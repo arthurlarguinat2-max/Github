@@ -1,18 +1,31 @@
-# Builds an unsigned .ipa to install for free from a Mac with Sideloadly.
-# No secret needed. Run it from the Actions tab (also works from an iPhone).
-# Guide: INSTALL_MAC.md
-name: iOS – IPA gratuit (Sideloadly)
+# Free iPhone builds (no Apple Developer account):
+#   tests → unsigned IPA → GitHub Release + SideStore source.
+# Runs on every push of game code, or manually from the Actions tab.
+# The iPhone gets the update from SideStore. Guide: INSTALL_SIDESTORE.md
+name: iOS – version gratuite (SideStore)
 
 on:
   workflow_dispatch:
   push:
-    tags: ["v*"]
+    branches: [main, "claude/**"]
+    paths-ignore: ["**.md"]
 
 env:
   GODOT_VERSION: "4.7.2"
 
+permissions:
+  contents: write  # create releases
+
+concurrency:
+  group: ios-free
+  cancel-in-progress: true
+
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   unsigned-ipa:
+    needs: tests
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -37,10 +50,15 @@ jobs:
       - name: Build unsigned IPA
         run: ci/build_unsigned_ipa.sh
 
-      - name: Upload IPA
+      - name: Publish release + SideStore source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ci/publish_release.sh
+
+      - name: Upload IPA (backup)
         uses: actions/upload-artifact@v5
         with:
           name: MiniPlanete-ipa
-          path: build/ipa/*.ipa
+          path: build/ipa/MiniPlanete.ipa
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 14

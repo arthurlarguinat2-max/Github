@@ -6,7 +6,8 @@ du bout du doigt et guide sa civilisation de l'âge de pierre jusqu'au futur.
 - Moteur : **Godot 4** (GDScript, rendu *Mobile*), application **iOS native**.
 - 100 % hors ligne, sauvegarde locale, sans publicité ni compte.
 - Build iOS **sans ordinateur** (tout depuis un iPhone) : GitHub Actions (macOS) + fastlane → TestFlight privé.
-  - **Gratuit avec un Mac** (Sideloadly) : **[INSTALL_MAC.md](INSTALL_MAC.md)**.
+  - **Gratuit, mises à jour depuis l'iPhone** (SideStore, Mac une seule fois) : **[INSTALL_SIDESTORE.md](INSTALL_SIDESTORE.md)**.
+  - **Gratuit avec un Mac à chaque fois** (Sideloadly) : [INSTALL_MAC.md](INSTALL_MAC.md).
   - **TestFlight** (compte Apple payant, iPhone seul) : **[BUILD.md](BUILD.md)**.
 
 ## Structure

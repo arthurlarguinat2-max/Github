@@ -5,8 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-export APP_VERSION="$(tr -d '[:space:]' < VERSION)"
+# VERSION holds "major.minor"; the patch number is the build number, so every
+# build has a higher version and SideStore offers it as an update.
 export BUILD_NUMBER="${GITHUB_RUN_NUMBER:-1}"
+export APP_VERSION="$(tr -d '[:space:]' < VERSION).${BUILD_NUMBER}"
 ci/export_ios.sh
 
 XCODEPROJ="$(cat build/ios/xcodeproj_path.txt)"
@@ -31,5 +33,6 @@ fi
 # An .ipa is simply a zip containing Payload/<App>.app
 rm -rf build/ipa && mkdir -p build/ipa/Payload
 cp -R "$APP" build/ipa/Payload/
-(cd build/ipa && zip -qry "MiniPlanete-${APP_VERSION}-${BUILD_NUMBER}.ipa" Payload && rm -rf Payload)
+(cd build/ipa && zip -qry MiniPlanete.ipa Payload && rm -rf Payload)
+echo "$APP_VERSION" > build/ipa/version.txt
 ls -la build/ipa

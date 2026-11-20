@@ -4,6 +4,9 @@ Pas de compte Apple Developer payant : GitHub fabrique l'app, ton Mac
 l'installe sur ton iPhone avec **Sideloadly** et ton **identifiant Apple
 gratuit**. L'app reste privée, sur ton téléphone uniquement.
 
+> Pour des mises à jour **depuis l'iPhone sans Mac**, préfère
+> [INSTALL_SIDESTORE.md](INSTALL_SIDESTORE.md).
+
 > **La règle d'Apple pour les comptes gratuits :** l'app expire au bout de
 > **7 jours** (elle ne s'ouvre plus). Il suffit de la réinstaller depuis le Mac
 > (2 min), ou d'activer le renouvellement automatique (étape 6).
@@ -11,16 +14,11 @@ gratuit**. L'app reste privée, sur ton téléphone uniquement.
 
 ---
 
-## Étape 1 — Fabriquer l'app sur GitHub (depuis le Mac ou l'iPhone)
+## Étape 1 — Récupérer l'app
 
-1. Ouvre ton dépôt sur github.com → onglet **Actions**.
-2. Dans la liste de gauche : **iOS – IPA gratuit (Sideloadly)**.
-3. **Run workflow** → choisis la branche `claude/mini-planete-ios-godot-9vnfsb`
-   → **Run workflow**.
-4. Attends la coche verte (~10–20 min).
-5. Clique sur l'exécution → en bas, section **Artifacts** → **MiniPlanete-ipa**
-   → le fichier `.zip` se télécharge sur le Mac.
-6. Double‑clique sur le `.zip` : tu obtiens `MiniPlanete-x.y.z-N.ipa`.
+Safari (Mac ou iPhone) → <https://github.com/arthurlarguinat2-max/Github/releases/latest>
+→ télécharge **MiniPlanete.ipa**. Une nouvelle version y est publiée
+automatiquement à chaque modification du jeu.
 
 ## Étape 2 — Installer Sideloadly sur le Mac
 
