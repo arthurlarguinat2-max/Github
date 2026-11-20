@@ -1,0 +1,10 @@
+{
+	"APP_TITLE": "Mini Planet",
+	"HELLO_PLANET": "Hello, Planet!",
+	"HINT_DRAG": "Drag your finger to spin the planet",
+	"DAY_N": "Day %d",
+	"SPEED_PAUSE": "Pause",
+	"SPEED_X": "x%d",
+	"OFFLINE_WELCOME": "While you were away, %d days went by.",
+	"VERSION": "Version %s"
+}

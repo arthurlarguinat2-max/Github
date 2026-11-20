@@ -1,0 +1,3 @@
+# Values come from GitHub Secrets (see BUILD.md); nothing personal is committed.
+app_identifier(ENV["APP_BUNDLE_ID"])
+team_id(ENV["APPLE_TEAM_ID"])

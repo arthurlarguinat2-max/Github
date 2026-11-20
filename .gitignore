@@ -1,0 +1,24 @@
+# Godot
+.godot/
+*.translation
+export_credentials.cfg
+# Builds & signing material — NEVER commit certificates or keys
+build/
+*.ipa
+*.p12
+*.p8
+*.cer
+*.key
+*.csr
+*.mobileprovision
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+# Ruby
+.bundle/
+vendor/bundle/
+# OS
+.DS_Store
+Thumbs.db

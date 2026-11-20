@@ -1,0 +1,32 @@
+# Runs on every push: headless simulation tests + main scene smoke test (Linux).
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-linux-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        run: ci/install_godot.sh linux
+
+      - name: Unit tests (simulation, save, data)
+        run: ci/run_tests.sh
+
+      - name: Smoke test (main scene)
+        run: ci/smoke_test.sh

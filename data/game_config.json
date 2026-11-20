@@ -1,0 +1,10 @@
+{
+	"_comment": "Global tuning values. Edit freely: no code change needed.",
+	"tick_rate_hz": 10,
+	"ticks_per_day": 600,
+	"max_ticks_per_frame": 40,
+	"allowed_speeds": [0, 1, 2, 4],
+	"autosave_interval_seconds": 30,
+	"offline_progress_cap_hours": 8,
+	"offline_progress_efficiency": 0.5
+}
