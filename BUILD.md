@@ -1,178 +1,167 @@
-# Compiler Mini Planète pour iPhone — sans Mac
+# Installer Mini Planète sur ton iPhone — avec seulement un iPhone
 
-Toute la compilation iOS se fait sur **GitHub Actions** (machine macOS louée par
-GitHub) avec **fastlane**. Toi, tu n'as besoin que d'un PC (Windows ou Linux),
-d'un navigateur et d'**OpenSSL**.
+Pas besoin d'ordinateur. Tout se fait dans **Safari** sur ton iPhone, et la
+compilation tourne sur les machines macOS de **GitHub Actions**.
 
-> Sous Windows, OpenSSL est fourni avec **Git for Windows** : ouvre « Git Bash »
-> et toutes les commandes ci‑dessous fonctionnent telles quelles.
+**Ce que ça donne :** l'app arrive dans **TestFlight**, en privé. Toi seul
+(et les personnes que tu invites) pouvez l'installer. **Rien n'est vendu ni
+publié sur l'App Store** : une publication demanderait une soumission à Apple,
+qui ne sera jamais faite sans ta demande.
 
-Les deux workflows :
+**Coût :** compte Apple Developer, 99 $/an (obligatoire chez Apple pour
+installer une app perso sans ordinateur).
 
-| Workflow | Quand | Ce qu'il fait |
-|---|---|---|
-| `Tests` (`.github/workflows/tests.yml`) | chaque push | tests headless de la simulation + lancement de la scène principale (Linux) |
-| `iOS → TestFlight` (`.github/workflows/ios-testflight.yml`) | tag `v*` ou bouton manuel | export Godot → Xcode → signature → envoi sur TestFlight (macOS) |
+**Tu n'as rien à fabriquer toi‑même :** le certificat et le profil de
+signature sont créés automatiquement par GitHub au premier build, puis
+rangés **chiffrés** (avec ton mot de passe) sur la branche `match-signing`
+du dépôt.
+
+> **Astuce Safari :** si une page Apple ou GitHub s'affiche mal, touche
+> **« aA »** dans la barre d'adresse → **Demander le site pour ordinateur**.
 
 ---
 
-## Étape 1 — Compte Apple Developer
+## Étape 1 — Compte Apple Developer (depuis l'iPhone)
 
-1. Inscris‑toi sur <https://developer.apple.com/programs/> (99 $/an). L'activation
-   peut prendre jusqu'à 48 h.
-2. Note ton **Team ID** : <https://developer.apple.com/account> → *Membership
-   details* → *Team ID* (10 caractères, ex. `AB12CD34EF`).
-   → secret **`APPLE_TEAM_ID`**
+1. Installe l'app **Apple Developer** depuis l'App Store.
+2. Ouvre‑la → **Compte** → connecte‑toi avec ton identifiant Apple →
+   **S'inscrire maintenant** (Enroll), en tant que particulier.
+   Le paiement se fait directement dans l'app.
+3. Attends l'e‑mail de confirmation (de quelques minutes à 48 h).
+4. Récupère ton **Team ID** : dans Safari, va sur
+   <https://developer.apple.com/account> → **Membership details** →
+   **Team ID** (10 caractères, ex. `AB12CD34EF`). Garde‑le dans Notes.
 
-## Étape 2 — Identifiant de l'app (Bundle ID)
+## Étape 2 — Choisir l'identifiant de l'app (Bundle ID)
 
-1. <https://developer.apple.com/account/resources/identifiers/list> → **+**
-2. *App IDs* → *App* → Continue.
-3. Description : `Mini Planete` ; Bundle ID **Explicit** : par ex.
-   `com.tonnom.miniplanete` (minuscules, pas d'accent ; il ne pourra plus changer).
-4. Aucune « Capability » n'est nécessaire → *Continue* → *Register*.
-   → secret **`APP_BUNDLE_ID`** (ex. `com.tonnom.miniplanete`)
+Invente un identifiant unique, en minuscules, sans accent ni espace, par ex. :
+`com.tonprenom.miniplanete`
 
-## Étape 3 — Certificat de distribution (sans Mac, avec OpenSSL)
+Note‑le dans Notes. Il ne pourra plus changer. GitHub l'enregistrera
+automatiquement chez Apple.
 
-Travaille dans un dossier **hors du dépôt Git** (ex. `~/apple-signing/`) : ces
-fichiers sont secrets.
+## Étape 3 — Créer la fiche privée dans App Store Connect
 
-```bash
-mkdir -p ~/apple-signing && cd ~/apple-signing
+TestFlight a besoin d'une « fiche » d'app. Elle reste privée tant que tu ne
+la soumets pas à la publication.
 
-# 3.1 Clé privée (à garder précieusement, ne jamais la partager)
-openssl genrsa -out distribution.key 2048
+1. Safari → <https://appstoreconnect.apple.com/apps> (mode « site pour
+   ordinateur » conseillé).
+2. **+** → **Nouvelle app** :
+   - Plateformes : **iOS**
+   - Nom : `Mini Planète` (s'il est pris : `Mini Planète – Perso`)
+   - Langue principale : **Français**
+   - Identifiant de lot (Bundle ID) : choisis celui de l'étape 2.
+     **S'il n'apparaît pas encore dans la liste :** fais d'abord l'étape 4,
+     lance une fois le build (étape 7), qui échouera mais enregistrera le
+     Bundle ID, puis reviens ici.
+   - UGS (SKU) : `miniplanete001`
+   - Accès utilisateur : **Accès complet**
+3. **Créer**.
 
-# 3.2 Demande de certificat (CSR) — remplace l'e-mail et le nom
-openssl req -new -key distribution.key -out distribution.csr \
-  -subj "/emailAddress=ton@email.com/CN=Ton Nom/C=FR"
-```
+## Étape 4 — Clé API App Store Connect
 
-3.3 Sur <https://developer.apple.com/account/resources/certificates/list> → **+**
-→ **Apple Distribution** → *Continue* → envoie `distribution.csr` → télécharge
-le fichier `distribution.cer`, place‑le dans `~/apple-signing/`.
+Elle permet à GitHub de parler à Apple sans ton mot de passe.
 
-```bash
-# 3.4 Conversion .cer (DER) -> .pem
-openssl x509 -inform der -in distribution.cer -out distribution.pem
+1. Safari → <https://appstoreconnect.apple.com/access/integrations/api>
+   (*Utilisateurs et accès* → *Intégrations* → *App Store Connect API*).
+   La première fois : **Demander l'accès**, puis accepte.
+2. **Générer une clé API** (ou **+**) :
+   - Nom : `GitHub`
+   - Accès : **Admin** (nécessaire pour que GitHub puisse créer le certificat)
+3. Note dans Notes :
+   - l'**ID de la clé** (ex. `2X9R4HXF34`),
+   - l'**Issuer ID** affiché en haut de la page (long code avec des tirets).
+4. Touche **Télécharger la clé API**. Apple ne la propose **qu'une seule fois** !
+   Le fichier `AuthKey_XXXX.p8` arrive dans l'app **Fichiers** → *Téléchargements*.
 
-# 3.5 Création du .p12 (certificat + clé). Choisis un mot de passe solide.
-#     -legacy est indispensable avec OpenSSL 3 pour que macOS sache l'importer.
-openssl pkcs12 -export -legacy \
-  -inkey distribution.key -in distribution.pem \
-  -out distribution.p12 -name "Apple Distribution"
-```
+**Copier le contenu de la clé :**
+1. App **Fichiers** → *Téléchargements* → appui long sur `AuthKey_XXXX.p8`
+   → **Renommer** → remplace `.p8` par `.txt` (confirme « Utiliser .txt »).
+2. Ouvre le fichier `.txt` → appui long sur le texte → **Tout sélectionner**
+   → **Copier**. Le texte commence par `-----BEGIN PRIVATE KEY-----`
+   et finit par `-----END PRIVATE KEY-----`.
+3. Garde ce fichier dans un endroit sûr (iCloud Drive), ne le partage jamais.
 
-> Si `-legacy` est refusé, ton OpenSSL est en version 1.x : retire simplement l'option.
+## Étape 5 — Choisir un mot de passe de chiffrement
 
-- Le contenu base64 du `.p12` → secret **`IOS_DIST_CERT_P12_BASE64`**
-- Le mot de passe choisi → secret **`IOS_DIST_CERT_PASSWORD`**
+Invente un mot de passe long (ex. 4 mots au hasard), il chiffrera le
+certificat stocké dans le dépôt. Garde‑le dans ton gestionnaire de mots de
+passe. **Si tu le perds**, il suffira d'en choisir un autre et de supprimer
+la branche `match-signing` (un nouveau certificat sera créé).
 
-## Étape 4 — Profil de provisionnement App Store
+> Conseil : rends le dépôt **privé** si ce n'est pas déjà le cas
+> (dépôt GitHub → **Settings** → tout en bas, *Change visibility*).
+> Les fichiers sont chiffrés de toute façon, mais c'est plus sûr.
 
-1. <https://developer.apple.com/account/resources/profiles/list> → **+**
-2. *Distribution* → **App Store Connect** → *Continue*.
-3. Choisis ton App ID (`com.tonnom.miniplanete`) → *Continue*.
-4. Choisis le certificat **Apple Distribution** créé à l'étape 3.
-5. Nom du profil : `Mini Planete AppStore` → *Generate* → télécharge le
-   `.mobileprovision` dans `~/apple-signing/`.
+## Étape 6 — Créer les 6 secrets GitHub
 
-- Son contenu base64 → secret **`IOS_PROVISIONING_PROFILE_BASE64`**
+Safari → ton dépôt sur github.com (mode « site pour ordinateur ») →
+**Settings** → **Secrets and variables** → **Actions** →
+**New repository secret**. Crée exactement :
 
-> Le profil expire en même temps que le certificat (1 an). Il faudra alors
-> refaire les étapes 3 et 4 et mettre à jour les 3 secrets correspondants.
+| Nom du secret | Contenu |
+|---|---|
+| `APPLE_TEAM_ID` | ton Team ID (étape 1) |
+| `APP_BUNDLE_ID` | ton Bundle ID, ex. `com.tonprenom.miniplanete` (étape 2) |
+| `ASC_KEY_ID` | l'ID de la clé (étape 4) |
+| `ASC_ISSUER_ID` | l'Issuer ID (étape 4) |
+| `ASC_KEY_P8` | tout le texte de la clé, lignes BEGIN/END comprises (étape 4) |
+| `MATCH_PASSWORD` | ton mot de passe de chiffrement (étape 5) |
 
-## Étape 5 — Créer la fiche de l'app dans App Store Connect
+Les noms sont sensibles à la casse : copie‑les tels quels.
 
-L'envoi TestFlight exige que l'app existe déjà :
+## Étape 7 — Lancer la construction
 
-1. <https://appstoreconnect.apple.com/apps> → **+** → *Nouvelle app*.
-2. Plateforme **iOS**, nom `Mini Planète` (doit être unique sur l'App Store ;
-   sinon `Mini Planète – Civilisation`), langue principale **Français**,
-   Bundle ID : celui de l'étape 2, SKU : `miniplanete001`, accès complet.
+Safari → ton dépôt → onglet **Actions** → **iOS → TestFlight** →
+**Run workflow** → branche `claude/mini-planete-ios-godot-9vnfsb` (ou `main`
+plus tard) → **Run workflow**.
 
-## Étape 6 — Clé API App Store Connect
+- Durée : ~15–25 min. Rond orange = en cours, coche verte = réussi.
+- Le numéro de build augmente tout seul, la version vient du fichier `VERSION`.
+- En cas de croix rouge : préviens‑moi, je lirai les logs et corrigerai.
 
-Elle permet à fastlane de parler à Apple sans ton mot de passe ni la double
-authentification.
+## Étape 8 — Installer sur l'iPhone
 
-1. <https://appstoreconnect.apple.com/access/integrations/api> (*Utilisateurs et
-   accès* → *Intégrations* → *App Store Connect API*). La première fois, clique
-   sur *Demander l'accès* (validation immédiate pour le titulaire du compte).
-2. **Générer une clé API** : nom `GitHub CI`, accès **App Manager** → *Générer*.
-3. Note :
-   - l'**ID de la clé** (ex. `2X9R4HXF34`) → secret **`ASC_KEY_ID`**
-   - l'**Issuer ID** affiché en haut de la page (UUID) → secret **`ASC_ISSUER_ID`**
-4. **Télécharge le fichier `AuthKey_XXXX.p8`** — Apple ne le propose **qu'une
-   seule fois**. Son contenu base64 → secret **`ASC_KEY_P8_BASE64`**.
+10 à 30 min après la coche verte (Apple traite le build) :
 
-## Étape 7 — Encoder les fichiers en base64
+1. Installe l'app **TestFlight** depuis l'App Store.
+2. Safari → <https://appstoreconnect.apple.com/apps> → Mini Planète →
+   **TestFlight** → **Testeurs internes** → **+** → crée un groupe
+   (ex. « Moi ») et ajoute‑toi.
+3. Tu reçois une invitation par e‑mail → ouvre‑la sur l'iPhone →
+   TestFlight → **Installer**.
 
-GitHub Secrets ne stocke que du texte. Encode chaque fichier **sur une seule ligne** :
+Chaque nouveau build apparaît ensuite dans TestFlight → **Mettre à jour**.
+Ta partie est conservée entre les mises à jour.
+Un build TestFlight reste installable **90 jours** : il suffit d'en relancer
+un (étape 7) de temps en temps.
 
-**Linux / Git Bash :**
-```bash
-cd ~/apple-signing
-base64 -w0 distribution.p12        > p12.b64.txt
-base64 -w0 *.mobileprovision       > profile.b64.txt
-base64 -w0 AuthKey_*.p8            > p8.b64.txt
-```
-(Sur macOS ce serait `base64 -i fichier`, mais tu n'en as pas besoin.)
+> Si Apple demande un « questionnaire de conformité export » : réponds que
+> l'app n'utilise **aucun chiffrement** (c'est déjà déclaré dans le build).
 
-**PowerShell (Windows) :**
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("distribution.p12")) | Set-Content p12.b64.txt
-```
-
-Ouvre chaque `.txt` et copie tout son contenu.
-
-## Étape 8 — Créer les secrets GitHub
-
-Dépôt GitHub → **Settings** → **Secrets and variables** → **Actions** →
-**New repository secret**. Crée exactement ces 8 secrets :
-
-| Secret | Contenu | Étape |
-|---|---|---|
-| `APPLE_TEAM_ID` | Team ID (10 caractères) | 1 |
-| `APP_BUNDLE_ID` | ex. `com.tonnom.miniplanete` | 2 |
-| `IOS_DIST_CERT_P12_BASE64` | contenu de `p12.b64.txt` | 3 + 7 |
-| `IOS_DIST_CERT_PASSWORD` | mot de passe du `.p12` | 3 |
-| `IOS_PROVISIONING_PROFILE_BASE64` | contenu de `profile.b64.txt` | 4 + 7 |
-| `ASC_KEY_ID` | ID de la clé API | 6 |
-| `ASC_ISSUER_ID` | Issuer ID (UUID) | 6 |
-| `ASC_KEY_P8_BASE64` | contenu de `p8.b64.txt` | 6 + 7 |
-
-Ensuite, **supprime les fichiers `.b64.txt`** et garde `~/apple-signing/` en lieu
-sûr (sauvegarde chiffrée) : tu en auras besoin au renouvellement annuel.
-
-## Étape 9 — Lancer un build TestFlight
-
-Au choix :
-- **Manuel** : onglet **Actions** → *iOS → TestFlight* → **Run workflow**.
-- **Par tag** : `git tag v0.1.0 && git push origin v0.1.0`.
-
-Le build prend ~15–25 min. Le **numéro de build** est calculé automatiquement
-(dernier build TestFlight + 1). La **version** affichée vient du fichier `VERSION`.
-
-Puis, ~10–30 min plus tard (traitement Apple) :
-1. App Store Connect → ton app → **TestFlight**.
-2. Ajoute‑toi comme testeur interne (*Testeurs internes* → **+**).
-3. Installe l'app **TestFlight** sur ton iPhone et accepte l'invitation.
+---
 
 ## Dépannage
 
-| Symptôme | Cause probable |
+| Symptôme dans les logs | Cause probable |
 |---|---|
 | `Missing secret …` | secret absent ou mal nommé (sensible à la casse) |
-| `Could not find App with bundle identifier` | étape 5 non faite ou Bundle ID différent |
-| `MAC verification failed` / import du `.p12` | mauvais mot de passe, ou `.p12` créé sans `-legacy` |
-| `No signing certificate "iOS Distribution" found` / profil ne correspond pas | le profil n'a pas été généré avec CE certificat : refais l'étape 4 |
-| `Authentication credentials are missing or invalid` | `ASC_KEY_ID`, `ASC_ISSUER_ID` ou `.p8` incorrects |
-| Erreur d'export Godot (templates) | la version `GODOT_VERSION` des workflows n'existe pas : mets la dernière stable |
-| `The bundle version must be higher` | un build avec ce numéro existe déjà : relance simplement |
+| `ASC_KEY_P8 is not a valid .p8 key` | le texte collé est incomplet : recopie tout, lignes BEGIN/END comprises |
+| `Authentication credentials are missing or invalid` | `ASC_KEY_ID`, `ASC_ISSUER_ID` ou clé incorrects |
+| `… not allowed to create certificates` / `forbidden` | la clé API n'a pas le rôle **Admin** : recrée‑la (étape 4) |
+| `Could not find App with bundle identifier` | la fiche de l'étape 3 n'existe pas ou utilise un autre Bundle ID |
+| `You already have a current Distribution certificate` | limite Apple atteinte : sur developer.apple.com → *Certificates*, révoque un ancien certificat de distribution inutilisé |
+| `Invalid password` / erreur de déchiffrement | `MATCH_PASSWORD` différent de celui du premier build |
+| Erreur d'export Godot | la version `GODOT_VERSION` n'existe pas : mets la dernière stable |
+
+## Renouvellement annuel
+
+Le certificat expire après 1 an. Il suffit alors de supprimer la branche
+`match-signing` (dépôt → *Branches*) et de relancer un build : un nouveau
+certificat est créé automatiquement.
 
 ## Changer de version de Godot
 
-Une seule valeur à modifier : `GODOT_VERSION` en tête des deux fichiers dans
-`.github/workflows/`. Les caches sont automatiquement invalidés.
+Une seule valeur à modifier : `GODOT_VERSION` en tête des deux fichiers de
+`.github/workflows/`.
