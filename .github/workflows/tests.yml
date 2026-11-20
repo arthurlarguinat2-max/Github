@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Godot
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/godot
           key: godot-linux-${{ env.GODOT_VERSION }}

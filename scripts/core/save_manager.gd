@@ -48,10 +48,11 @@ static func load_from_file(path: String = DEFAULT_PATH) -> Dictionary:
 
 ## Pure function (no I/O): parses JSON text and migrates it. Unit-tested.
 static func parse_and_migrate(text: String) -> Dictionary:
-	var parsed = JSON.parse_string(text)
-	if typeof(parsed) != TYPE_DICTIONARY:
+	# JSON.new().parse() reports errors silently (parse_string logs an engine error).
+	var json := JSON.new()
+	if json.parse(text) != OK or typeof(json.data) != TYPE_DICTIONARY:
 		return {"status": LoadStatus.CORRUPTED, "envelope": {}}
-	var envelope: Dictionary = parsed
+	var envelope: Dictionary = json.data
 	var version := int(envelope.get("version", 0))
 	if version > SAVE_VERSION:
 		# Save written by a newer app version: do not touch it.
