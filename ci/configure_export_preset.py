@@ -2,8 +2,10 @@
 """Fills signing/version fields of the iOS export preset from environment
 variables (set from GitHub Secrets on the macOS runner).
 
-Required env: APPLE_TEAM_ID, APP_BUNDLE_ID, PROFILE_UUID, PROFILE_NAME,
-              APP_VERSION, BUILD_NUMBER
+Env: APPLE_TEAM_ID, APP_BUNDLE_ID, PROFILE_UUID, PROFILE_NAME,
+     APP_VERSION, BUILD_NUMBER.
+For the unsigned build (free install with Sideloadly), signing values are
+optional and placeholders are used: the Mac re-signs the app on install.
 """
 import os
 import re
@@ -12,10 +14,10 @@ import sys
 PRESET = os.path.join(os.path.dirname(__file__), "..", "export_presets.cfg")
 
 VALUES = {
-    "application/app_store_team_id": os.environ["APPLE_TEAM_ID"],
-    "application/bundle_identifier": os.environ["APP_BUNDLE_ID"],
-    "application/provisioning_profile_uuid_release": os.environ["PROFILE_UUID"],
-    "application/provisioning_profile_specifier_release": os.environ["PROFILE_NAME"],
+    "application/app_store_team_id": os.environ.get("APPLE_TEAM_ID") or "ABCDE12345",
+    "application/bundle_identifier": os.environ.get("APP_BUNDLE_ID") or "com.miniplanete.game",
+    "application/provisioning_profile_uuid_release": os.environ.get("PROFILE_UUID", ""),
+    "application/provisioning_profile_specifier_release": os.environ.get("PROFILE_NAME", ""),
     "application/short_version": os.environ["APP_VERSION"],
     "application/version": os.environ["BUILD_NUMBER"],
 }
