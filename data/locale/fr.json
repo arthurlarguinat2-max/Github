@@ -164,5 +164,6 @@
 	"BLD_WAITING": "En attente : il manque %s.",
 	"ALERT_THIRST": "Plus d'eau ! Un habitant meurt de soif. Construis des puits.",
 	"ALERT_SICKNESS": "Maladie : un habitant est mort. Pense à l'eau, à la nourriture et aux guérisseurs.",
-	"ALERT_UNHAPPY": "Les habitants sont malheureux : l'un d'eux quitte la planète."
+	"ALERT_UNHAPPY": "Les habitants sont malheureux : l'un d'eux quitte la planète.",
+	"UPDATE_INSTALLED": "Version %s installée. Bon jeu !"
 }

@@ -127,6 +127,7 @@ func _ready() -> void:
 	if GameState.pending_offline_days > 0:
 		_show_toast(tr("OFFLINE_WELCOME") % GameState.pending_offline_days)
 		GameState.pending_offline_days = 0
+	_greet_new_version()
 
 
 func _process(delta: float) -> void:
@@ -235,6 +236,16 @@ func _set_gauge(chip: Dictionary, value: float, target: float) -> void:
 
 func _refresh_title() -> void:
 	_title.text = "%s · %s" % [GameState.sim.custom.get("planet_name", ""), tr("DAY_N") % GameState.sim.day()]
+
+
+## After an update, says which version is now installed (once).
+func _greet_new_version() -> void:
+	var version := str(ProjectSettings.get_setting("application/config/version", ""))
+	var last := str(UserSettings.get_value("last_version"))
+	if version == "" or version == last:
+		return
+	UserSettings.set_value("last_version", version)
+	_show_toast(tr("UPDATE_INSTALLED") % version)
 
 
 func _on_alert(key: String) -> void:

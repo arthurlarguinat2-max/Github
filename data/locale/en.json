@@ -164,5 +164,6 @@
 	"BLD_WAITING": "Waiting: missing %s.",
 	"ALERT_THIRST": "No water left! Someone died of thirst. Build wells.",
 	"ALERT_SICKNESS": "Sickness: someone died. Mind water, food and healers.",
-	"ALERT_UNHAPPY": "People are unhappy: one of them leaves the planet."
+	"ALERT_UNHAPPY": "People are unhappy: one of them leaves the planet.",
+	"UPDATE_INSTALLED": "Version %s installed. Enjoy!"
 }

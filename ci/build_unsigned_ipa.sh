@@ -9,6 +9,8 @@ cd "$ROOT"
 # build has a higher version and SideStore offers it as an update.
 export BUILD_NUMBER="${GITHUB_RUN_NUMBER:-1}"
 export APP_VERSION="$(tr -d '[:space:]' < VERSION).${BUILD_NUMBER}"
+# Show the same version inside the game as in AltStore/SideStore.
+sed -i '' "s/^config\/version=.*/config\/version=\"${APP_VERSION}\"/" project.godot
 ci/export_ios.sh
 
 XCODEPROJ="$(cat build/ios/xcodeproj_path.txt)"

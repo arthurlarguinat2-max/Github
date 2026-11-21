@@ -12,6 +12,7 @@ const DEFAULTS := {
 	"clouds": true,
 	"outlines": true,
 	"sky": "stars",
+	"last_version": "",  # Used to greet the player after an update.
 }
 
 var values: Dictionary = DEFAULTS.duplicate()
