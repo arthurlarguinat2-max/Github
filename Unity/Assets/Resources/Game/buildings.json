@@ -1,0 +1,438 @@
+{
+	"_comment": "Buildings. cost/produces in resources; produces = per day with full workers. extracts = takes that resource from its cell and neighbours. territory = buildable radius (in cells) around it. order = position in the build menu; priority = who gets workers first (lower first). consumes = inputs per day (production slows when they run out). tool_bonus = +25% while tools are in stock. water_bonus = multiplier next to water. happiness / health = village bonus while staffed. category = build menu tab. upgrade_to = building it can be upgraded into (paying the target's upgrade_cost). buildable=false hides it from the build menu. profession = trained villagers needed to work here. build_days = construction time (1 day = 60 s at x1).",
+	"buildings": {
+		"campfire": {
+			"name_key": "BLD_CAMPFIRE",
+			"desc_key": "BLD_CAMPFIRE_DESC",
+			"age": "stone",
+			"order": 1,
+			"priority": 0,
+			"cost": {
+				"wood": 8,
+				"stone": 5
+			},
+			"workers": 0,
+			"housing": 0,
+			"territory": 1,
+			"growth_bonus": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"short_key": "BLD_CAMPFIRE_SHORT",
+			"category": "housing",
+			"happiness": 5,
+			"build_days": 0.2
+		},
+		"hut": {
+			"name_key": "BLD_HUT",
+			"desc_key": "BLD_HUT_DESC",
+			"age": "stone",
+			"order": 0,
+			"priority": 0,
+			"cost": {
+				"wood": 10
+			},
+			"workers": 0,
+			"housing": 4,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"short_key": "BLD_HUT_SHORT",
+			"category": "housing",
+			"upgrade_to": "longhouse",
+			"build_days": 0.3
+		},
+		"gatherer": {
+			"name_key": "BLD_GATHERER",
+			"desc_key": "BLD_GATHERER_DESC",
+			"age": "stone",
+			"order": 10,
+			"priority": 1,
+			"cost": {
+				"wood": 5
+			},
+			"workers": 2,
+			"produces": {
+				"food": 6
+			},
+			"fertility_bonus": true,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach"
+			],
+			"short_key": "BLD_GATHERER_SHORT",
+			"category": "food",
+			"tool_bonus": true,
+			"profession": "gatherer",
+			"build_days": 0.25
+		},
+		"woodcutter": {
+			"name_key": "BLD_WOODCUTTER",
+			"desc_key": "BLD_WOODCUTTER_DESC",
+			"age": "stone",
+			"order": 20,
+			"priority": 2,
+			"cost": {
+				"wood": 5
+			},
+			"workers": 2,
+			"produces": {
+				"wood": 4
+			},
+			"extracts": "wood",
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"short_key": "BLD_WOODCUTTER_SHORT",
+			"category": "resources",
+			"tool_bonus": true,
+			"profession": "woodcutter",
+			"build_days": 0.25
+		},
+		"quarry": {
+			"name_key": "BLD_QUARRY",
+			"desc_key": "BLD_QUARRY_DESC",
+			"age": "stone",
+			"order": 21,
+			"priority": 3,
+			"cost": {
+				"wood": 15
+			},
+			"workers": 3,
+			"produces": {
+				"stone": 3
+			},
+			"extracts": "stone",
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"short_key": "BLD_QUARRY_SHORT",
+			"category": "resources",
+			"tool_bonus": true,
+			"profession": "stonecutter",
+			"build_days": 0.4
+		},
+		"field": {
+			"name_key": "BLD_FIELD",
+			"desc_key": "BLD_FIELD_DESC",
+			"short_key": "BLD_FIELD_SHORT",
+			"age": "stone",
+			"category": "food",
+			"order": 11,
+			"priority": 1,
+			"cost": {
+				"wood": 10
+			},
+			"workers": 2,
+			"produces": {
+				"grain": 10
+			},
+			"fertility_bonus": true,
+			"tool_bonus": true,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"beach"
+			],
+			"profession": "farmer",
+			"build_days": 0.3
+		},
+		"mill": {
+			"name_key": "BLD_MILL",
+			"desc_key": "BLD_MILL_DESC",
+			"short_key": "BLD_MILL_SHORT",
+			"age": "stone",
+			"category": "food",
+			"order": 12,
+			"priority": 2,
+			"cost": {
+				"wood": 12,
+				"stone": 8
+			},
+			"workers": 1,
+			"consumes": {
+				"grain": 10
+			},
+			"produces": {
+				"flour": 10
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "miller",
+			"build_days": 0.5
+		},
+		"bakery": {
+			"name_key": "BLD_BAKERY",
+			"desc_key": "BLD_BAKERY_DESC",
+			"short_key": "BLD_BAKERY_SHORT",
+			"age": "stone",
+			"category": "food",
+			"order": 13,
+			"priority": 2,
+			"cost": {
+				"wood": 10,
+				"stone": 12
+			},
+			"workers": 2,
+			"consumes": {
+				"flour": 8,
+				"wood": 1
+			},
+			"produces": {
+				"food": 24
+			},
+			"happiness": 3,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "baker",
+			"build_days": 0.6
+		},
+		"well": {
+			"name_key": "BLD_WELL",
+			"desc_key": "BLD_WELL_DESC",
+			"short_key": "BLD_WELL_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 22,
+			"priority": 1,
+			"cost": {
+				"wood": 10
+			},
+			"workers": 1,
+			"produces": {
+				"water": 8
+			},
+			"water_bonus": 1.5,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "water_carrier",
+			"build_days": 0.3
+		},
+		"workshop": {
+			"name_key": "BLD_WORKSHOP",
+			"desc_key": "BLD_WORKSHOP_DESC",
+			"short_key": "BLD_WORKSHOP_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 23,
+			"priority": 4,
+			"cost": {
+				"wood": 15,
+				"stone": 10
+			},
+			"workers": 2,
+			"consumes": {
+				"wood": 2,
+				"stone": 2
+			},
+			"produces": {
+				"tools": 2
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "artisan",
+			"build_days": 0.6
+		},
+		"healer": {
+			"name_key": "BLD_HEALER",
+			"desc_key": "BLD_HEALER_DESC",
+			"short_key": "BLD_HEALER_SHORT",
+			"age": "stone",
+			"category": "services",
+			"order": 30,
+			"priority": 1,
+			"cost": {
+				"wood": 12,
+				"stone": 6
+			},
+			"workers": 1,
+			"health": 15,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "healer",
+			"build_days": 0.6
+		},
+		"stone_circle": {
+			"name_key": "BLD_STONE_CIRCLE",
+			"desc_key": "BLD_STONE_CIRCLE_DESC",
+			"short_key": "BLD_STONE_CIRCLE_SHORT",
+			"age": "stone",
+			"category": "services",
+			"order": 31,
+			"priority": 0,
+			"cost": {
+				"wood": 10,
+				"stone": 15
+			},
+			"workers": 0,
+			"happiness": 10,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"build_days": 0.8
+		},
+		"longhouse": {
+			"name_key": "BLD_LONGHOUSE",
+			"desc_key": "BLD_LONGHOUSE_DESC",
+			"short_key": "BLD_LONGHOUSE_SHORT",
+			"age": "stone",
+			"category": "housing",
+			"order": 2,
+			"priority": 0,
+			"buildable": false,
+			"upgrade_cost": {
+				"wood": 20,
+				"stone": 10
+			},
+			"cost": {
+				"wood": 30,
+				"stone": 10
+			},
+			"workers": 0,
+			"housing": 9,
+			"happiness": 1,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"build_days": 0.8
+		},
+		"townhall": {
+			"name_key": "BLD_TOWNHALL",
+			"desc_key": "BLD_TOWNHALL_DESC",
+			"short_key": "BLD_TOWNHALL_SHORT",
+			"age": "stone",
+			"category": "housing",
+			"order": -1,
+			"priority": 0,
+			"buildable": false,
+			"cost": {},
+			"workers": 0,
+			"housing": 0,
+			"territory": 3,
+			"build_days": 0,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			]
+		},
+		"outpost": {
+			"name_key": "BLD_OUTPOST",
+			"desc_key": "BLD_OUTPOST_DESC",
+			"short_key": "BLD_OUTPOST_SHORT",
+			"age": "stone",
+			"category": "housing",
+			"order": 3,
+			"priority": 0,
+			"cost": {
+				"wood": 30,
+				"stone": 20
+			},
+			"workers": 0,
+			"housing": 0,
+			"territory": 3,
+			"build_days": 0.8,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			]
+		}
+	},
+	"start": {
+		"stocks": {
+			"food": 40,
+			"wood": 30,
+			"stone": 10,
+			"water": 40
+		},
+		"population": 4,
+		"buildings": [
+			"townhall"
+		],
+		"trained": {}
+	},
+	"categories": [
+		{
+			"id": "housing",
+			"name_key": "CAT_HOUSING"
+		},
+		{
+			"id": "food",
+			"name_key": "CAT_FOOD"
+		},
+		{
+			"id": "resources",
+			"name_key": "CAT_RESOURCES"
+		},
+		{
+			"id": "services",
+			"name_key": "CAT_SERVICES"
+		}
+	]
+}

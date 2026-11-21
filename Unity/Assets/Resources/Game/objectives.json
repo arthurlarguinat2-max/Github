@@ -1,0 +1,172 @@
+{
+	"_comment": "Goals shown in the Goals screen. type: townhall | trained | population | building (id) | buildings_total | happiness | health | day | stock (res). reward: resources given once.",
+	"objectives": [
+		{
+			"id": "first_well",
+			"title_key": "OBJ_FIRST_WELL",
+			"type": "building",
+			"target": "well",
+			"value": 1,
+			"reward": {
+				"wood": 10
+			}
+		},
+		{
+			"id": "first_gatherer",
+			"title_key": "OBJ_FIRST_GATHERER",
+			"type": "building",
+			"target": "gatherer",
+			"value": 1,
+			"reward": {
+				"food": 15
+			}
+		},
+		{
+			"id": "train_3",
+			"title_key": "OBJ_TRAINED",
+			"type": "trained",
+			"value": 3,
+			"reward": {
+				"food": 15
+			}
+		},
+		{
+			"id": "pop_10",
+			"title_key": "OBJ_POP",
+			"type": "population",
+			"value": 10,
+			"reward": {
+				"wood": 20,
+				"stone": 10
+			}
+		},
+		{
+			"id": "townhall_2",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 2,
+			"reward": {
+				"wood": 30,
+				"stone": 15
+			}
+		},
+		{
+			"id": "huts_4",
+			"title_key": "OBJ_HUTS",
+			"type": "building",
+			"target": "hut",
+			"value": 4,
+			"reward": {
+				"food": 20
+			}
+		},
+		{
+			"id": "bread",
+			"title_key": "OBJ_BREAD",
+			"type": "building",
+			"target": "bakery",
+			"value": 1,
+			"reward": {
+				"wood": 25
+			}
+		},
+		{
+			"id": "tools",
+			"title_key": "OBJ_TOOLS",
+			"type": "stock",
+			"target": "tools",
+			"value": 5,
+			"reward": {
+				"stone": 20
+			}
+		},
+		{
+			"id": "townhall_3",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 3,
+			"reward": {
+				"wood": 50,
+				"stone": 40
+			}
+		},
+		{
+			"id": "happy_70",
+			"title_key": "OBJ_HAPPY",
+			"type": "happiness",
+			"value": 70,
+			"reward": {
+				"food": 30
+			}
+		},
+		{
+			"id": "pop_25",
+			"title_key": "OBJ_POP",
+			"type": "population",
+			"value": 25,
+			"reward": {
+				"wood": 40,
+				"stone": 30
+			}
+		},
+		{
+			"id": "longhouse",
+			"title_key": "OBJ_LONGHOUSE",
+			"type": "building",
+			"target": "longhouse",
+			"value": 1,
+			"reward": {
+				"stone": 25
+			}
+		},
+		{
+			"id": "buildings_20",
+			"title_key": "OBJ_BUILDINGS",
+			"type": "buildings_total",
+			"value": 20,
+			"reward": {
+				"tools": 10
+			}
+		},
+		{
+			"id": "day_30",
+			"title_key": "OBJ_DAYS",
+			"type": "day",
+			"value": 30,
+			"reward": {
+				"food": 40,
+				"water": 40
+			}
+		},
+		{
+			"id": "pop_50",
+			"title_key": "OBJ_POP",
+			"type": "population",
+			"value": 50,
+			"reward": {
+				"wood": 80,
+				"stone": 60
+			}
+		},
+		{
+			"id": "townhall_4",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 4,
+			"reward": {
+				"tools": 15,
+				"food": 60
+			}
+		},
+		{
+			"id": "outpost",
+			"title_key": "OBJ_OUTPOST",
+			"type": "building",
+			"target": "outpost",
+			"value": 1,
+			"reward": {
+				"wood": 40
+			}
+		}
+	]
+}

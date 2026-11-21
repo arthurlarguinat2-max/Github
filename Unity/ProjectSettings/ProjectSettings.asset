@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 28
+  productGUID: 71af10eb25224afbb4568d7579fc796e
+  companyName: MiniPlanete
+  productName: Mini Planète Unity
+  defaultScreenOrientation: 0
+  bundleVersion: 0.1.0
+  applicationIdentifier:
+    iPhone: com.miniplanete.unitypreview
+  buildNumber:
+    iPhone: 1
+  overrideDefaultApplicationIdentifier: 1
+  iOSTargetOSVersionString: 15.0
+  scriptingBackend:
+    iPhone: 1
+  activeInputHandler: 0

@@ -1,0 +1,78 @@
+{
+	"_comment": "Jobs villagers are trained for at the town hall. cost/days = price and time of one training.",
+	"professions": {
+		"water_carrier": {
+			"name_key": "PROF_WATER",
+			"icon": "water",
+			"cost": {
+				"food": 4
+			},
+			"days": 0.2
+		},
+		"gatherer": {
+			"name_key": "PROF_GATHERER",
+			"icon": "gatherer",
+			"cost": {
+				"food": 4
+			},
+			"days": 0.2
+		},
+		"woodcutter": {
+			"name_key": "PROF_WOODCUTTER",
+			"icon": "woodcutter",
+			"cost": {
+				"food": 5
+			},
+			"days": 0.25
+		},
+		"stonecutter": {
+			"name_key": "PROF_STONECUTTER",
+			"icon": "quarry",
+			"cost": {
+				"food": 6
+			},
+			"days": 0.3
+		},
+		"farmer": {
+			"name_key": "PROF_FARMER",
+			"icon": "field",
+			"cost": {
+				"food": 6
+			},
+			"days": 0.3
+		},
+		"miller": {
+			"name_key": "PROF_MILLER",
+			"icon": "mill",
+			"cost": {
+				"food": 8
+			},
+			"days": 0.4
+		},
+		"baker": {
+			"name_key": "PROF_BAKER",
+			"icon": "bakery",
+			"cost": {
+				"food": 8
+			},
+			"days": 0.4
+		},
+		"artisan": {
+			"name_key": "PROF_ARTISAN",
+			"icon": "workshop",
+			"cost": {
+				"food": 10,
+				"wood": 5
+			},
+			"days": 0.5
+		},
+		"healer": {
+			"name_key": "PROF_HEALER",
+			"icon": "healer",
+			"cost": {
+				"food": 12
+			},
+			"days": 0.6
+		}
+	}
+}
