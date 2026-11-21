@@ -13,6 +13,8 @@ signal ticked
 var config: Dictionary
 var sim: Simulation
 var stepper: FixedStepper
+## The start screen is shown once per app launch (not after a scene reload).
+var start_menu_shown := false
 ## Days simulated while the app was closed; the UI shows then clears it.
 var pending_offline_days := 0
 var _autosave_timer := 0.0
@@ -31,6 +33,9 @@ func _ready() -> void:
 	config["start"] = buildings_file.get("start", {})
 	config["building_categories"] = buildings_file.get("categories", [])
 	config["customization"] = Config.load_json("res://data/customization.json")
+	config["objectives"] = Config.load_json("res://data/objectives.json").get("objectives", [])
+	config["events"] = Config.load_json("res://data/events.json").get("events", [])
+	config["tutorial"] = Config.load_json("res://data/tutorial.json")
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()
 
@@ -63,16 +68,38 @@ func save_game() -> void:
 		push_warning("Save failed: %s" % error_string(err))
 
 
-## Replaces the current planet with a brand new one of the given size,
-## saves it and restarts the scene. The previous planet is lost.
-func new_world(frequency: int) -> void:
+## Replaces the current planet with a brand new one, saves it and restarts
+## the scene. The previous planet is lost.
+## options: frequency, ocean_fraction, hills_threshold, mountain_threshold,
+##          seed (-1 = random), name ("" = generated), palette, village_color.
+func new_world(options: Dictionary) -> void:
 	var world_config := config.duplicate(true)
-	world_config["planet"]["frequency"] = frequency
-	sim = Simulation.new(randi(), world_config)
+	for key in ["frequency", "ocean_fraction", "hills_threshold", "mountain_threshold"]:
+		if options.has(key):
+			world_config["planet"][key] = options[key]
+	var world_seed := int(options.get("seed", -1))
+	if world_seed < 0:
+		world_seed = randi()
+	sim = Simulation.new(world_seed, world_config)
+	if str(options.get("name", "")).strip_edges() != "":
+		sim.custom["planet_name"] = str(options.name).strip_edges()
+	for key in ["palette", "village_color", "rings", "moon"]:
+		if options.has(key):
+			sim.custom[key] = options[key]
 	_saving_enabled = true
 	stepper.reset()
 	save_game()
 	get_tree().reload_current_scene()
+
+
+## Turns any text into a planet seed, so friends can share planets.
+static func seed_from_text(text: String) -> int:
+	var clean := text.strip_edges()
+	if clean == "":
+		return -1
+	if clean.is_valid_int():
+		return absi(clean.to_int())
+	return absi(hash(clean.to_lower()))
 
 
 func new_game(seed_value: int = -1) -> void:

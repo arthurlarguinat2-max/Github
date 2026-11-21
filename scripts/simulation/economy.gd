@@ -35,6 +35,8 @@ var village_center := -1
 ## Village well-being, 0..100.
 var happiness := 60.0
 var health := 80.0
+## Territory radii are multiplied by this on planets with many small cells.
+var territory_scale := 1
 ## Net change per day of each resource, measured during the last update.
 var rates: Dictionary = {}
 
@@ -141,6 +143,8 @@ func can_build(cell: int, id: String) -> String:
 	if planet.buildings[cell] != "":
 		return ERR_OCCUPIED
 	var def: Dictionary = defs[id]
+	if not def.get("buildable", true):
+		return ERR_UNKNOWN
 	if not (planet.terrain[cell] in def.get("terrains", [])):
 		return ERR_TERRAIN
 	if def.has("extracts") and not has_deposit(cell, str(def.extracts)):
@@ -219,6 +223,35 @@ func build(cell: int, id: String) -> bool:
 	for res in cost:
 		stocks[res] = stock(res) - float(cost[res])
 	_place(cell, id)
+	return true
+
+
+## Building this one can be upgraded into ("" if none).
+func upgrade_target(cell: int) -> String:
+	return str(def_of(cell).get("upgrade_to", ""))
+
+
+func upgrade_cost(cell: int) -> Dictionary:
+	return defs.get(upgrade_target(cell), {}).get("upgrade_cost", {})
+
+
+## "" when the building on `cell` can be upgraded now, else the reason key.
+func can_upgrade(cell: int) -> String:
+	var target := upgrade_target(cell)
+	if target == "" or not defs.has(target):
+		return ERR_UNKNOWN
+	if not can_afford(upgrade_cost(cell)):
+		return ERR_COST
+	return ""
+
+
+func upgrade(cell: int) -> bool:
+	if can_upgrade(cell) != "":
+		return false
+	var cost := upgrade_cost(cell)
+	for res in cost:
+		stocks[res] = stock(res) - float(cost[res])
+	_place(cell, upgrade_target(cell))
 	return true
 
 
@@ -443,7 +476,7 @@ func _rebuild_caches() -> void:
 		return pa < pb or (pa == pb and a < b))
 	_territory = {}
 	for cell in _building_cells:
-		_mark_territory(cell, int(def_of(cell).get("territory", 2)))
+		_mark_territory(cell, int(def_of(cell).get("territory", 2)) * territory_scale)
 	_compute_staffing()
 
 

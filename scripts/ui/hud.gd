@@ -12,6 +12,10 @@ signal appearance_changed
 
 const Haptics := preload("res://scripts/platform/haptics.gd")
 const Economy := preload("res://scripts/simulation/economy.gd")
+const UiKit := preload("res://scripts/ui/ui_kit.gd")
+const StartMenu := preload("res://scripts/ui/start_menu.gd")
+const Objectives := preload("res://scripts/simulation/objectives.gd")
+const Events := preload("res://scripts/simulation/events.gd")
 const ICON_DIR := "res://assets/icons/ui/"
 
 const BASE_PADDING := 14.0
@@ -65,6 +69,26 @@ var _last_speed := 1
 var _refresh_timer := 0.0
 var _blocking: Array[Control] = []
 
+# Tutorial, goals, events, start screen.
+var _tutorial_panel: PanelContainer
+var _tutorial_text: Label
+var _tutorial_count: Label
+var _tutorial_next: Button
+var _tutorial_steps: Array = []
+var _tutorial_flags := {}
+var _pulse_tween: Tween
+var _pulsing: Control
+var _goals_button: Button
+var _goals_sheet: PanelContainer
+var _goals_list: VBoxContainer
+var _event_sheet: PanelContainer
+var _event_title: Label
+var _event_text: Label
+var _event_choices: VBoxContainer
+var _upgrade_button: Button
+var _start_menu: Control
+var _settings_tab := "planet"
+
 
 func _ready() -> void:
 	var root := Control.new()
@@ -91,6 +115,8 @@ func _ready() -> void:
 	_toast = _label("", 15, WARN)
 	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_toast)
+	_tutorial_panel = _build_tutorial_panel()
+	column.add_child(_tutorial_panel)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -107,7 +133,11 @@ func _ready() -> void:
 	column.add_child(_settings_sheet)
 	_needs_sheet = _build_needs_sheet()
 	column.add_child(_needs_sheet)
-	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet])
+	_goals_sheet = _build_goals_sheet()
+	column.add_child(_goals_sheet)
+	_event_sheet = _build_event_sheet()
+	column.add_child(_event_sheet)
+	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet, _goals_sheet, _event_sheet])
 
 	_hint = _label(tr("HINT_DRAG"), 13, Color("7c86a8"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -115,11 +145,21 @@ func _ready() -> void:
 	_bottom_bar = _build_bottom_bar()
 	column.add_child(_bottom_bar)
 
-	_blocking.append_array([_bottom_bar, _banner, _build_sheet, _cell_card, _settings_sheet, _needs_sheet, _needs_row])
+	_start_menu = StartMenu.new()
+	root.add_child(_start_menu)
+	_start_menu.tutorial_requested.connect(restart_tutorial)
+	_start_menu.closed.connect(func(): GameState.start_menu_shown = true)
+	_start_menu.visible = not GameState.start_menu_shown
+	_blocking.append_array([_bottom_bar, _banner, _build_sheet, _cell_card, _settings_sheet, _needs_sheet, _needs_row,
+		_tutorial_panel, _goals_sheet, _event_sheet, _start_menu])
 	get_viewport().size_changed.connect(_apply_safe_area)
 	_apply_safe_area()
 	GameState.ticked.connect(_refresh_title)
 	GameState.sim.economy.alert.connect(_on_alert)
+	GameState.sim.objective_completed.connect(_on_objective_completed)
+	GameState.sim.event_started.connect(_show_event)
+	var steps_file: Dictionary = GameState.config.get("tutorial", {})
+	_tutorial_steps = steps_file.get("steps", [])
 	_last_speed = GameState.sim.speed if GameState.sim.speed > 0 else 1
 	_refresh_title()
 	_refresh_chips()
@@ -128,6 +168,9 @@ func _ready() -> void:
 		_show_toast(tr("OFFLINE_WELCOME") % GameState.pending_offline_days)
 		GameState.pending_offline_days = 0
 	_greet_new_version()
+	_refresh_tutorial()
+	if GameState.sim.pending_event != "":
+		_show_event.call_deferred(GameState.sim.pending_event)
 
 
 func _process(delta: float) -> void:
@@ -136,6 +179,9 @@ func _process(delta: float) -> void:
 		return
 	_refresh_timer = 0.0
 	_refresh_chips()
+	_check_tutorial()
+	if _goals_sheet.visible:
+		_update_goals_sheet()
 	if _cell_card.visible:
 		_update_cell_card()
 	if _build_sheet.visible:
@@ -270,10 +316,10 @@ func _show_toast(text: String) -> void:
 func _build_bottom_bar() -> HBoxContainer:
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
-	_pause_button = _icon_button("pause", "", Vector2(58, 58))
+	_pause_button = _icon_button("pause", "", Vector2(52, 58))
 	_pause_button.pressed.connect(_on_pause_pressed)
 	bar.add_child(_pause_button)
-	_speed_button = _icon_button("", "x1", Vector2(58, 58))
+	_speed_button = _icon_button("", "x1", Vector2(52, 58))
 	_speed_button.pressed.connect(_on_speed_pressed)
 	bar.add_child(_speed_button)
 	_build_button = _icon_button("build", tr("BUILD"), Vector2(0, 58))
@@ -282,7 +328,10 @@ func _build_bottom_bar() -> HBoxContainer:
 	_build_button.add_theme_stylebox_override("hover", _box(Color(0.35, 0.56, 0.95, 0.95), 16, 8))
 	_build_button.pressed.connect(_on_build_pressed)
 	bar.add_child(_build_button)
-	_settings_button = _icon_button("settings", "", Vector2(58, 58))
+	_goals_button = _icon_button("goals", "", Vector2(52, 58))
+	_goals_button.pressed.connect(_on_goals_pressed)
+	bar.add_child(_goals_button)
+	_settings_button = _icon_button("settings", "", Vector2(52, 58))
 	_settings_button.pressed.connect(_on_settings_pressed)
 	bar.add_child(_settings_button)
 	return bar
@@ -299,6 +348,7 @@ func _on_speed_pressed() -> void:
 	var index := SPEEDS.find(_last_speed)
 	_last_speed = SPEEDS[(index + 1) % SPEEDS.size()]
 	GameState.sim.set_speed(_last_speed)
+	_tutorial_flags["speed"] = true
 	Haptics.light()
 	_refresh_speed_buttons()
 
@@ -420,7 +470,7 @@ func _open_build_sheet(cell: int) -> void:
 	for cat_id in _category_buttons:
 		_category_buttons[cat_id].set_pressed_no_signal(cat_id == _category)
 	for id in ids:
-		if str(eco.defs[id].get("category", "housing")) != _category:
+		if str(eco.defs[id].get("category", "housing")) != _category or not eco.defs[id].get("buildable", true):
 			continue
 		if cell >= 0 and eco.can_build(cell, id) in [Economy.ERR_TERRAIN, Economy.ERR_DEPOSIT]:
 			continue
@@ -462,6 +512,7 @@ func _on_build_card_pressed(id: String) -> void:
 	if _target_cell >= 0:
 		if eco.build(_target_cell, id):
 			Haptics.medium()
+			GameState.sim.check_objectives()
 			_show_toast(tr("BUILT") % tr(str(eco.defs[id].get("name_key", id))))
 		_close_sheets()
 		close_requested.emit()
@@ -527,6 +578,7 @@ func on_cell_tapped(cell: int) -> void:
 		var reason: String = eco.can_build(cell, id)
 		if reason == "" and eco.build(cell, id):
 			Haptics.medium()
+			GameState.sim.check_objectives()
 			_show_toast(tr("BUILT") % tr(str(eco.defs[id].get("name_key", id))))
 			_end_placement()
 		else:
@@ -534,6 +586,7 @@ func on_cell_tapped(cell: int) -> void:
 		close_requested.emit()
 		return
 	_cell = cell
+	_tutorial_flags["select"] = true
 	_confirm_demolish = false
 	_update_cell_card()
 	_show_sheet(_cell_card)
@@ -561,6 +614,10 @@ func _build_cell_card() -> PanelContainer:
 	_cell_build_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_cell_build_button.pressed.connect(func(): _open_build_sheet(_cell))
 	actions.add_child(_cell_build_button)
+	_upgrade_button = _icon_button("build", "", Vector2(0, 50))
+	_upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_upgrade_button.pressed.connect(_on_upgrade_pressed)
+	actions.add_child(_upgrade_button)
 	_demolish_button = Button.new()
 	_demolish_button.custom_minimum_size = Vector2(0, 50)
 	_demolish_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -599,6 +656,11 @@ func _update_cell_card() -> void:
 	_cell_text.text = "\n".join(lines)
 	_cell_build_button.visible = can_build_here
 	_demolish_button.visible = building_id != "" and _cell != eco.village_center
+	var upgrade_id: String = eco.upgrade_target(_cell) if building_id != "" else ""
+	_upgrade_button.visible = upgrade_id != ""
+	if upgrade_id != "":
+		_upgrade_button.text = tr("UPGRADE") % [tr(str(eco.defs[upgrade_id].get("name_key", upgrade_id))), _cost_text(eco.upgrade_cost(_cell))]
+		_upgrade_button.disabled = eco.can_upgrade(_cell) != ""
 	_demolish_button.text = tr("DEMOLISH_CONFIRM") if _confirm_demolish else tr("DEMOLISH")
 
 
@@ -645,6 +707,14 @@ func _visible_resources(cell: int) -> PackedStringArray:
 	return found
 
 
+func _on_upgrade_pressed() -> void:
+	if GameState.sim.economy.upgrade(_cell):
+		Haptics.medium()
+		_show_toast(tr("UPGRADED"))
+		GameState.sim.check_objectives()
+	_update_cell_card()
+
+
 func _on_demolish_pressed() -> void:
 	if not _confirm_demolish:
 		_confirm_demolish = true
@@ -680,6 +750,7 @@ func _toggle_needs_sheet() -> void:
 		_close_sheets()
 		return
 	_end_placement()
+	_tutorial_flags["needs"] = true
 	_update_needs_sheet()
 	_show_sheet(_needs_sheet)
 	close_requested.emit()
@@ -741,6 +812,7 @@ func _build_settings_sheet() -> PanelContainer:
 
 
 ## Rebuilt each time the sheet opens, so it always shows current values.
+## Three tabs keep it short: Planet, Display, Game.
 func _refresh_settings_sheet() -> void:
 	var box: VBoxContainer = _settings_sheet.find_child("Content", true, false)
 	for child in box.get_children():
@@ -749,106 +821,91 @@ func _refresh_settings_sheet() -> void:
 	var sim = GameState.sim
 	var options: Dictionary = GameState.config.get("customization", {})
 
-	# --- My planet
-	box.add_child(_section(tr("SECTION_PLANET")))
-	var name_row := HBoxContainer.new()
-	name_row.add_theme_constant_override("separation", 8)
-	var name_edit := LineEdit.new()
-	name_edit.text = str(sim.custom.get("planet_name", ""))
-	name_edit.max_length = 18
-	name_edit.placeholder_text = tr("PLANET_NAME")
-	name_edit.custom_minimum_size = Vector2(0, 46)
-	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_edit.text_changed.connect(func(text: String):
-		if text.strip_edges() != "":
-			sim.custom["planet_name"] = text.strip_edges()
-			_refresh_title())
-	name_row.add_child(name_edit)
-	var dice := _icon_button("dice", "", Vector2(46, 46))
-	dice.pressed.connect(func():
-		var new_name: String = sim.generate_name(randi(), sim.name_syllables)
-		sim.custom["planet_name"] = new_name
-		name_edit.text = new_name
-		_refresh_title()
-		Haptics.light())
-	name_row.add_child(dice)
-	box.add_child(name_row)
+	var tabs := {"planet": {"name_key": "SECTION_PLANET", "order": 0}, "display": {"name_key": "SECTION_DISPLAY", "order": 1}, "game": {"name_key": "SECTION_GAME", "order": 2}}
+	box.add_child(UiKit.choice_grid(tabs, _settings_tab, func(id: String):
+		_settings_tab = id
+		_refresh_settings_sheet.call_deferred()))
 
-	box.add_child(_caption(tr("PALETTE")))
-	box.add_child(_choice_grid(options.get("palettes", {}), str(sim.custom.get("palette", "classic")), func(id: String):
-		sim.custom["palette"] = id
-		appearance_changed.emit()))
-
-	box.add_child(_caption(tr("VILLAGE_COLOR")))
-	var swatches := HBoxContainer.new()
-	swatches.add_theme_constant_override("separation", 8)
-	var group := ButtonGroup.new()
-	for hex in options.get("village_colors", []):
-		var swatch := Button.new()
-		swatch.toggle_mode = true
-		swatch.button_group = group
-		swatch.custom_minimum_size = Vector2(44, 44)
-		swatch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var color := Color(str(hex))
-		swatch.add_theme_stylebox_override("normal", _box(color, 22, 0))
-		swatch.add_theme_stylebox_override("hover", _box(color.lightened(0.1), 22, 0))
-		var chosen := _box(color, 22, 0)
-		chosen.set_border_width_all(4)
-		chosen.border_color = Color.WHITE
-		swatch.add_theme_stylebox_override("pressed", chosen)
-		swatch.add_theme_stylebox_override("hover_pressed", chosen)
-		swatch.button_pressed = str(hex) == str(sim.custom.get("village_color", ""))
-		swatch.pressed.connect(func():
-			sim.custom["village_color"] = str(hex)
-			appearance_changed.emit()
-			Haptics.light())
-		swatches.add_child(swatch)
-	box.add_child(swatches)
-
-	# --- Display
-	box.add_child(_section(tr("SECTION_DISPLAY")))
-	box.add_child(_caption(tr("SKY")))
-	box.add_child(_choice_grid(options.get("skies", {}), str(UserSettings.get_value("sky")), func(id: String):
-		UserSettings.set_value("sky", id)
-		appearance_changed.emit()))
-	box.add_child(_toggle(tr("CLOUDS"), "clouds", true))
-	box.add_child(_toggle(tr("OUTLINES"), "outlines", true))
-
-	# --- Game
-	box.add_child(_section(tr("SECTION_GAME")))
-	box.add_child(_toggle(tr("HAPTICS"), "haptics", false))
-	box.add_child(_caption(tr("LANGUAGE")))
-	var current_lang := str(UserSettings.get_value("language"))
-	if current_lang == "":
-		current_lang = TranslationServer.get_locale().substr(0, 2)
-	box.add_child(_choice_grid({"fr": {"name_key": "LANG_FR", "order": 0}, "en": {"name_key": "LANG_EN", "order": 1}}, current_lang, func(id: String):
-		UserSettings.set_value("language", id)
-		GameState.save_game()
-		get_tree().reload_current_scene()))
-
-	# --- New planet
-	box.add_child(_section(tr("SECTION_NEW_PLANET")))
-	box.add_child(_caption(tr("NEW_PLANET_INFO")))
-	var sizes := {}
-	for size in options.get("planet_sizes", []):
-		sizes[str(size.frequency)] = {"name_key": size.name_key, "order": int(size.frequency), "cells": 10 * int(size.frequency) * int(size.frequency) + 2}
-	_new_world_size = sim.planet.grid.frequency
-	box.add_child(_choice_grid(sizes, str(_new_world_size), func(id: String):
-		_new_world_size = int(id)
-		_confirm_new_world = false))
-	var create := Button.new()
-	create.custom_minimum_size = Vector2(0, 50)
-	create.text = tr("NEW_PLANET")
-	create.pressed.connect(func():
-		if not _confirm_new_world:
-			_confirm_new_world = true
-			create.text = tr("NEW_PLANET_CONFIRM")
-			Haptics.medium()
-			return
-		GameState.new_world(_new_world_size))
-	box.add_child(create)
-
-	box.add_child(_label(tr("VERSION") % ProjectSettings.get_setting("application/config/version", "?"), 11, Color("5a6380")))
+	match _settings_tab:
+		"planet":
+			box.add_child(_caption(tr("PLANET_NAME")))
+			var name_row := HBoxContainer.new()
+			name_row.add_theme_constant_override("separation", 8)
+			var name_edit := LineEdit.new()
+			name_edit.text = str(sim.custom.get("planet_name", ""))
+			name_edit.max_length = 18
+			name_edit.custom_minimum_size = Vector2(0, 46)
+			name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_edit.text_changed.connect(func(text: String):
+				if text.strip_edges() != "":
+					sim.custom["planet_name"] = text.strip_edges()
+					_refresh_title())
+			name_row.add_child(name_edit)
+			var dice := _icon_button("dice", "", Vector2(46, 46))
+			dice.pressed.connect(func():
+				var new_name: String = sim.generate_name(randi(), sim.name_syllables)
+				sim.custom["planet_name"] = new_name
+				name_edit.text = new_name
+				_refresh_title()
+				Haptics.light())
+			name_row.add_child(dice)
+			box.add_child(name_row)
+			box.add_child(_caption(tr("PALETTE")))
+			box.add_child(UiKit.choice_grid(options.get("palettes", {}), str(sim.custom.get("palette", "classic")), func(id: String):
+				sim.custom["palette"] = id
+				appearance_changed.emit()
+				Haptics.light()))
+			box.add_child(_caption(tr("VILLAGE_COLOR")))
+			box.add_child(UiKit.swatches(options.get("village_colors", []), str(sim.custom.get("village_color", "")), func(hex: String):
+				sim.custom["village_color"] = hex
+				appearance_changed.emit()
+				Haptics.light()))
+			box.add_child(_caption(tr("DECORATIONS")))
+			for key in ["rings", "moon"]:
+				var toggle := CheckButton.new()
+				toggle.text = tr("DECOR_" + key.to_upper())
+				toggle.icon = _texture(key)
+				toggle.add_theme_constant_override("icon_max_width", 28)
+				toggle.custom_minimum_size = Vector2(0, 44)
+				toggle.button_pressed = bool(sim.custom.get(key, false))
+				toggle.toggled.connect(func(on: bool):
+					sim.custom[key] = on
+					appearance_changed.emit())
+				box.add_child(toggle)
+		"display":
+			box.add_child(_caption(tr("SKY")))
+			box.add_child(UiKit.choice_grid(options.get("skies", {}), str(UserSettings.get_value("sky")), func(id: String):
+				UserSettings.set_value("sky", id)
+				appearance_changed.emit()
+				Haptics.light()))
+			box.add_child(_toggle(tr("CLOUDS"), "clouds", true))
+			box.add_child(_toggle(tr("OUTLINES"), "outlines", true))
+		"game":
+			box.add_child(_toggle(tr("HAPTICS"), "haptics", false))
+			box.add_child(_caption(tr("LANGUAGE")))
+			var current_lang := str(UserSettings.get_value("language"))
+			if current_lang == "":
+				current_lang = TranslationServer.get_locale().substr(0, 2)
+			box.add_child(UiKit.choice_grid({"fr": {"name_key": "LANG_FR", "order": 0}, "en": {"name_key": "LANG_EN", "order": 1}}, current_lang, func(id: String):
+				UserSettings.set_value("language", id)
+				GameState.save_game()
+				get_tree().reload_current_scene()))
+			var tuto := _icon_button("help", tr("START_TUTORIAL"), Vector2(0, 50))
+			tuto.pressed.connect(func():
+				_close_sheets()
+				restart_tutorial())
+			box.add_child(tuto)
+			var new_planet := _icon_button("build", tr("START_NEW"), Vector2(0, 50))
+			new_planet.pressed.connect(func():
+				_close_sheets()
+				_start_menu.open("new"))
+			box.add_child(new_planet)
+			var home := _icon_button("play", tr("START_SCREEN"), Vector2(0, 50))
+			home.pressed.connect(func():
+				_close_sheets()
+				_start_menu.open("main"))
+			box.add_child(home)
+			box.add_child(_label(tr("VERSION") % ProjectSettings.get_setting("application/config/version", "?"), 11, Color("5a6380")))
 
 
 func _section(text: String) -> Label:
@@ -901,6 +958,299 @@ func _toggle(text: String, key: String, affects_view: bool) -> CheckButton:
 		if affects_view:
 			appearance_changed.emit())
 	return toggle
+
+
+# =============================================================================
+# Tutorial
+# =============================================================================
+
+func _build_tutorial_panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _box(Color(0.16, 0.2, 0.36, 0.95), 16, 12))
+	panel.visible = false
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+	row.add_child(_icon("help", 34))
+	var texts := VBoxContainer.new()
+	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(texts)
+	_tutorial_count = _label("", 11, MUTED)
+	_tutorial_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	texts.add_child(_tutorial_count)
+	_tutorial_text = _label("", 15, TEXT)
+	_tutorial_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_tutorial_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	texts.add_child(_tutorial_text)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 8)
+	texts.add_child(buttons)
+	var skip := Button.new()
+	skip.text = tr("TUTO_SKIP")
+	skip.custom_minimum_size = Vector2(0, 38)
+	skip.pressed.connect(func():
+		GameState.sim.tutorial_step = -1
+		_refresh_tutorial())
+	buttons.add_child(skip)
+	_tutorial_next = Button.new()
+	_tutorial_next.text = tr("TUTO_NEXT")
+	_tutorial_next.custom_minimum_size = Vector2(0, 38)
+	_tutorial_next.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tutorial_next.add_theme_stylebox_override("normal", _box(Color(0.3, 0.5, 0.9, 0.95), 12, 6))
+	_tutorial_next.pressed.connect(_advance_tutorial)
+	buttons.add_child(_tutorial_next)
+	return panel
+
+
+func restart_tutorial() -> void:
+	GameState.sim.tutorial_step = 0
+	_tutorial_flags.clear()
+	_refresh_tutorial()
+
+
+func on_planet_rotated() -> void:
+	_tutorial_flags["rotate"] = true
+
+
+func on_planet_zoomed() -> void:
+	_tutorial_flags["zoom"] = true
+
+
+func _current_step() -> Dictionary:
+	var index: int = GameState.sim.tutorial_step
+	if index < 0 or index >= _tutorial_steps.size():
+		return {}
+	return _tutorial_steps[index]
+
+
+func _refresh_tutorial() -> void:
+	var step := _current_step()
+	_stop_pulse()
+	if step.is_empty():
+		_tutorial_panel.visible = false
+		if GameState.sim.tutorial_step >= _tutorial_steps.size():
+			GameState.sim.tutorial_step = -1
+		return
+	_tutorial_panel.visible = true
+	_tutorial_count.text = tr("TUTO_STEP") % [GameState.sim.tutorial_step + 1, _tutorial_steps.size()]
+	var text := tr(str(step.get("text_key", "")))
+	if text.contains("%s"):
+		text = text % GameState.sim.custom.get("planet_name", "")
+	_tutorial_text.text = text
+	_tutorial_next.visible = str(step.get("condition", "")) == "next"
+	match str(step.get("highlight", "")):
+		"build":
+			_start_pulse(_build_button)
+		"needs":
+			_start_pulse(_needs_row)
+		"speed":
+			_start_pulse(_speed_button)
+		"goals":
+			_start_pulse(_goals_button)
+
+
+func _advance_tutorial() -> void:
+	GameState.sim.tutorial_step += 1
+	_tutorial_flags.clear()
+	Haptics.light()
+	_refresh_tutorial()
+
+
+## Moves to the next step as soon as its condition is met.
+func _check_tutorial() -> void:
+	var step := _current_step()
+	if step.is_empty():
+		return
+	var condition := str(step.get("condition", "next"))
+	var done := false
+	if condition.begins_with("building:"):
+		var parts := condition.split(":")
+		done = GameState.sim.planet.buildings.count(parts[1]) >= int(parts[2])
+	elif condition != "next":
+		done = _tutorial_flags.get(condition, false)
+	if done:
+		_advance_tutorial()
+
+
+func _start_pulse(control: Control) -> void:
+	_pulsing = control
+	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.tween_property(control, "modulate", Color(1.5, 1.4, 0.7), 0.5)
+	_pulse_tween.tween_property(control, "modulate", Color.WHITE, 0.5)
+
+
+func _stop_pulse() -> void:
+	if _pulse_tween:
+		_pulse_tween.kill()
+		_pulse_tween = null
+	if _pulsing:
+		_pulsing.modulate = Color.WHITE
+		_pulsing = null
+
+
+# =============================================================================
+# Goals
+# =============================================================================
+
+func _on_goals_pressed() -> void:
+	_tutorial_flags["goals"] = true
+	if _goals_sheet.visible:
+		_close_sheets()
+		return
+	_end_placement()
+	_update_goals_sheet()
+	_show_sheet(_goals_sheet)
+	close_requested.emit()
+	Haptics.light()
+
+
+func _build_goals_sheet() -> PanelContainer:
+	var parts := _sheet(_label(tr("GOALS_TITLE"), 20, TEXT))
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 360)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	parts[1].add_child(scroll)
+	_goals_list = VBoxContainer.new()
+	_goals_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_goals_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(_goals_list)
+	return parts[0]
+
+
+func _update_goals_sheet() -> void:
+	for child in _goals_list.get_children():
+		_goals_list.remove_child(child)
+		child.queue_free()
+	var sim = GameState.sim
+	var shown := 0
+	var done_count := 0
+	for obj in sim.objective_defs:
+		var done: bool = str(obj.id) in sim.completed_objectives
+		if done:
+			done_count += 1
+	_goals_list.add_child(_caption(tr("GOALS_PROGRESS") % [done_count, sim.objective_defs.size()]))
+	# Unfinished goals first (the next 5), then the completed ones.
+	for pass_done in [false, true]:
+		for obj in sim.objective_defs:
+			var done: bool = str(obj.id) in sim.completed_objectives
+			if done != pass_done or (not done and shown >= 5):
+				continue
+			if not done:
+				shown += 1
+			_goals_list.add_child(_goal_row(obj, done))
+
+
+func _goal_row(obj: Dictionary, done: bool) -> PanelContainer:
+	var sim = GameState.sim
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _box(Color(0.14, 0.24, 0.18, 0.9) if done else Color(0.14, 0.16, 0.25, 0.9), 12, 10))
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+	var title := tr(str(obj.title_key))
+	if title.contains("%d"):
+		title = title % int(obj.value)
+	elif title.contains("%s"):
+		title = title % str(obj.value)
+	var head := _label(("OK  " if done else "") + title, 15, GOOD if done else TEXT)
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(head)
+	if not done:
+		var p := Objectives.progress(sim, obj)
+		var bar := ProgressBar.new()
+		bar.max_value = float(p[1])
+		bar.value = float(p[0])
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 10)
+		box.add_child(bar)
+		box.add_child(_caption(tr("GOAL_STATUS") % [floori(float(p[0])), int(p[1]), _cost_text(obj.get("reward", {}))]))
+	return panel
+
+
+func _on_objective_completed(id: String) -> void:
+	for obj in GameState.sim.objective_defs:
+		if str(obj.id) == id:
+			var title := tr(str(obj.title_key))
+			if title.contains("%d"):
+				title = title % int(obj.value)
+			_show_toast(tr("GOAL_DONE") % [title, _cost_text(obj.get("reward", {}))])
+			Haptics.medium()
+
+
+# =============================================================================
+# Events
+# =============================================================================
+
+func _build_event_sheet() -> PanelContainer:
+	_event_title = _label("", 20, TEXT)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _box(Color(0.2, 0.15, 0.1, 0.97), 20, 14))
+	panel.visible = false
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	head.add_child(_icon("event", 36))
+	_event_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_event_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_event_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.add_child(_event_title)
+	box.add_child(head)
+	_event_text = _label("", 15, Color("eadfcf"))
+	_event_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_event_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_event_text)
+	_event_choices = VBoxContainer.new()
+	_event_choices.add_theme_constant_override("separation", 8)
+	box.add_child(_event_choices)
+	return panel
+
+
+func _show_event(id: String) -> void:
+	var ev := Events.find(GameState.sim.event_defs, id)
+	if ev.is_empty():
+		return
+	_end_placement()
+	_event_title.text = tr(str(ev.title_key))
+	_event_text.text = tr(str(ev.text_key))
+	for child in _event_choices.get_children():
+		_event_choices.remove_child(child)
+		child.queue_free()
+	var choices: Array = ev.get("choices", [])
+	for i in choices.size():
+		var choice: Dictionary = choices[i]
+		var b := Button.new()
+		b.text = "%s\n%s" % [tr(str(choice.label_key)), _effects_text(choice.get("effects", {}))]
+		b.custom_minimum_size = Vector2(0, 58)
+		b.pressed.connect(func():
+			GameState.sim.resolve_event(i)
+			Haptics.light()
+			_close_sheets())
+		_event_choices.add_child(b)
+	_show_sheet(_event_sheet)
+	close_requested.emit()
+	Haptics.medium()
+
+
+func _effects_text(effects: Dictionary) -> String:
+	if effects.is_empty():
+		return tr("EV_NOTHING")
+	var parts := PackedStringArray()
+	for key in effects:
+		var value := float(effects[key])
+		var label := ""
+		match str(key):
+			"population":
+				label = tr("EFFECT_PEOPLE")
+			"happiness":
+				label = tr("HAPPINESS").to_lower()
+			"health":
+				label = tr("HEALTH").to_lower()
+			_:
+				label = tr(_res_key(str(key))).to_lower()
+		parts.append("%s%d %s" % ["+" if value > 0.0 else "", int(value), label])
+	return " · ".join(parts)
 
 
 # =============================================================================

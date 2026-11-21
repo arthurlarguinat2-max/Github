@@ -1,22 +1,240 @@
 {
 	"_comment": "Player customization options. Palettes override terrain colors (hex sRGB); missing terrains keep their default color from terrains.json.",
 	"planet_sizes": [
-		{"id": "small",  "name_key": "SIZE_SMALL",  "frequency": 6},
-		{"id": "medium", "name_key": "SIZE_MEDIUM", "frequency": 8},
-		{"id": "large",  "name_key": "SIZE_LARGE",  "frequency": 10}
+		{
+			"id": "small",
+			"name_key": "SIZE_SMALL",
+			"frequency": 8
+		},
+		{
+			"id": "medium",
+			"name_key": "SIZE_MEDIUM",
+			"frequency": 12
+		},
+		{
+			"id": "large",
+			"name_key": "SIZE_LARGE",
+			"frequency": 16
+		},
+		{
+			"id": "huge",
+			"name_key": "SIZE_HUGE",
+			"frequency": 20
+		}
 	],
 	"palettes": {
-		"classic": {"name_key": "PALETTE_CLASSIC", "order": 0, "colors": {}},
-		"autumn":  {"name_key": "PALETTE_AUTUMN",  "order": 1, "colors": {"plains": "c9b458", "forest": "c46b2e", "hills": "a8834f", "beach": "ead9a6", "desert": "d9a066"}},
-		"pastel":  {"name_key": "PALETTE_PASTEL",  "order": 2, "colors": {"ocean": "6c9fd8", "shallow": "8ec5ea", "plains": "a8dba0", "forest": "7cbf8e", "desert": "f0d9a8", "hills": "c3cf9a", "mountain": "b0a7b8", "beach": "f6e7c1"}},
-		"mars":    {"name_key": "PALETTE_MARS",    "order": 3, "colors": {"ocean": "3b4f7a", "shallow": "5672a1", "plains": "c8754a", "forest": "8f4a3a", "desert": "e0a066", "hills": "b06a45", "mountain": "7a4b3e", "beach": "e8c29a", "ice": "f2e6e0"}},
-		"frost":   {"name_key": "PALETTE_FROST",   "order": 4, "colors": {"ocean": "244a7a", "shallow": "3a6fa8", "plains": "b9d6c9", "forest": "5f8f86", "desert": "d8d2c4", "hills": "9fb3b0", "beach": "dfe6e8"}}
+		"classic": {
+			"name_key": "PALETTE_CLASSIC",
+			"order": 0,
+			"colors": {}
+		},
+		"autumn": {
+			"name_key": "PALETTE_AUTUMN",
+			"order": 1,
+			"colors": {
+				"plains": "c9b458",
+				"forest": "c46b2e",
+				"hills": "a8834f",
+				"beach": "ead9a6",
+				"desert": "d9a066"
+			}
+		},
+		"pastel": {
+			"name_key": "PALETTE_PASTEL",
+			"order": 2,
+			"colors": {
+				"ocean": "6c9fd8",
+				"shallow": "8ec5ea",
+				"plains": "a8dba0",
+				"forest": "7cbf8e",
+				"desert": "f0d9a8",
+				"hills": "c3cf9a",
+				"mountain": "b0a7b8",
+				"beach": "f6e7c1"
+			}
+		},
+		"mars": {
+			"name_key": "PALETTE_MARS",
+			"order": 3,
+			"colors": {
+				"ocean": "3b4f7a",
+				"shallow": "5672a1",
+				"plains": "c8754a",
+				"forest": "8f4a3a",
+				"desert": "e0a066",
+				"hills": "b06a45",
+				"mountain": "7a4b3e",
+				"beach": "e8c29a",
+				"ice": "f2e6e0"
+			}
+		},
+		"frost": {
+			"name_key": "PALETTE_FROST",
+			"order": 4,
+			"colors": {
+				"ocean": "244a7a",
+				"shallow": "3a6fa8",
+				"plains": "b9d6c9",
+				"forest": "5f8f86",
+				"desert": "d8d2c4",
+				"hills": "9fb3b0",
+				"beach": "dfe6e8"
+			}
+		},
+		"tropical": {
+			"name_key": "PALETTE_TROPICAL",
+			"order": 5,
+			"colors": {
+				"ocean": "1f78b4",
+				"shallow": "3fc1c9",
+				"beach": "f7e3a1",
+				"plains": "5fd068",
+				"forest": "1f9e5a",
+				"hills": "8cc56a",
+				"desert": "f2c46d"
+			}
+		},
+		"golden": {
+			"name_key": "PALETTE_GOLDEN",
+			"order": 6,
+			"colors": {
+				"plains": "d8c06a",
+				"forest": "a8923a",
+				"hills": "c9a75a",
+				"desert": "f0cf7a",
+				"beach": "f3e2b0",
+				"mountain": "9c8466"
+			}
+		},
+		"night": {
+			"name_key": "PALETTE_NIGHT",
+			"order": 7,
+			"colors": {
+				"ocean": "141a40",
+				"shallow": "243080",
+				"beach": "7d6fb3",
+				"plains": "3f5fb8",
+				"forest": "2a3f8a",
+				"hills": "5b5fc2",
+				"desert": "9c7fd0",
+				"mountain": "6a5a9a",
+				"ice": "d8e4ff"
+			}
+		}
 	},
-	"village_colors": ["d9b45c", "c0503a", "3a7bc0", "5aa35a", "8a5ac0", "e8e8e8"],
+	"village_colors": [
+		"d9b45c",
+		"c0503a",
+		"e07b39",
+		"3a7bc0",
+		"2fa3a3",
+		"5aa35a",
+		"8a5ac0",
+		"d0568f",
+		"e8e8e8",
+		"4a4a4a"
+	],
 	"skies": {
-		"stars": {"name_key": "SKY_STARS", "order": 0, "color": "080a14", "stars": 1.0},
-		"dusk":  {"name_key": "SKY_DUSK",  "order": 1, "color": "2a1838", "stars": 0.4},
-		"deep":  {"name_key": "SKY_DEEP",  "order": 2, "color": "0b1d33", "stars": 0.0}
+		"stars": {
+			"name_key": "SKY_STARS",
+			"order": 0,
+			"color": "080a14",
+			"stars": 1.0
+		},
+		"dusk": {
+			"name_key": "SKY_DUSK",
+			"order": 1,
+			"color": "2a1838",
+			"stars": 0.4
+		},
+		"deep": {
+			"name_key": "SKY_DEEP",
+			"order": 2,
+			"color": "0b1d33",
+			"stars": 0.0
+		},
+		"aurora": {
+			"name_key": "SKY_AURORA",
+			"order": 3,
+			"color": "0a2226",
+			"stars": 0.8
+		},
+		"sunset": {
+			"name_key": "SKY_SUNSET",
+			"order": 4,
+			"color": "3a1c2c",
+			"stars": 0.25
+		}
 	},
-	"name_syllables": ["ka", "lo", "mi", "ra", "ze", "vu", "no", "ta", "li", "so", "bel", "dra", "or", "in", "ul", "ma", "pe", "ri", "go", "ny"]
+	"name_syllables": [
+		"ka",
+		"lo",
+		"mi",
+		"ra",
+		"ze",
+		"vu",
+		"no",
+		"ta",
+		"li",
+		"so",
+		"bel",
+		"dra",
+		"or",
+		"in",
+		"ul",
+		"ma",
+		"pe",
+		"ri",
+		"go",
+		"ny"
+	],
+	"default_size": 12,
+	"water_levels": {
+		"islands": {
+			"name_key": "WATER_ISLANDS",
+			"order": 0,
+			"ocean_fraction": 0.7
+		},
+		"balanced": {
+			"name_key": "WATER_BALANCED",
+			"order": 1,
+			"ocean_fraction": 0.55
+		},
+		"continents": {
+			"name_key": "WATER_CONTINENTS",
+			"order": 2,
+			"ocean_fraction": 0.38
+		}
+	},
+	"reliefs": {
+		"flat": {
+			"name_key": "RELIEF_FLAT",
+			"order": 0,
+			"hills_threshold": 0.62,
+			"mountain_threshold": 0.86
+		},
+		"normal": {
+			"name_key": "RELIEF_NORMAL",
+			"order": 1,
+			"hills_threshold": 0.48,
+			"mountain_threshold": 0.7
+		},
+		"mountains": {
+			"name_key": "RELIEF_MOUNTAINS",
+			"order": 2,
+			"hills_threshold": 0.36,
+			"mountain_threshold": 0.56
+		}
+	},
+	"decorations": {
+		"_comment": "Cosmetic extras around the planet (per planet).",
+		"rings": {
+			"name_key": "DECOR_RINGS",
+			"default": false
+		},
+		"moon": {
+			"name_key": "DECOR_MOON",
+			"default": true
+		}
+	}
 }

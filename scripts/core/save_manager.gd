@@ -26,7 +26,7 @@ static func save_to_file(game: Dictionary, path: String = DEFAULT_PATH) -> Error
 	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(envelope, "\t"))
+	file.store_string(JSON.stringify(envelope))  # Compact: big planets have thousands of cells.
 	file.close()
 	if FileAccess.file_exists(path):
 		DirAccess.copy_absolute(path, path + ".bak")

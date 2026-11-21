@@ -17,9 +17,9 @@ func _config() -> Dictionary:
 	return config
 
 
-func test_default_planet_has_642_cells() -> void:
+func test_default_planet_has_1442_cells() -> void:
 	var sim := Simulation.new(3, _config())
-	assert_eq(sim.planet.cell_count(), 642)
+	assert_eq(sim.planet.cell_count(), 1442)
 
 
 func test_planet_sizes_build_the_right_grid() -> void:

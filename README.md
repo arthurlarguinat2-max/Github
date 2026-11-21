@@ -59,5 +59,5 @@ fastlane/          Signature + build Xcode + envoi TestFlight
 | 4 | Science, arbre technologique, Antiquité, Médiéval | |
 | 5 | Environnement : pollution, climat, eau, événements | |
 | 6 | Industriel, Moderne, Futuriste, énergie | |
-| 7 | Finition : audio, haptique, tutoriel, succès, menus | |
+| 7 | Finition : audio, haptique, tutoriel ✅, succès ✅, menus ✅ | |
 | 8 | Publication App Store | |

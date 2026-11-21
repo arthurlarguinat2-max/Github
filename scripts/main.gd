@@ -16,6 +16,8 @@ var hud: Hud
 var _env: Environment
 var _stars: MultiMeshInstance3D
 var _star_material: StandardMaterial3D
+var _rings: MeshInstance3D
+var _moon_pivot: Node3D
 
 
 func _ready() -> void:
@@ -23,6 +25,7 @@ func _ready() -> void:
 	_build_stars()
 	var cam := _build_camera()
 	_build_sun()
+	_build_decorations()
 	hud = Hud.new()
 	add_child(hud)
 
@@ -41,14 +44,17 @@ func _ready() -> void:
 	hud.placement_started.connect(planet.set_placement)
 	hud.placement_ended.connect(planet.clear_placement)
 	hud.appearance_changed.connect(apply_appearance.bind(true))
+	planet.rotated.connect(hud.on_planet_rotated)
+	planet.zoomed.connect(hud.on_planet_zoomed)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Day/night: the sun orbits the planet following the simulated time of day,
 	# smoothed by the stepper's interpolation alpha.
 	var sim = GameState.sim
 	var t: float = sim.time_of_day() + GameState.stepper.interpolation_alpha() / float(sim.ticks_per_day)
 	sun_pivot.rotation.y = t * TAU
+	_moon_pivot.rotate_y(delta * 0.05)
 
 
 ## Applies the planet customization (palette, village color) and the device
@@ -69,6 +75,8 @@ func apply_appearance(rebuild: bool) -> void:
 	var star_strength := float(sky.get("stars", 1.0))
 	_stars.visible = star_strength > 0.0
 	_star_material.albedo_color = Color(1, 1, 1, star_strength)
+	_rings.visible = bool(custom.get("rings", false))
+	_moon_pivot.visible = bool(custom.get("moon", true))
 
 
 func _build_environment() -> void:
@@ -115,6 +123,45 @@ func _build_stars() -> void:
 	_stars.multimesh = mm
 	_stars.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_stars)
+
+
+## Optional planetary rings and a small moon (cosmetic, chosen in Settings).
+func _build_decorations() -> void:
+	var torus := TorusMesh.new()
+	torus.inner_radius = 1.45
+	torus.outer_radius = 1.9
+	torus.rings = 48
+	torus.ring_segments = 3
+	var ring_mat := StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(0.86, 0.8, 0.66, 0.55)
+	ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ring_mat.roughness = 1.0
+	torus.material = ring_mat
+	_rings = MeshInstance3D.new()
+	_rings.mesh = torus
+	_rings.scale = Vector3(1.0, 0.03, 1.0)
+	_rings.rotation = Vector3(deg_to_rad(18), 0, deg_to_rad(-8))
+	_rings.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_rings)
+
+	_moon_pivot = Node3D.new()
+	_moon_pivot.rotation = Vector3(deg_to_rad(12), 0, 0)
+	add_child(_moon_pivot)
+	var moon_mesh := SphereMesh.new()
+	moon_mesh.radius = 0.16
+	moon_mesh.height = 0.32
+	moon_mesh.radial_segments = 10
+	moon_mesh.rings = 6
+	var moon_mat := StandardMaterial3D.new()
+	moon_mat.albedo_color = Color(0.78, 0.78, 0.8)
+	moon_mat.roughness = 1.0
+	moon_mesh.material = moon_mat
+	var moon := MeshInstance3D.new()
+	moon.mesh = moon_mesh
+	moon.position = Vector3(2.6, 0.5, -1.2)
+	moon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_moon_pivot.add_child(moon)
 
 
 func _build_camera() -> Camera3D:

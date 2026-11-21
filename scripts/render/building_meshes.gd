@@ -38,6 +38,11 @@ static func create(id: String) -> Node3D:
 			_add(root, _cylinder(0.022, 0.024, 0.022, 7), "wall", Vector3(0, 0.011, 0))
 			_add(root, _cylinder(0.0, 0.033, 0.028, 7), "accent", Vector3(0, 0.036, 0))
 			_add(root, _box(Vector3(0.008, 0.01, 0.003)), "window", Vector3(0, 0.01, 0.022))
+		"longhouse":
+			_add(root, _box(Vector3(0.05, 0.022, 0.026)), "wall", Vector3(0, 0.011, 0))
+			_add(root, _prism(Vector3(0.056, 0.022, 0.032)), "accent", Vector3(0, 0.033, 0), Vector3(0, PI / 2, 0))
+			_add(root, _box(Vector3(0.008, 0.01, 0.003)), "window", Vector3(-0.014, 0.01, 0.0135))
+			_add(root, _box(Vector3(0.008, 0.01, 0.003)), "window", Vector3(0.014, 0.01, 0.0135))
 		"campfire":
 			for k in 6:
 				var a := TAU * k / 6.0

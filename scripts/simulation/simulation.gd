@@ -9,6 +9,11 @@ signal day_passed(day: int)
 
 const PlanetState := preload("res://scripts/simulation/planet_state.gd")
 const Economy := preload("res://scripts/simulation/economy.gd")
+const Objectives := preload("res://scripts/simulation/objectives.gd")
+const Events := preload("res://scripts/simulation/events.gd")
+
+signal objective_completed(id: String)
+signal event_started(id: String)
 const DEFAULT_TICKS_PER_DAY := 600
 
 var world_seed: int = 0
@@ -29,7 +34,17 @@ var building_defs: Dictionary = {}
 var start_settings: Dictionary = {}
 var economy_settings: Dictionary = {}
 ## Player customization of this planet (name, colors).
-var custom := {"planet_name": "", "palette": "classic", "village_color": "d9b45c"}
+var custom := {"planet_name": "", "palette": "classic", "village_color": "d9b45c", "rings": false, "moon": true}
+## Goals reached so far (ids from data/objectives.json).
+var completed_objectives: Array = []
+## Random event waiting for the player's choice ("" = none).
+var pending_event := ""
+## Tutorial progress: index of the current step, -1 when finished/skipped.
+var tutorial_step := 0
+var objective_defs: Array = []
+var event_defs: Array = []
+var event_settings: Dictionary = {}
+var event_rng := RandomNumberGenerator.new()
 var name_syllables: Array = []
 
 
@@ -44,9 +59,14 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	start_settings = config.get("start", {})
 	economy_settings = config.get("economy", {})
 	name_syllables = config.get("customization", {}).get("name_syllables", [])
+	objective_defs = config.get("objectives", [])
+	event_defs = config.get("events", [])
+	event_settings = config.get("event_settings", {})
+	event_rng.seed = p_seed + 4242
 	custom.planet_name = generate_name(world_seed, name_syllables)
 	planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 	planet.generate(world_seed, terrain_defs, planet_settings)
+	economy.territory_scale = _territory_scale()
 	economy.setup(planet, building_defs, terrain_defs, economy_settings)
 	economy.found_village(start_settings)
 
@@ -68,12 +88,44 @@ func step() -> void:
 	economy.update(1.0 / float(ticks_per_day))
 	if day() != previous_day:
 		economy.daily_update()
+		_daily_extras()
 		day_passed.emit(day())
 
 
 func run_ticks(count: int) -> void:
 	for i in count:
 		step()
+
+
+## Checks goals (rewards are given right away). Call after any player action.
+func check_objectives() -> void:
+	for id in Objectives.check(self, objective_defs):
+		objective_completed.emit(id)
+
+
+## Applies the player's choice for the pending event.
+func resolve_event(choice_index: int) -> void:
+	var ev := Events.find(event_defs, pending_event)
+	pending_event = ""
+	var choices: Array = ev.get("choices", [])
+	if choice_index >= 0 and choice_index < choices.size():
+		Events.apply(self, choices[choice_index].get("effects", {}))
+	check_objectives()
+
+
+func _daily_extras() -> void:
+	check_objectives()
+	if pending_event == "" and not event_defs.is_empty() and day() >= int(event_settings.get("first_day", 4)):
+		if event_rng.randf() < float(event_settings.get("daily_chance", 0.12)):
+			pending_event = Events.pick(self, event_defs, event_rng)
+			if pending_event != "":
+				event_started.emit(pending_event)
+
+
+## Bigger planets have smaller cells: territories cover more cells.
+func _territory_scale() -> int:
+	var reference := float(planet_settings.get("territory_reference_frequency", 8))
+	return maxi(1, roundi(float(planet.grid.frequency) / maxf(reference, 1.0)))
 
 
 ## Pleasant planet name made of 2-3 syllables, deterministic for a seed.
@@ -111,6 +163,7 @@ func advance_offline(seconds: float, tick_rate_hz: float, cap_seconds: float, ef
 		economy.update(float(n) / float(ticks_per_day))
 		for d in day() - previous_day:
 			economy.daily_update()
+			check_objectives()
 		remaining -= n
 	return ticks
 
@@ -124,6 +177,10 @@ func to_dict() -> Dictionary:
 		"planet": planet.to_dict(),
 		"economy": economy.to_dict(),
 		"custom": custom,
+		"completed_objectives": completed_objectives,
+		"pending_event": pending_event,
+		"tutorial_step": tutorial_step,
+		"event_rng_state": str(event_rng.state),
 	}
 
 
@@ -138,7 +195,15 @@ func from_dict(data: Dictionary) -> void:
 	if typeof(saved_custom) == TYPE_DICTIONARY:
 		for key in custom:
 			if saved_custom.has(key) and str(saved_custom[key]) != "":
-				custom[key] = str(saved_custom[key])
+				custom[key] = saved_custom[key] if typeof(custom[key]) == TYPE_BOOL else str(saved_custom[key])
+	completed_objectives = Array(data.get("completed_objectives", []))
+	pending_event = str(data.get("pending_event", ""))
+	if pending_event != "" and Events.find(event_defs, pending_event).is_empty():
+		pending_event = ""
+	tutorial_step = int(data.get("tutorial_step", 0))
+	event_rng.seed = world_seed + 4242
+	if data.has("event_rng_state"):
+		event_rng.state = str(data["event_rng_state"]).to_int()
 	if data.has("rng_state"):
 		rng.state = str(data["rng_state"]).to_int()
 	# Saves made before Phase 1 have no planet: generate it from the seed.
@@ -149,6 +214,7 @@ func from_dict(data: Dictionary) -> void:
 		planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 		planet.generate(world_seed, terrain_defs, planet_settings)
 	economy = Economy.new()
+	economy.territory_scale = _territory_scale()
 	economy.setup(planet, building_defs, terrain_defs, economy_settings)
 	if typeof(data.get("economy")) == TYPE_DICTIONARY:
 		economy.from_dict(data["economy"])

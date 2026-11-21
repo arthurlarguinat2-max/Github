@@ -1,0 +1,66 @@
+{
+	"_comment": "Tutorial steps. condition: next (button) | rotate | zoom | select | building:<id>:<count> | needs | speed | goals. highlight: UI element to pulse (build, needs, speed, goals).",
+	"steps": [
+		{
+			"id": "welcome",
+			"text_key": "TUTO_WELCOME",
+			"condition": "next"
+		},
+		{
+			"id": "rotate",
+			"text_key": "TUTO_ROTATE",
+			"condition": "rotate"
+		},
+		{
+			"id": "zoom",
+			"text_key": "TUTO_ZOOM",
+			"condition": "zoom"
+		},
+		{
+			"id": "select",
+			"text_key": "TUTO_SELECT",
+			"condition": "select"
+		},
+		{
+			"id": "well",
+			"text_key": "TUTO_WELL",
+			"condition": "building:well:1",
+			"highlight": "build"
+		},
+		{
+			"id": "gatherer",
+			"text_key": "TUTO_GATHERER",
+			"condition": "building:gatherer:1",
+			"highlight": "build"
+		},
+		{
+			"id": "hut",
+			"text_key": "TUTO_HUT",
+			"condition": "building:hut:2",
+			"highlight": "build"
+		},
+		{
+			"id": "needs",
+			"text_key": "TUTO_NEEDS",
+			"condition": "needs",
+			"highlight": "needs"
+		},
+		{
+			"id": "speed",
+			"text_key": "TUTO_SPEED",
+			"condition": "speed",
+			"highlight": "speed"
+		},
+		{
+			"id": "goals",
+			"text_key": "TUTO_GOALS",
+			"condition": "goals",
+			"highlight": "goals"
+		},
+		{
+			"id": "done",
+			"text_key": "TUTO_DONE",
+			"condition": "next"
+		}
+	]
+}

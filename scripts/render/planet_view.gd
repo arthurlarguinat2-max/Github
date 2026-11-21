@@ -7,6 +7,9 @@ extends Node3D
 
 signal cell_selected(cell: int)
 signal selection_cleared
+## For the tutorial: the player spun / zoomed the planet.
+signal rotated
+signal zoomed
 
 const DRAG_SENSITIVITY := 0.006   # Radians per pixel at the farthest zoom.
 const INERTIA_DAMPING := 3.5      # Higher = stops faster.
@@ -48,6 +51,7 @@ var ui_blocks_point: Callable
 
 var selected := -1
 var _heights := PackedFloat32Array()   # Top radius of each cell.
+var _zoom_min := ZOOM_MIN
 var _zoom := ZOOM_DEFAULT
 var _zoom_target := ZOOM_DEFAULT
 var _angular_velocity := Vector2.ZERO
@@ -76,7 +80,9 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 	terrain_defs = p_terrain_defs
 	camera = p_camera
 	_world_seed = world_seed
-	_object_scale = clampf(6.0 / float(planet.grid.frequency), 0.5, 1.2)
+	_object_scale = clampf(6.0 / float(planet.grid.frequency), 0.3, 1.2)
+	# Smaller cells: let the camera come closer.
+	_zoom_min = 1.2 + 3.2 / float(planet.grid.frequency)
 	_compute_heights()
 	_build_surface(world_seed)
 	_placement = MeshInstance3D.new()
@@ -151,6 +157,8 @@ func _on_drag(event: InputEventScreenDrag) -> void:
 		var k := _rotation_scale()
 		_apply_rotation(event.relative * DRAG_SENSITIVITY * k)
 		_angular_velocity = event.velocity * DRAG_SENSITIVITY * k
+		if event.relative.length() > 2.0:
+			rotated.emit()
 	elif _touches.size() == 2:
 		_tap_candidate = false
 		var other: Vector2 = Vector2.ZERO
@@ -176,14 +184,15 @@ func _rotation_scale() -> float:
 
 
 func _set_zoom(value: float) -> void:
-	_zoom_target = clampf(value, ZOOM_MIN, ZOOM_MAX)
+	_zoom_target = clampf(value, _zoom_min, ZOOM_MAX)
+	zoomed.emit()
 
 
 func _update_camera() -> void:
 	if camera == null:
 		return
 	# Far away the planet sits a bit low (room for the title); close up, centered.
-	var t := (_zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)
+	var t := clampf((_zoom - _zoom_min) / (ZOOM_MAX - _zoom_min), 0.0, 1.0)
 	camera.position = Vector3(0.0, 0.25 * t, _zoom)
 
 

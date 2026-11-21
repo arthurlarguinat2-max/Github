@@ -1,0 +1,153 @@
+{
+	"_comment": "Random events with choices. effects: stocks (+/-), population (+/-, newcomers need room), happiness, health (points). weight = relative chance. min_population / min_day = conditions.",
+	"events": [
+		{
+			"id": "travelers",
+			"title_key": "EV_TRAVELERS",
+			"text_key": "EV_TRAVELERS_TEXT",
+			"weight": 3,
+			"min_day": 4,
+			"choices": [
+				{
+					"label_key": "EV_TRAVELERS_A",
+					"effects": {
+						"population": 3,
+						"happiness": 3
+					}
+				},
+				{
+					"label_key": "EV_TRAVELERS_B",
+					"effects": {
+						"food": 10
+					}
+				}
+			]
+		},
+		{
+			"id": "harvest",
+			"title_key": "EV_HARVEST",
+			"text_key": "EV_HARVEST_TEXT",
+			"weight": 3,
+			"choices": [
+				{
+					"label_key": "EV_HARVEST_A",
+					"effects": {
+						"food": 30
+					}
+				},
+				{
+					"label_key": "EV_HARVEST_B",
+					"effects": {
+						"food": 12,
+						"happiness": 8
+					}
+				}
+			]
+		},
+		{
+			"id": "storm",
+			"title_key": "EV_STORM",
+			"text_key": "EV_STORM_TEXT",
+			"weight": 2,
+			"min_day": 6,
+			"choices": [
+				{
+					"label_key": "EV_STORM_A",
+					"effects": {
+						"wood": -15
+					}
+				},
+				{
+					"label_key": "EV_STORM_B",
+					"effects": {
+						"happiness": -8,
+						"health": -5
+					}
+				}
+			]
+		},
+		{
+			"id": "spring",
+			"title_key": "EV_SPRING",
+			"text_key": "EV_SPRING_TEXT",
+			"weight": 2,
+			"choices": [
+				{
+					"label_key": "EV_SPRING_A",
+					"effects": {
+						"water": 40
+					}
+				},
+				{
+					"label_key": "EV_SPRING_B",
+					"effects": {
+						"health": 10
+					}
+				}
+			]
+		},
+		{
+			"id": "stones",
+			"title_key": "EV_STONES",
+			"text_key": "EV_STONES_TEXT",
+			"weight": 2,
+			"choices": [
+				{
+					"label_key": "EV_STONES_A",
+					"effects": {
+						"stone": 25
+					}
+				},
+				{
+					"label_key": "EV_STONES_B",
+					"effects": {
+						"happiness": 6
+					}
+				}
+			]
+		},
+		{
+			"id": "fever",
+			"title_key": "EV_FEVER",
+			"text_key": "EV_FEVER_TEXT",
+			"weight": 1,
+			"min_day": 10,
+			"min_population": 8,
+			"choices": [
+				{
+					"label_key": "EV_FEVER_A",
+					"effects": {
+						"food": -15,
+						"health": 5
+					}
+				},
+				{
+					"label_key": "EV_FEVER_B",
+					"effects": {
+						"health": -15
+					}
+				}
+			]
+		},
+		{
+			"id": "festival",
+			"title_key": "EV_FESTIVAL",
+			"text_key": "EV_FESTIVAL_TEXT",
+			"weight": 2,
+			"min_population": 6,
+			"choices": [
+				{
+					"label_key": "EV_FESTIVAL_A",
+					"effects": {
+						"food": -20,
+						"happiness": 15
+					}
+				},
+				{
+					"label_key": "EV_FESTIVAL_B",
+					"effects": {}
+				}
+			]
+		}
+	]
+}
