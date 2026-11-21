@@ -1,0 +1,89 @@
+name: Mini Planète Unity · iPhone
+on:
+  push:
+    branches: [unity/mini-planete-ios]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: unity-ios-preview
+  cancel-in-progress: true
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet run --project ci/unity/SimulationChecks.csproj -- Unity/Assets/Resources
+  export:
+    needs: simulation
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Verify Unity activation is configured
+        env:
+          LICENSE: ${{ secrets.UNITY_LICENSE }}
+          EMAIL: ${{ secrets.UNITY_EMAIL }}
+          PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [[ -z "$LICENSE" || -z "$EMAIL" || -z "$PASSWORD" ]]; then
+            echo "::error::Activation Unity absente. Configurez les secrets Unity pour GameCI, ou utilisez Unity Build Automation avec le dossier Unity."
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+      - name: Export Xcode project
+        uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Unity
+          targetPlatform: iOS
+          unityVersion: 6000.0.62f1
+          versioning: Custom
+          version: 0.1.${{ github.run_number }}
+          buildName: MiniPlanete
+          buildsPath: build
+          allowDirtyBuild: true
+      - name: Preserve Xcode project permissions
+        run: tar czf xcode-project.tar.gz -C build/iOS MiniPlanete
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-xcode
+          path: xcode-project.tar.gz
+          retention-days: 1
+  iphone:
+    needs: export
+    runs-on: macos-15
+    timeout-minutes: 50
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: unity-xcode
+      - name: Build unsigned IPA for AltStore
+        run: |
+          tar xzf xcode-project.tar.gz
+          /usr/libexec/PlistBuddy -c 'Set :UIFileSharingEnabled true' MiniPlanete/Info.plist || /usr/libexec/PlistBuddy -c 'Add :UIFileSharingEnabled bool true' MiniPlanete/Info.plist
+          /usr/libexec/PlistBuddy -c 'Set :LSSupportsOpeningDocumentsInPlace true' MiniPlanete/Info.plist || /usr/libexec/PlistBuddy -c 'Add :LSSupportsOpeningDocumentsInPlace bool true' MiniPlanete/Info.plist
+          xcodebuild -project MiniPlanete/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath dd CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+          app="$(find dd/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d | head -1)"
+          test -n "$app"
+          mkdir Payload
+          ditto "$app" "Payload/$(basename "$app")"
+          zip -qry MiniPlanete-Unity.ipa Payload
+      - name: Publish separate Unity preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="unity-${GITHUB_RUN_NUMBER}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" MiniPlanete-Unity.ipa --clobber
+          else
+            gh release create "$tag" MiniPlanete-Unity.ipa --target "$GITHUB_SHA" --prerelease --latest=false --title "Mini Planète Unity 0.1.${GITHUB_RUN_NUMBER}" --notes "Version Unity pour iPhone. Installation via AltStore."
+          fi
