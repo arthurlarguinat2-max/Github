@@ -21,12 +21,28 @@ Shader "MiniPlanete/Landscape" {
    float light=saturate(dot(n,sun));
    float3 albedo=i.color.rgb;
    if (_Water>0.5) {
-     float wave=sin(dot(i.pos,float3(67,39,51))+_Time.y*1.4);
-     float rip=sin(dot(i.pos,float3(-93,87,32))-_Time.y*1.8+wave);
-     float3 perturb=mul((float3x3)unity_ObjectToWorld,float3(wave,0,rip)*0.045);
-     float3 view=normalize(_WorldSpaceCameraPos.xyz-i.world);
-     float glint=pow(saturate(dot(normalize(sun+view),normalize(n+perturb))),55.0);
-     albedo+=0.23*glint+0.015*(wave+rip);
+     // Sample waves in planet space so they wrap around both poles without a UV seam.
+     float3 p = normalize(i.pos);
+     float time = _Time.y;
+     float swell = sin(dot(p, float3(24, 16, -31)) - time * 0.85);
+     float ripple = sin(dot(p, float3(-46, 37, 22)) + time * 1.25 + swell * 0.55);
+     float3 slope = float3(0.048, 0.032, -0.062) * swell
+                  + float3(-0.046, 0.037, 0.022) * ripple;
+     float3 tangentSlope = slope - p * dot(p, slope);
+     float3 waterNormal = normalize(n + mul((float3x3)unity_ObjectToWorld, tangentSlope)
+                                    / max(length(mul((float3x3)unity_ObjectToWorld, p)), 0.0001));
+     float3 view = normalize(_WorldSpaceCameraPos.xyz - i.world);
+     float fresnel = pow(1.0 - saturate(dot(waterNormal, view)), 3.0);
+     float reflection = saturate(dot(reflect(-sun, waterNormal), view));
+     float glint = pow(reflection, 32.0) * smoothstep(0.0, 0.2, dot(n, sun));
+     albedo = lerp(albedo, float3(0.48, 0.67, 0.76), fresnel * 0.55);
+     // The baked water tint interpolates from deep blue (red 34) to shallows (red 141).
+     float shallows = saturate((i.color.r * 255.0 - 34.0) / 107.0);
+     float wash = sin(shallows * 22.0 - time * 1.6 + swell * 0.8);
+     float foam = smoothstep(0.67, 0.97, shallows) * smoothstep(0.40, 0.92, wash);
+     albedo = lerp(albedo, float3(0.81, 0.90, 0.85), foam * 0.58);
+     albedo += float3(1.0, 0.92, 0.75) * glint * 0.52;
+     light = saturate(dot(waterNormal, sun));
    }
    return fixed4(albedo*(float3(0.44,0.50,0.56)+light*float3(0.68,0.61,0.49)),1);
  }
