@@ -16,6 +16,13 @@ const COLORS := {
 	"bush": Color(0.24, 0.55, 0.26),
 	"berry": Color(0.85, 0.18, 0.25),
 	"accent": Color(0.85, 0.71, 0.36),
+	"water": Color(0.29, 0.64, 0.94),
+	"grain": Color(0.91, 0.76, 0.35),
+	"soil": Color(0.48, 0.32, 0.18),
+	"plaster": Color(0.91, 0.88, 0.82),
+	"clay": Color(0.69, 0.48, 0.32),
+	"grass": Color(0.43, 0.64, 0.35),
+	"cross": Color(0.9, 0.28, 0.3),
 }
 const GLOW := {
 	"fire": [Color(1.0, 0.55, 0.15), 3.0],
@@ -54,6 +61,42 @@ static func create(id: String) -> Node3D:
 			_add(root, _box(Vector3(0.024, 0.018, 0.02)), "rock", Vector3(-0.01, 0.009, -0.006), Vector3(0, 0.4, 0))
 			_add(root, _box(Vector3(0.016, 0.012, 0.016)), "stone", Vector3(0.013, 0.006, 0.008), Vector3(0, -0.3, 0))
 			_add(root, _box(Vector3(0.012, 0.01, 0.012)), "rock", Vector3(0.0, 0.023, -0.004), Vector3(0, 0.9, 0))
+		"field":
+			_add(root, _box(Vector3(0.05, 0.004, 0.05)), "soil", Vector3(0, 0.002, 0))
+			for k in 4:
+				_add(root, _box(Vector3(0.046, 0.008, 0.006)), "grain", Vector3(0, 0.007, -0.018 + 0.012 * k))
+		"mill":
+			_add(root, _cylinder(0.018, 0.02, 0.008, 10), "stone", Vector3(0, 0.004, 0))
+			_add(root, _cylinder(0.016, 0.016, 0.006, 10), "rock", Vector3(0, 0.011, 0))
+			_add(root, _cylinder(0.002, 0.002, 0.03, 5), "log", Vector3(0, 0.026, 0))
+			_add(root, _cylinder(0.002, 0.002, 0.03, 5), "log", Vector3(0, 0.03, 0), Vector3(0, 0, PI / 2))
+		"bakery":
+			_add(root, _sphere(0.02), "clay", Vector3(0, 0.004, 0))
+			_add(root, _box(Vector3(0.01, 0.008, 0.004)), "fire", Vector3(0, 0.006, 0.019))
+			_add(root, _cylinder(0.004, 0.005, 0.02, 6), "stone", Vector3(0.01, 0.024, -0.008))
+		"well":
+			_add(root, _cylinder(0.013, 0.014, 0.012, 10), "stone", Vector3(0, 0.006, 0))
+			_add(root, _cylinder(0.01, 0.01, 0.002, 10), "water", Vector3(0, 0.0125, 0))
+			_add(root, _box(Vector3(0.003, 0.026, 0.003)), "log", Vector3(-0.013, 0.019, 0))
+			_add(root, _box(Vector3(0.003, 0.026, 0.003)), "log", Vector3(0.013, 0.019, 0))
+			_add(root, _prism(Vector3(0.034, 0.01, 0.02)), "accent", Vector3(0, 0.036, 0))
+		"workshop":
+			_add(root, _box(Vector3(0.032, 0.02, 0.026)), "wall", Vector3(0, 0.01, 0))
+			_add(root, _prism(Vector3(0.036, 0.014, 0.03)), "accent", Vector3(0, 0.027, 0))
+			_add(root, _box(Vector3(0.008, 0.008, 0.002)), "fire", Vector3(0.006, 0.008, 0.0135))
+			_add(root, _box(Vector3(0.01, 0.006, 0.008)), "stone", Vector3(-0.022, 0.003, 0.01))
+		"healer":
+			_add(root, _box(Vector3(0.028, 0.02, 0.024)), "plaster", Vector3(0, 0.01, 0))
+			_add(root, _prism(Vector3(0.032, 0.014, 0.028)), "bush", Vector3(0, 0.027, 0))
+			_add(root, _box(Vector3(0.008, 0.002, 0.002)), "cross", Vector3(0, 0.012, 0.0125))
+			_add(root, _box(Vector3(0.002, 0.008, 0.002)), "cross", Vector3(0, 0.012, 0.0125))
+			_add(root, _sphere(0.006), "bush", Vector3(0.02, 0.004, 0.01))
+		"stone_circle":
+			_add(root, _cylinder(0.026, 0.026, 0.002, 12), "grass", Vector3(0, 0.001, 0))
+			for k in 6:
+				var a := TAU * k / 6.0
+				_add(root, _box(Vector3(0.006, 0.022, 0.005)), "stone", Vector3(cos(a) * 0.02, 0.011, sin(a) * 0.02), Vector3(0, -a, 0))
+			_add(root, _cylinder(0.0, 0.005, 0.012, 6), "fire", Vector3(0, 0.007, 0))
 		_:
 			_add(root, _box(Vector3(0.02, 0.02, 0.02)), "berry", Vector3(0, 0.01, 0))
 	return root

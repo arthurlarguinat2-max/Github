@@ -1,8 +1,14 @@
-## Economy: stocks, buildings, workers and population.
+## Economy: stocks, buildings, production chains, workers, population needs.
 ##
 ## Pure logic (no node, no rendering), driven by Simulation with a time step
 ## expressed in days, so the same code serves live play (tiny steps) and
 ## offline progress (big steps). Rules and numbers come from data/*.json.
+##
+## Each building may:
+##   produce   resources per day (scaled by workers, fertility, tools, happiness),
+##   consume   inputs per day (production slows down when inputs run out),
+##   extract   from deposits on its cell and neighbours,
+##   give      housing, happiness or health to the whole village.
 extends RefCounted
 
 ## Buildings changed: rendering and UI must refresh.
@@ -16,7 +22,7 @@ const ERR_TERRAIN := "BUILD_ERR_TERRAIN"
 const ERR_DEPOSIT := "BUILD_ERR_DEPOSIT"
 const ERR_TERRITORY := "BUILD_ERR_TERRITORY"
 const ERR_COST := "BUILD_ERR_COST"
-const BASE_RESOURCES := ["food", "wood", "stone"]
+const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools"]
 
 var planet  # PlanetState (untyped to avoid a cyclic preload)
 var defs: Dictionary = {}
@@ -26,13 +32,20 @@ var settings: Dictionary = {}
 var stocks: Dictionary = {}
 var population := 0
 var village_center := -1
+## Village well-being, 0..100.
+var happiness := 60.0
+var health := 80.0
 ## Net change per day of each resource, measured during the last update.
 var rates: Dictionary = {}
 
 var _building_cells: Array[int] = []
 var _territory: Dictionary = {}
 var _staffing: Dictionary = {}        # cell -> 0..1
-var _building_rates: Dictionary = {}  # cell -> {resource: per day}
+var _building_rates: Dictionary = {}  # cell -> {resource: produced per day}
+var _building_inputs: Dictionary = {} # cell -> {resource: consumed per day}
+var _waiting: Dictionary = {}         # cell -> true when inputs are missing
+var _short_food := false              # Ran out of food since the last daily update.
+var _short_water := false
 
 
 func setup(p_planet, p_defs: Dictionary, p_terrain_defs: Dictionary, p_settings: Dictionary) -> void:
@@ -40,6 +53,9 @@ func setup(p_planet, p_defs: Dictionary, p_terrain_defs: Dictionary, p_settings:
 	defs = p_defs
 	terrain_defs = p_terrain_defs
 	settings = p_settings
+	var wb := _wb()
+	happiness = float(wb.get("happiness_start", 60.0))
+	health = float(wb.get("health_start", 80.0))
 	for res in BASE_RESOURCES:
 		if not stocks.has(res):
 			stocks[res] = 0.0
@@ -87,12 +103,27 @@ func building_rate(cell: int) -> Dictionary:
 	return _building_rates.get(cell, {})
 
 
+## Per-day inputs used by a building during the last update.
+func building_inputs(cell: int) -> Dictionary:
+	return _building_inputs.get(cell, {})
+
+
+## True when a converter (mill, bakery...) is waiting for its inputs.
+func is_waiting(cell: int) -> bool:
+	return _waiting.has(cell)
+
+
 func in_territory(cell: int) -> bool:
 	return _territory.has(cell)
 
 
 func stock(res: String) -> float:
 	return float(stocks.get(res, 0.0))
+
+
+## Production multiplier from happiness: 0.6 (miserable) .. 1.2 (joyful).
+func productivity() -> float:
+	return 0.6 + 0.6 * clampf(happiness, 0.0, 100.0) / 100.0
 
 
 func can_afford(cost: Dictionary) -> bool:
@@ -126,6 +157,57 @@ func has_deposit(cell: int, res: String) -> bool:
 		if float(planet.resources[c].get(res, 0.0)) > 0.0:
 			return true
 	return false
+
+
+func near_water(cell: int) -> bool:
+	for nb in planet.grid.neighbors[cell]:
+		if terrain_defs.get(planet.terrain[nb], {}).get("water", false):
+			return true
+	return false
+
+
+## What pushes happiness up or down right now: [[localization key, points], ...].
+func happiness_factors() -> Array:
+	var wb := _wb()
+	var factors: Array = [["WB_BASE", float(wb.get("happiness_base", 50))]]
+	var leisure := minf(_sum_bonus("happiness"), float(wb.get("leisure_cap", 30)))
+	if leisure > 0.0:
+		factors.append(["WB_LEISURE", leisure])
+	if _short_food or stock("food") <= 0.0:
+		factors.append(["WB_FAMINE", float(wb.get("famine_happiness", -25))])
+	if _short_water or stock("water") <= 0.0:
+		factors.append(["WB_THIRST", float(wb.get("thirst_happiness", -20))])
+	if population > housing():
+		factors.append(["WB_HOMELESS", float(wb.get("homeless_happiness", -15))])
+	if population > 0 and population - employed() > population * 0.4:
+		factors.append(["WB_UNEMPLOYED", float(wb.get("unemployment_happiness", -8))])
+	var health_effect := (health - 60.0) * 0.2
+	if absf(health_effect) >= 1.0:
+		factors.append(["WB_HEALTH", health_effect])
+	return factors
+
+
+## What pushes health up or down right now.
+func health_factors() -> Array:
+	var wb := _wb()
+	var factors: Array = [["WB_BASE", float(wb.get("health_base", 65))]]
+	var care := minf(_sum_bonus("health"), float(wb.get("health_bonus_cap", 30)))
+	if care > 0.0:
+		factors.append(["WB_CARE", care])
+	if _short_food or stock("food") <= 0.0:
+		factors.append(["WB_FAMINE", float(wb.get("famine_health", -20))])
+	if _short_water or stock("water") <= 0.0:
+		factors.append(["WB_THIRST", float(wb.get("thirst_health", -30))])
+	if population > housing():
+		factors.append(["WB_CROWDING", float(wb.get("crowding_health", -10))])
+	return factors
+
+
+static func target_of(factors: Array) -> float:
+	var total := 0.0
+	for f in factors:
+		total += float(f[1])
+	return clampf(total, 0.0, 100.0)
 
 
 # --- Actions -----------------------------------------------------------------
@@ -188,47 +270,95 @@ func found_village(start: Dictionary) -> void:
 func update(dt_days: float) -> void:
 	if dt_days <= 0.0:
 		return
+	var wb := _wb()
 	_compute_staffing()
 	var new_rates := {}
 	for res in BASE_RESOURCES:
 		new_rates[res] = 0.0
 	_building_rates.clear()
+	_building_inputs.clear()
+	_waiting.clear()
+	var village_productivity := productivity()
 	for cell in _building_cells:
 		var def := def_of(cell)
 		var produces: Dictionary = def.get("produces", {})
 		if produces.is_empty():
 			continue
-		var mult: float = _staffing.get(cell, 0.0)
+		var mult: float = float(_staffing.get(cell, 0.0)) * village_productivity
+		if mult <= 0.0:
+			continue
 		if def.get("fertility_bonus", false):
 			mult *= 0.4 + planet.fertility[cell]
-		var out := {}
+		if def.has("water_bonus") and near_water(cell):
+			mult *= float(def.water_bonus)
+		if def.get("tool_bonus", false) and stock("tools") > 0.0:
+			mult *= float(wb.get("tool_bonus", 1.25))
+			var worn := minf(stock("tools"), float(wb.get("tool_use_per_day", 0.05)) * dt_days)
+			stocks["tools"] = stock("tools") - worn
+			new_rates["tools"] = float(new_rates["tools"]) - worn / dt_days
+
+		# Inputs: the scarcest one limits the whole production.
+		var consumes: Dictionary = def.get("consumes", {})
+		var supply := 1.0
+		for res in consumes:
+			var need := float(consumes[res]) * mult * dt_days
+			if need > 0.0:
+				supply = minf(supply, stock(res) / need)
+		if supply < 0.999 and not consumes.is_empty():
+			_waiting[cell] = true
+		if supply <= 0.0:
+			continue
+		var inputs := {}
+		for res in consumes:
+			var used := float(consumes[res]) * mult * dt_days * supply
+			stocks[res] = maxf(0.0, stock(res) - used)
+			inputs[res] = used / dt_days
+			new_rates[res] = float(new_rates.get(res, 0.0)) - inputs[res]
+		var outputs := {}
 		for res in produces:
-			var amount := float(produces[res]) * mult * dt_days
+			var amount := float(produces[res]) * mult * dt_days * supply
 			if def.has("extracts"):
 				amount = _extract(cell, str(def.extracts), amount)
 			stocks[res] = stock(res) + amount
-			out[res] = amount / dt_days
-			new_rates[res] = float(new_rates.get(res, 0.0)) + out[res]
-		_building_rates[cell] = out
-	var eat := population * float(settings.get("food_per_person_per_day", 1.0))
-	stocks["food"] = maxf(0.0, stock("food") - eat * dt_days)
-	new_rates["food"] = float(new_rates["food"]) - eat
+			outputs[res] = amount / dt_days
+			new_rates[res] = float(new_rates.get(res, 0.0)) + outputs[res]
+		_building_rates[cell] = outputs
+		_building_inputs[cell] = inputs
+
+	# People eat and drink.
+	_consume_needs("food", float(settings.get("food_per_person_per_day", 1.0)), dt_days, new_rates)
+	_consume_needs("water", float(settings.get("water_per_person_per_day", 1.0)), dt_days, new_rates)
 	rates = new_rates
 
 
-## Once per in-game day: nature regrows, population grows or shrinks.
+## Once per in-game day: nature regrows, well-being evolves, population changes.
 func daily_update() -> void:
 	_regrow()
+	var wb := _wb()
+	happiness += (target_of(happiness_factors()) - happiness) * float(wb.get("happiness_speed", 0.25))
+	health += (target_of(health_factors()) - health) * float(wb.get("health_speed", 0.2))
 	var capacity := housing()
 	if stock("food") <= 0.0 and population > 0:
 		var loss := maxi(1, ceili(population * float(settings.get("famine_loss", 0.1))))
 		population = maxi(0, population - loss)
 		alert.emit("ALERT_FAMINE")
+	elif stock("water") <= 0.0 and population > 0:
+		population -= 1
+		alert.emit("ALERT_THIRST")
 	elif population > capacity:
 		population -= 1
 		alert.emit("ALERT_HOMELESS")
-	elif population < capacity:
-		population += mini(capacity - population, maxi(1, _growth_bonus()))
+	elif health < 25.0 and population > 0:
+		population -= 1
+		alert.emit("ALERT_SICKNESS")
+	elif happiness < 20.0 and population > 0:
+		population -= 1
+		alert.emit("ALERT_UNHAPPY")
+	elif population < capacity and happiness >= 40.0 and health >= 40.0:
+		var births := maxi(1, _growth_bonus()) + (1 if happiness >= 75.0 else 0)
+		population += mini(capacity - population, births)
+	_short_food = false
+	_short_water = false
 
 
 # --- Save --------------------------------------------------------------------
@@ -237,7 +367,13 @@ func to_dict() -> Dictionary:
 	var saved_stocks := {}
 	for res in stocks:
 		saved_stocks[res] = snappedf(stock(res), 0.01)
-	return {"stocks": saved_stocks, "population": population, "village_center": village_center}
+	return {
+		"stocks": saved_stocks,
+		"population": population,
+		"village_center": village_center,
+		"happiness": snappedf(happiness, 0.01),
+		"health": snappedf(health, 0.01),
+	}
 
 
 func from_dict(data: Dictionary) -> void:
@@ -247,12 +383,46 @@ func from_dict(data: Dictionary) -> void:
 	var saved: Dictionary = data.get("stocks", {})
 	for res in saved:
 		stocks[str(res)] = float(saved[res])
+	# Saves from before Phase 3 had no water: give a fair amount to start with.
+	if not saved.has("water"):
+		stocks["water"] = 40.0
 	population = maxi(int(data.get("population", 0)), 0)
 	village_center = int(data.get("village_center", -1))
+	var wb := _wb()
+	happiness = clampf(float(data.get("happiness", wb.get("happiness_start", 60.0))), 0.0, 100.0)
+	health = clampf(float(data.get("health", wb.get("health_start", 80.0))), 0.0, 100.0)
 	_rebuild_caches()
 
 
 # --- Internals ---------------------------------------------------------------
+
+func _wb() -> Dictionary:
+	return settings.get("wellbeing", {})
+
+
+func _consume_needs(res: String, per_person: float, dt_days: float, new_rates: Dictionary) -> void:
+	var need := population * per_person
+	if need <= 0.0:
+		return
+	if stock(res) < need * dt_days:
+		if res == "food":
+			_short_food = true
+		else:
+			_short_water = true
+	stocks[res] = maxf(0.0, stock(res) - need * dt_days)
+	new_rates[res] = float(new_rates.get(res, 0.0)) - need
+
+
+## Sum of a village bonus ("happiness", "health", "growth_bonus") from
+## buildings, scaled by how well each one is staffed.
+func _sum_bonus(key: String) -> float:
+	var total := 0.0
+	for cell in _building_cells:
+		var value := float(def_of(cell).get(key, 0.0))
+		if value != 0.0:
+			total += value * float(_staffing.get(cell, 1.0 if int(def_of(cell).get("workers", 0)) == 0 else 0.0))
+	return total
+
 
 func _place(cell: int, id: String) -> void:
 	planet.buildings[cell] = id
@@ -274,6 +444,7 @@ func _rebuild_caches() -> void:
 	_territory = {}
 	for cell in _building_cells:
 		_mark_territory(cell, int(def_of(cell).get("territory", 2)))
+	_compute_staffing()
 
 
 func _mark_territory(start: int, radius: int) -> void:
@@ -341,10 +512,7 @@ func _regrow() -> void:
 
 
 func _growth_bonus() -> int:
-	var total := 0
-	for cell in _building_cells:
-		total += int(def_of(cell).get("growth_bonus", 0))
-	return total
+	return int(_sum_bonus("growth_bonus"))
 
 
 ## Most fertile land cell (with some land around) where `id` is allowed.
@@ -357,12 +525,15 @@ func _pick_start_cell(id: String) -> int:
 			continue
 		var land := 0
 		var wood_near := false
+		var water_near := false
 		for nb in planet.grid.neighbors[i]:
-			if not terrain_defs.get(planet.terrain[nb], {}).get("water", false):
+			if terrain_defs.get(planet.terrain[nb], {}).get("water", false):
+				water_near = true
+			else:
 				land += 1
 			if planet.terrain[nb] == "forest":
 				wood_near = true
-		var score: float = planet.fertility[i] + 0.06 * land + (0.15 if wood_near else 0.0)
+		var score: float = planet.fertility[i] + 0.06 * land + (0.15 if wood_near else 0.0) + (0.1 if water_near else 0.0)
 		if score > best_score:
 			best_score = score
 			best = i

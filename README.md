@@ -55,7 +55,7 @@ fastlane/          Signature + build Xcode + envoi TestFlight
 | 0 | Fondations, CI, TestFlight, « Hello Planète » 3D | ✅ |
 | 1 | Planète hexagonale (Goldberg), caméra tactile, sélection, jour/nuit | ✅ |
 | 2 | Âge de pierre : ressources, bâtiments, population, sauvegarde | ✅ |
-| 3 | Économie : chaînes de production, besoins, bonheur | |
+| 3 | Économie : chaînes de production, besoins, bonheur | ✅ |
 | 4 | Science, arbre technologique, Antiquité, Médiéval | |
 | 5 | Environnement : pollution, climat, eau, événements | |
 | 6 | Industriel, Moderne, Futuriste, énergie | |

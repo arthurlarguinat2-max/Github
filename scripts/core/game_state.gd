@@ -29,6 +29,7 @@ func _ready() -> void:
 	var buildings_file := Config.load_json("res://data/buildings.json")
 	config["buildings"] = buildings_file.get("buildings", {})
 	config["start"] = buildings_file.get("start", {})
+	config["building_categories"] = buildings_file.get("categories", [])
 	config["customization"] = Config.load_json("res://data/customization.json")
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()

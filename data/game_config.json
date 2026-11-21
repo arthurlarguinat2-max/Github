@@ -28,6 +28,27 @@
 	"economy": {
 		"_comment": "Per day values. A day lasts ticks_per_day / tick_rate_hz seconds at x1 (60 s).",
 		"food_per_person_per_day": 1.0,
-		"famine_loss": 0.1
+		"famine_loss": 0.1,
+		"water_per_person_per_day": 1.0,
+		"wellbeing": {
+			"_comment": "Happiness and health (0-100) move each day toward a target.",
+			"happiness_base": 50,
+			"happiness_start": 60,
+			"health_base": 65,
+			"health_start": 80,
+			"leisure_cap": 30,
+			"health_bonus_cap": 30,
+			"famine_happiness": -25,
+			"thirst_happiness": -20,
+			"homeless_happiness": -15,
+			"unemployment_happiness": -8,
+			"famine_health": -20,
+			"thirst_health": -30,
+			"crowding_health": -10,
+			"happiness_speed": 0.25,
+			"health_speed": 0.2,
+			"tool_use_per_day": 0.05,
+			"tool_bonus": 1.25
+		}
 	}
 }

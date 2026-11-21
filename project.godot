@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Mini Planète"
 config/description="Une petite planète à faire grandir, d'âge en âge."
-config/version="0.2.0"
+config/version="0.3.0"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://assets/icons/app_icon_1024.png"

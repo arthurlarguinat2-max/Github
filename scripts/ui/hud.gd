@@ -47,6 +47,11 @@ var _cell_text: Label
 var _cell_build_button: Button
 var _demolish_button: Button
 var _settings_sheet: PanelContainer
+var _needs_sheet: PanelContainer
+var _needs_text: RichTextLabel
+var _needs_row: PanelContainer
+var _category_buttons := {}  # category id -> Button
+var _category := "housing"
 var _banner: PanelContainer
 var _banner_label: Label
 
@@ -80,7 +85,9 @@ func _ready() -> void:
 
 	_title = _label("", 17, MUTED)
 	column.add_child(_title)
-	column.add_child(_build_chips())
+	column.add_child(_build_chip_row(["food", "water", "wood", "stone"]))
+	_needs_row = _build_needs_row()
+	column.add_child(_needs_row)
 	_toast = _label("", 15, WARN)
 	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_toast)
@@ -98,7 +105,9 @@ func _ready() -> void:
 	column.add_child(_cell_card)
 	_settings_sheet = _build_settings_sheet()
 	column.add_child(_settings_sheet)
-	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet])
+	_needs_sheet = _build_needs_sheet()
+	column.add_child(_needs_sheet)
+	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet])
 
 	_hint = _label(tr("HINT_DRAG"), 13, Color("7c86a8"))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -106,7 +115,7 @@ func _ready() -> void:
 	_bottom_bar = _build_bottom_bar()
 	column.add_child(_bottom_bar)
 
-	_blocking.append_array([_bottom_bar, _banner, _build_sheet, _cell_card, _settings_sheet])
+	_blocking.append_array([_bottom_bar, _banner, _build_sheet, _cell_card, _settings_sheet, _needs_sheet, _needs_row])
 	get_viewport().size_changed.connect(_apply_safe_area)
 	_apply_safe_area()
 	GameState.ticked.connect(_refresh_title)
@@ -130,6 +139,8 @@ func _process(delta: float) -> void:
 		_update_cell_card()
 	if _build_sheet.visible:
 		_update_build_cards()
+	if _needs_sheet.visible:
+		_update_needs_sheet()
 
 
 ## True when `point` (viewport coordinates) is over an interactive UI element.
@@ -144,50 +155,82 @@ func blocks_point(point: Vector2) -> bool:
 # Top: title and resource chips
 # =============================================================================
 
-func _build_chips() -> HBoxContainer:
+func _build_chip_row(resources: Array) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for res in ["food", "wood", "stone", "people"]:
-		var chip := PanelContainer.new()
-		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		chip.add_theme_stylebox_override("panel", _box(Color(0.1, 0.12, 0.2, 0.82), 12, 6))
-		var line := HBoxContainer.new()
-		line.add_theme_constant_override("separation", 4)
-		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		chip.add_child(line)
-		line.add_child(_icon(res, 26))
-		var texts := VBoxContainer.new()
-		texts.add_theme_constant_override("separation", -4)
-		texts.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.add_child(texts)
-		var value := _label("", 16, TEXT)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		texts.add_child(value)
-		var rate := _label("", 11, MUTED)
-		rate.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		texts.add_child(rate)
-		row.add_child(chip)
-		_chips[res] = {"value": value, "rate": rate}
+	for res in resources:
+		row.add_child(_chip(res))
 	return row
+
+
+func _chip(res: String) -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip.add_theme_stylebox_override("panel", _box(Color(0.1, 0.12, 0.2, 0.82), 12, 6))
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip.add_child(line)
+	line.add_child(_icon(res, 24))
+	var texts := VBoxContainer.new()
+	texts.add_theme_constant_override("separation", -4)
+	texts.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(texts)
+	var value := _label("", 15, TEXT)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	texts.add_child(value)
+	var rate := _label("", 10, MUTED)
+	rate.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	texts.add_child(rate)
+	_chips[res] = {"value": value, "rate": rate}
+	return chip
+
+
+## Population, happiness and health. Tapping it opens the "needs" screen.
+func _build_needs_row() -> PanelContainer:
+	var holder := PanelContainer.new()
+	holder.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	holder.mouse_filter = Control.MOUSE_FILTER_STOP
+	holder.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_toggle_needs_sheet())
+	var row := _build_chip_row(["people", "happy", "health"])
+	holder.add_child(row)
+	return holder
 
 
 func _refresh_chips() -> void:
 	var eco = GameState.sim.economy
-	for res in ["food", "wood", "stone"]:
+	for res in ["food", "water", "wood", "stone"]:
 		var chip: Dictionary = _chips[res]
 		var rate := float(eco.rates.get(res, 0.0))
 		chip.value.text = str(floori(eco.stock(res)))
 		chip.rate.text = (_format_signed(rate) + tr("PER_DAY")) if absf(rate) >= 0.05 else "—"
 		chip.rate.add_theme_color_override("font_color", GOOD if rate > 0.05 else (BAD if rate < -0.05 else MUTED))
-		if res == "food" and eco.stock("food") <= 0.0:
-			chip.value.add_theme_color_override("font_color", BAD)
-		else:
-			chip.value.add_theme_color_override("font_color", TEXT)
+		var empty: bool = (res == "food" or res == "water") and eco.stock(res) <= 0.0
+		chip.value.add_theme_color_override("font_color", BAD if empty else TEXT)
 	var people: Dictionary = _chips["people"]
 	people.value.text = "%d/%d" % [eco.population, eco.housing()]
 	people.rate.text = tr("WORKERS_SHORT") % [eco.employed(), eco.jobs()]
+	_set_gauge(_chips["happy"], eco.happiness, eco.target_of(eco.happiness_factors()))
+	_set_gauge(_chips["health"], eco.health, eco.target_of(eco.health_factors()))
+
+
+## Shows a 0-100 gauge and where it is heading.
+func _set_gauge(chip: Dictionary, value: float, target: float) -> void:
+	chip.value.text = "%d %%" % roundi(value)
+	chip.value.add_theme_color_override("font_color", BAD if value < 30.0 else (WARN if value < 50.0 else TEXT))
+	if target > value + 1.0:
+		chip.rate.text = tr("TREND_UP")
+		chip.rate.add_theme_color_override("font_color", GOOD)
+	elif target < value - 1.0:
+		chip.rate.text = tr("TREND_DOWN")
+		chip.rate.add_theme_color_override("font_color", BAD)
+	else:
+		chip.rate.text = tr("TREND_STABLE")
+		chip.rate.add_theme_color_override("font_color", MUTED)
 
 
 func _refresh_title() -> void:
@@ -322,9 +365,33 @@ func _sheet(title_label: Label) -> Array:
 func _build_build_sheet() -> PanelContainer:
 	_build_sheet_title = _label("", 20, TEXT)
 	var parts := _sheet(_build_sheet_title)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 6)
+	parts[1].add_child(tabs)
+	var group := ButtonGroup.new()
+	var categories: Array = GameState.config.get("building_categories", [])
+	for cat in categories:
+		var tab := Button.new()
+		tab.toggle_mode = true
+		tab.button_group = group
+		tab.text = tr(str(cat.name_key))
+		tab.custom_minimum_size = Vector2(0, 40)
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab.add_theme_font_size_override("font_size", 13)
+		tab.pressed.connect(func():
+			_category = str(cat.id)
+			_open_build_sheet(_target_cell)
+			Haptics.light())
+		tabs.add_child(tab)
+		_category_buttons[str(cat.id)] = tab
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 300)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	parts[1].add_child(scroll)
 	_build_list = VBoxContainer.new()
+	_build_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_build_list.add_theme_constant_override("separation", 6)
-	parts[1].add_child(_build_list)
+	scroll.add_child(_build_list)
 	return parts[0]
 
 
@@ -339,7 +406,11 @@ func _open_build_sheet(cell: int) -> void:
 	var eco = GameState.sim.economy
 	var ids: Array = eco.defs.keys()
 	ids.sort_custom(func(a, b): return int(eco.defs[a].get("order", 99)) < int(eco.defs[b].get("order", 99)))
+	for cat_id in _category_buttons:
+		_category_buttons[cat_id].set_pressed_no_signal(cat_id == _category)
 	for id in ids:
+		if str(eco.defs[id].get("category", "housing")) != _category:
+			continue
 		if cell >= 0 and eco.can_build(cell, id) in [Economy.ERR_TERRAIN, Economy.ERR_DEPOSIT]:
 			continue
 		_build_list.add_child(_build_card(id))
@@ -529,9 +600,18 @@ func _building_status(cell: int, bdef: Dictionary) -> String:
 	if housing > 0:
 		return tr("BLD_HOUSING") % housing
 	var need := int(bdef.get("workers", 0))
+	if need > 0 and eco.workers_at(cell) == 0:
+		return tr("BLD_IDLE")
+	if bdef.has("happiness") and not bdef.has("produces"):
+		return tr("BLD_GIVES_HAPPINESS") % int(bdef.happiness)
+	if bdef.has("health"):
+		return tr("BLD_GIVES_HEALTH") % [int(bdef.health), eco.workers_at(cell), need]
 	if bdef.has("produces"):
-		if need > 0 and eco.workers_at(cell) == 0:
-			return tr("BLD_IDLE")
+		if eco.is_waiting(cell):
+			var inputs := PackedStringArray()
+			for res in bdef.get("consumes", {}):
+				inputs.append(tr(_res_key(res)).to_lower())
+			return tr("BLD_WAITING") % " + ".join(inputs)
 		if bdef.has("extracts") and not eco.has_deposit(cell, str(bdef.extracts)):
 			return tr("BLD_DEPLETED")
 		var rate: Dictionary = eco.building_rate(cell)
@@ -563,6 +643,74 @@ func _on_demolish_pressed() -> void:
 		Haptics.medium()
 	_confirm_demolish = false
 	_update_cell_card()
+
+
+# --- Needs ------------------------------------------------------------------------
+
+func _build_needs_sheet() -> PanelContainer:
+	var parts := _sheet(_label(tr("NEEDS_TITLE"), 20, TEXT))
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 360)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	parts[1].add_child(scroll)
+	_needs_text = RichTextLabel.new()
+	_needs_text.bbcode_enabled = true
+	_needs_text.fit_content = true
+	_needs_text.scroll_active = false
+	_needs_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_needs_text.add_theme_font_size_override("normal_font_size", 15)
+	_needs_text.add_theme_font_size_override("bold_font_size", 16)
+	scroll.add_child(_needs_text)
+	return parts[0]
+
+
+func _toggle_needs_sheet() -> void:
+	if _needs_sheet.visible:
+		_close_sheets()
+		return
+	_end_placement()
+	_update_needs_sheet()
+	_show_sheet(_needs_sheet)
+	close_requested.emit()
+	Haptics.light()
+
+
+## Plain-language summary: each need, its state, and what moves it.
+func _update_needs_sheet() -> void:
+	var eco = GameState.sim.economy
+	var t := ""
+	var food_rate := float(eco.rates.get("food", 0.0))
+	var water_rate := float(eco.rates.get("water", 0.0))
+	t += _need_line(tr("RES_FOOD"), food_rate >= 0.0 or eco.stock("food") > 0.0, tr("NEED_FOOD") % [floori(eco.stock("food")), _format_signed(food_rate)])
+	t += _need_line(tr("RES_WATER"), water_rate >= 0.0 or eco.stock("water") > 0.0, tr("NEED_WATER") % [floori(eco.stock("water")), _format_signed(water_rate)])
+	t += _need_line(tr("NEED_HOUSING"), eco.population <= eco.housing(), tr("NEED_HOUSING_TEXT") % [eco.population, eco.housing()])
+	t += _need_line(tr("NEED_WORK"), eco.employed() >= eco.population * 0.6, tr("NEED_WORK_TEXT") % [eco.employed(), eco.jobs()])
+	t += "\n[b]%s : %d %%[/b]  [color=#8f9abf](%s)[/color]\n" % [tr("HAPPINESS"), roundi(eco.happiness), tr("NEED_PRODUCTIVITY") % roundi(eco.productivity() * 100.0)]
+	t += _factor_lines(eco.happiness_factors())
+	t += "\n[b]%s : %d %%[/b]\n" % [tr("HEALTH"), roundi(eco.health)]
+	t += _factor_lines(eco.health_factors())
+	t += "\n[b]%s[/b]\n" % tr("NEED_STOCKS")
+	for res in ["grain", "flour", "tools"]:
+		t += "%s : %d\n" % [tr(_res_key(res)), floori(eco.stock(res))]
+	t += "\n[color=#8f9abf]%s[/color]" % tr("NEED_TIP")
+	_needs_text.text = t
+
+
+func _need_line(title: String, ok: bool, text: String) -> String:
+	var color := "#8fd18f" if ok else "#ff8b7b"
+	return "[color=%s]•[/color] [b]%s[/b] — %s\n" % [color, title, text]
+
+
+func _factor_lines(factors: Array) -> String:
+	var out := ""
+	for f in factors:
+		var value := float(f[1])
+		if str(f[0]) == "WB_BASE":
+			out += "   %s %d\n" % [tr("WB_BASE"), roundi(value)]
+			continue
+		var color := "#8fd18f" if value > 0.0 else "#ff8b7b"
+		out += "   [color=%s]%s%d[/color] %s\n" % [color, "+" if value > 0.0 else "", roundi(value), tr(str(f[0]))]
+	return out
 
 
 # --- Settings -----------------------------------------------------------------

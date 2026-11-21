@@ -1,11 +1,54 @@
 {
 	"_comment": "Natural resources found on cells. hidden = not shown until a later age reveals it.",
 	"resources": {
-		"wood":    {"name_key": "RES_WOOD",    "hidden": false},
-		"stone":   {"name_key": "RES_STONE",   "hidden": false},
-		"ore":     {"name_key": "RES_ORE",     "hidden": false},
-		"fish":    {"name_key": "RES_FISH",    "hidden": false},
-		"oil":     {"name_key": "RES_OIL",     "hidden": true},
-		"uranium": {"name_key": "RES_URANIUM", "hidden": true}
+		"wood": {
+			"name_key": "RES_WOOD",
+			"hidden": false
+		},
+		"stone": {
+			"name_key": "RES_STONE",
+			"hidden": false
+		},
+		"ore": {
+			"name_key": "RES_ORE",
+			"hidden": false
+		},
+		"fish": {
+			"name_key": "RES_FISH",
+			"hidden": false
+		},
+		"oil": {
+			"name_key": "RES_OIL",
+			"hidden": true
+		},
+		"uranium": {
+			"name_key": "RES_URANIUM",
+			"hidden": true
+		},
+		"food": {
+			"name_key": "RES_FOOD",
+			"hidden": false,
+			"stock": true
+		},
+		"water": {
+			"name_key": "RES_WATER",
+			"hidden": false,
+			"stock": true
+		},
+		"grain": {
+			"name_key": "RES_GRAIN",
+			"hidden": false,
+			"stock": true
+		},
+		"flour": {
+			"name_key": "RES_FLOUR",
+			"hidden": false,
+			"stock": true
+		},
+		"tools": {
+			"name_key": "RES_TOOLS",
+			"hidden": false,
+			"stock": true
+		}
 	}
 }
