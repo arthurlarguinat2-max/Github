@@ -476,6 +476,308 @@
 			"build_days": 0.5,
 			"workers": 0,
 			"health": 4
+		},
+		"claypit": {
+			"name_key": "BLD_CLAYPIT",
+			"desc_key": "BLD_CLAYPIT_DESC",
+			"short_key": "BLD_CLAYPIT_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 60,
+			"priority": 3,
+			"cost": {
+				"wood": 10,
+				"stone": 4
+			},
+			"workers": 1,
+			"consumes": {
+				"water": 2
+			},
+			"produces": {
+				"clay": 6
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "clayworker",
+			"build_days": 0.54
+		},
+		"kiln": {
+			"name_key": "BLD_KILN",
+			"desc_key": "BLD_KILN_DESC",
+			"short_key": "BLD_KILN_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 61,
+			"priority": 4,
+			"cost": {
+				"clay": 8,
+				"stone": 10
+			},
+			"workers": 1,
+			"consumes": {
+				"clay": 4,
+				"wood": 1
+			},
+			"produces": {
+				"bricks": 4
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "potter",
+			"build_days": 0.66,
+			"recipes": {
+				"bricks": {
+					"consumes": {
+						"clay": 4,
+						"wood": 1
+					},
+					"produces": {
+						"bricks": 4
+					}
+				},
+				"pots": {
+					"consumes": {
+						"clay": 3,
+						"wood": 1
+					},
+					"produces": {
+						"pots": 3
+					}
+				}
+			}
+		},
+		"sawmill": {
+			"name_key": "BLD_SAWMILL",
+			"desc_key": "BLD_SAWMILL_DESC",
+			"short_key": "BLD_SAWMILL_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 62,
+			"priority": 5,
+			"cost": {
+				"wood": 18,
+				"stone": 8
+			},
+			"workers": 1,
+			"consumes": {
+				"wood": 4
+			},
+			"produces": {
+				"boards": 6
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "carpenter",
+			"build_days": 0.78,
+			"recipes": {
+				"boards": {
+					"consumes": {
+						"wood": 4
+					},
+					"produces": {
+						"boards": 6
+					}
+				},
+				"frames": {
+					"consumes": {
+						"boards": 4
+					},
+					"produces": {
+						"frames": 2
+					}
+				}
+			}
+		},
+		"flaxfield": {
+			"name_key": "BLD_FLAXFIELD",
+			"desc_key": "BLD_FLAXFIELD_DESC",
+			"short_key": "BLD_FLAXFIELD_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 63,
+			"priority": 6,
+			"cost": {
+				"boards": 8,
+				"wood": 12
+			},
+			"workers": 1,
+			"consumes": {
+				"water": 2
+			},
+			"produces": {
+				"flax": 7
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "flaxgrower",
+			"build_days": 1.14
+		},
+		"weavery": {
+			"name_key": "BLD_WEAVERY",
+			"desc_key": "BLD_WEAVERY_DESC",
+			"short_key": "BLD_WEAVERY_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 64,
+			"priority": 7,
+			"cost": {
+				"bricks": 8,
+				"frames": 3
+			},
+			"workers": 1,
+			"consumes": {
+				"flax": 4
+			},
+			"produces": {
+				"linen": 3
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "weaver",
+			"build_days": 1.14
+		},
+		"papermill": {
+			"name_key": "BLD_PAPERMILL",
+			"desc_key": "BLD_PAPERMILL_DESC",
+			"short_key": "BLD_PAPERMILL_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 65,
+			"priority": 8,
+			"cost": {
+				"bricks": 16,
+				"frames": 6
+			},
+			"workers": 1,
+			"consumes": {
+				"flax": 3,
+				"water": 2
+			},
+			"produces": {
+				"paper": 5
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "papermaker",
+			"build_days": 1.26
+		},
+		"bindery": {
+			"name_key": "BLD_BINDERY",
+			"desc_key": "BLD_BINDERY_DESC",
+			"short_key": "BLD_BINDERY_SHORT",
+			"age": "stone",
+			"category": "resources",
+			"order": 66,
+			"priority": 9,
+			"cost": {
+				"boards": 15,
+				"linen": 8
+			},
+			"workers": 1,
+			"consumes": {
+				"paper": 4,
+				"linen": 1
+			},
+			"produces": {
+				"books": 2
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "binder",
+			"build_days": 1.38
+		},
+		"cistern": {
+			"name_key": "BLD_CISTERN",
+			"desc_key": "BLD_CISTERN_DESC",
+			"short_key": "BLD_CISTERN_SHORT",
+			"age": "stone",
+			"category": "services",
+			"order": 73,
+			"priority": 2,
+			"cost": {
+				"bricks": 6,
+				"pots": 6
+			},
+			"workers": 0,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"build_days": 1.1,
+			"produces": {
+				"water": 5
+			}
+		},
+		"library": {
+			"name_key": "BLD_LIBRARY",
+			"desc_key": "BLD_LIBRARY_DESC",
+			"short_key": "BLD_LIBRARY_SHORT",
+			"age": "stone",
+			"category": "services",
+			"order": 80,
+			"priority": 2,
+			"cost": {
+				"books": 20,
+				"frames": 10,
+				"bricks": 20
+			},
+			"workers": 0,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"build_days": 1.1,
+			"happiness": 7
 		}
 	},
 	"start": {

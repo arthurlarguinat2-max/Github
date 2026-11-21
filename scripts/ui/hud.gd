@@ -704,6 +704,8 @@ func _build_cell_card() -> PanelContainer:
 		if _cell == GameState.sim.economy.village_center:
 			_village_tab = "townhall"
 			_on_goals_pressed()
+		elif GameState.sim.economy.def_of(_cell).has("consumes"):
+			_management.open("recipes", "food", _cell)
 		else:
 			_open_build_sheet(_cell))
 	actions.add_child(_cell_build_button)
@@ -731,7 +733,7 @@ func _update_cell_card() -> void:
 	var lines := PackedStringArray()
 
 	if building_id != "":
-		var bdef: Dictionary = eco.defs.get(building_id, {})
+		var bdef: Dictionary = eco.def_of(_cell)
 		_cell_title.text = tr(str(bdef.get("name_key", building_id)))
 		lines.append(_building_status(_cell, bdef))
 		lines.append(tr(str(tdef.get("name_key", terrain_id))))
@@ -747,8 +749,9 @@ func _update_cell_card() -> void:
 	if building_id == "" and not tdef.get("water", false) and not eco.in_territory(_cell):
 		lines.append(tr("BUILD_ERR_TERRITORY"))
 	_cell_text.text = "\n".join(lines)
-	_cell_build_button.visible = can_build_here or _cell == eco.village_center
-	_cell_build_button.text = tr("OPEN_TOWNHALL") if _cell == eco.village_center else tr("BUILD_HERE")
+	var crafts: bool = building_id != "" and eco.is_active(_cell) and eco.def_of(_cell).has("consumes")
+	_cell_build_button.visible = can_build_here or _cell == eco.village_center or crafts
+	_cell_build_button.text = tr("OPEN_TOWNHALL") if _cell == eco.village_center else (tr("CRAFT_RECIPES") if crafts else tr("BUILD_HERE"))
 	_demolish_button.visible = building_id != "" and _cell != eco.village_center
 	var upgrade_id: String = eco.upgrade_target(_cell) if building_id != "" else ""
 	_upgrade_button.visible = upgrade_id != ""
@@ -873,7 +876,9 @@ func _update_needs_sheet() -> void:
 	t += "\n[b]%s : %d %%[/b]\n" % [tr("HEALTH"), roundi(eco.health)]
 	t += _factor_lines(eco.health_factors())
 	t += "\n[b]%s[/b]\n" % tr("NEED_STOCKS")
-	for res in ["grain", "flour", "tools"]:
+	for res in Economy.BASE_RESOURCES:
+		if res in ["food", "water", "wood", "stone"] or (eco.stock(res) <= 0 and res not in ["grain", "flour", "tools"]):
+			continue
 		t += "%s : %d\n" % [tr(_res_key(res)), floori(eco.stock(res))]
 	t += "\n[color=#8a7564]%s[/color]" % tr("NEED_TIP")
 	_needs_text.text = t
@@ -1246,7 +1251,7 @@ func _update_goals_sheet() -> void:
 	var eco = GameState.sim.economy
 	var signature := str([_village_tab, eco.townhall_level, snappedf(eco.townhall_upgrade_left, 0.02), eco.trained,
 		eco.training.size(), eco.population, floori(eco.stock("food")), floori(eco.stock("wood")), floori(eco.stock("stone")),
-		GameState.sim.completed_objectives.size(), eco.free_builders()])
+		GameState.sim.completed_objectives.size(), eco.free_builders(), eco.can_upgrade_townhall()])
 	if signature == _village_signature:
 		return
 	_village_signature = signature

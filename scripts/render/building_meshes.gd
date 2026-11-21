@@ -8,6 +8,7 @@ static var _materials := {}
 static var _meshes := {}
 
 const COLORS := {
+	"flax": Color(0.46, 0.51, 0.77),
 	"wall": Color(0.62, 0.44, 0.28),
 	"daub": Color(0.86, 0.76, 0.6),
 	"straw": Color(0.88, 0.74, 0.42),
@@ -142,6 +143,35 @@ static func create(id: String, level: int = 1) -> Node3D:
 			_add(root, _cylinder(0.014, 0.014, 0.002, 24), "water", pool, Vector3.ZERO, Vector3(1.25, 1, 0.9))
 			for step in 3:
 				_boulder(root, Vector3(-0.013 + step * 0.004, 0.001, 0.009), Vector3(0.006, 0.003, 0.005), "stone", step * 0.6)
+		"claypit", "cistern":
+			var surface := "clay" if id == "claypit" else "water"
+			_add(root, _cylinder(0.018, 0.02, 0.006, 20), surface, Vector3.UP * 0.003)
+			_add(root, _torus(0.016, 0.022), "stone", Vector3.UP * 0.005)
+			for j in 3:
+				_add(root, _sphere(0.005, 10), "clay", Vector3(-0.014 + j * 0.011, 0.006, 0.019), Vector3.ZERO, Vector3(1, 1.35, 1))
+		"kiln":
+			_add(root, _dome(0.022, 0.027), "clay", Vector3.ZERO)
+			_add(root, _cylinder(0.006, 0.007, 0.018, 12), "bark", Vector3(0, 0.028, -0.006))
+			_add(root, _sphere(0.006, 10), "ember", Vector3(0, 0.006, 0.017))
+		"sawmill":
+			_round_house(root, 0.014, 0.016, "bark", false, Vector3(-0.011, 0, 0))
+			for j in 4:
+				_add(root, _capsule(0.003, 0.036), "log", Vector3(0.009 + j * 0.004, 0.004, 0), Vector3(PI / 2, 0, 0))
+		"flaxfield":
+			_add(root, _cylinder(0.024, 0.024, 0.003, 20), "soil", Vector3.UP * 0.0015)
+			for i in 3:
+				for j in 3:
+					_add(root, _sphere(0.004, 8), "flax", Vector3((i-1)*0.012, 0.009, (j-1)*0.012), Vector3.ZERO, Vector3(0.8, 1.9, 0.8))
+		"weavery", "papermill", "bindery", "library":
+			var finish := "cloth" if id == "weavery" else ("clay" if id == "papermill" else "flax")
+			_round_house(root, 0.023 if id == "library" else 0.016, 0.019, finish, false)
+			match id:
+				"weavery", "papermill":
+					for j in 3:
+						_add(root, _capsule(0.002, 0.016), "log", Vector3(-0.01+j*0.01, 0.008, 0.02))
+					_add(root, _sphere(0.009, 8), finish, Vector3(0, 0.010, 0.02), Vector3.ZERO, Vector3(1.3, 0.65, 0.15))
+				"bindery", "library":
+					_round_house(root, 0.01, 0.013, "bark", false, Vector3(0.018, 0, 0.012))
 		"outpost":
 			_add(root, _capsule(0.0015, 0.064), "log", Vector3(0, 0.032, 0))
 			_add(root, _sphere(0.009, 8), "accent", Vector3(0.008, 0.055, 0), Vector3.ZERO, Vector3(1.1, 0.6, 0.15))

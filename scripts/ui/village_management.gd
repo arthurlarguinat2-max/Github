@@ -68,6 +68,7 @@ func refresh() -> void:
 	_used.clear()
 	match mode:
 		"reserve": _reserve(eco)
+		"recipes": _recipes(eco)
 		"priority": _priority(eco)
 		"plans": _plans(eco)
 		"voice": _voice(eco)
@@ -198,6 +199,29 @@ func _apply_priority(cell: int) -> void:
 	eco.preferred_cell = cell
 	eco._compute_staffing()
 	open("reserve", resource)
+
+
+func _recipes(eco) -> void:
+	var def: Dictionary = eco.def_of(target)
+	title.text = _site(eco, target)
+	var lines := PackedStringArray([tr("CRAFT_GUIDE")])
+	var recipes: Dictionary = def.get("recipes", {})
+	if recipes.is_empty() and def.has("produces"):
+		recipes = {def.produces.keys()[0]: def}
+	for id in recipes:
+		var recipe: Dictionary = recipes[id]
+		var formula := "%s → %s" % [hud._cost_text(recipe.consumes), hud._cost_text(recipe.produces)]
+		if def.produces.has(id):
+			lines.append("%s · %s" % [tr("CRAFT_ACTIVE"), formula])
+			action("output" + id, tr("MG_SEE") % _res(id), open.bind("reserve", id))
+		else:
+			action("craft%d:%s" % [target, id], formula, _change_recipe.bind(target, id))
+	detail.text = "\n".join(lines)
+
+
+func _change_recipe(cell: int, id: String) -> void:
+	GameState.sim.economy.select_recipe(cell, id)
+	refresh()
 
 
 func _plans(eco) -> void:

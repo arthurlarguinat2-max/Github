@@ -265,15 +265,28 @@ func test_outposts_expand_territory() -> void:
 func test_every_level_is_reachable() -> void:
 	# Each level's upgrade only costs resources that earlier levels can produce.
 	var levels: Array = _json("res://data/townhall.json").levels
-	var producers := {"food": ["gatherer", "field", "bakery"], "wood": ["woodcutter"], "stone": ["quarry"], "tools": ["workshop"]}
+	var buildings: Dictionary = _json("res://data/buildings.json").buildings
 	for i in range(1, levels.size()):
-		var available: Dictionary = levels[i - 1].buildings
-		for res in levels[i].get("cost", {}):
-			var ok := false
-			for b in producers.get(res, []):
-				if int(available.get(b, 0)) > 0:
-					ok = true
-			assert_true(ok, "level %d needs %s but nothing produces it" % [i + 1, res])
+		var previous: Dictionary = levels[i - 1]
+		# Resolve supply chains from raw producers, including workshop setup costs.
+		var obtainable := {}
+		for pass_index in buildings.size():
+			var count := obtainable.size()
+			for id in previous.buildings:
+				var def: Dictionary = buildings[id]
+				if not def.get("profession", "") in previous.professions and def.has("profession"):
+					continue
+				if not def.cost.keys().all(func(r): return obtainable.has(r) or r in ["wood","stone"]):
+					continue
+				for recipe in def.get("recipes", {"default": def}).values():
+					if recipe.get("consumes", {}).keys().all(func(r): return obtainable.has(r)):
+						for output in recipe.get("produces", {}):
+							obtainable[output] = true
+			if obtainable.size() == count:
+				break
+		for res in levels[i].cost:
+			assert_true(obtainable.has(res), "unreachable %s at level %d" % [res, i + 1])
+
 
 
 func test_professions_have_texts_and_buildings() -> void:
@@ -427,3 +440,66 @@ func test_legacy_management_defaults_and_recheck_location() -> void:
 	assert_eq(loaded.planet.buildings[spot],"well")
 	assert_eq(loaded.economy.plans.size(),1)
 	assert_almost_eq(loaded.economy.stock("wood"),wood)
+
+
+func test_kiln_recipe_inputs_staff_and_save() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 3
+	_rich(sim)
+	eco.stocks.clay = 20
+	var cell := _spot(sim, "kiln")
+	assert_true(eco.build(cell, "kiln"))
+	assert_false(eco.select_recipe(cell, "pots"))
+	eco.complete_construction()
+	assert_false(eco.select_recipe(cell, "books"))
+	assert_true(eco.select_recipe(cell, "pots"))
+	assert_eq(eco.forecast(-1, 0.01).net.pots, 0.0)
+	eco.trained.potter = 1
+	eco._compute_staffing()
+	var flow := eco.forecast(-1, 0.01)
+	assert_true(flow.net.pots > 0)
+	assert_eq(flow.net.bricks, 0.0)
+	assert_true(flow.net.clay < 0)
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	assert_true(loaded.economy.def_of(cell).produces.has("pots"))
+	loaded.economy.stocks.clay = 0.0
+	assert_eq(loaded.economy.forecast(-1, 0.01).net.pots, 0.0)
+	assert_true(loaded.economy.select_recipe(cell, "bricks"))
+	assert_true(loaded.economy.def_of(cell).produces.has("bricks"))
+	assert_true(eco.demolish(cell))
+	assert_false(eco.recipe_choices.has(cell))
+
+
+func test_book_chain_supplies_library_and_level_ten() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 9
+	eco.population = 66
+	eco._rebuild_caches()
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 500
+	for id in ["flaxfield", "weavery", "papermill", "bindery"]:
+		var cell := _spot(sim, id)
+		assert_true(cell >= 0, id)
+		assert_true(eco.build(cell, id))
+		eco.complete_construction()
+		eco.trained[eco.defs[id].profession] = 1
+	for res in ["flax", "paper", "linen", "books"]:
+		eco.stocks[res] = 0.0
+	eco.update(1.0)
+	assert_true(eco.stock("books") > 0)
+	assert_false(eco.can_upgrade_townhall() == "")
+	# Isolate the supply chain from household water demand in this village.
+	eco.stocks.water = 10000
+	for day in 85:
+		eco.update(1.0)
+		if eco.can_upgrade_townhall() == "":
+			break
+	assert_true(eco.upgrade_townhall(), str(eco.stocks))
+	eco.update(10.0)
+	assert_eq(eco.townhall_level, 10)
+	assert_true(eco.build(_spot(sim, "library"), "library"))
+	eco.complete_construction()
+	assert_eq(eco.building_count("library"), 1)

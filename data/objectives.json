@@ -167,6 +167,57 @@
 			"reward": {
 				"wood": 40
 			}
+		},
+		{
+			"id": "village_pottery",
+			"type": "stock",
+			"target": "pots",
+			"value": 6,
+			"title_key": "OBJ_VILLAGE_POTTERY",
+			"reward": {
+				"wood": 10
+			}
+		},
+		{
+			"id": "village_frames",
+			"type": "stock",
+			"target": "frames",
+			"value": 8,
+			"title_key": "OBJ_VILLAGE_FRAMES",
+			"reward": {
+				"tools": 5
+			}
+		},
+		{
+			"id": "village_textiles",
+			"type": "stock",
+			"target": "linen",
+			"value": 12,
+			"title_key": "OBJ_VILLAGE_TEXTILES",
+			"reward": {
+				"flax": 8
+			}
+		},
+		{
+			"id": "village_books",
+			"type": "stock",
+			"target": "books",
+			"value": 10,
+			"title_key": "OBJ_VILLAGE_BOOKS",
+			"reward": {
+				"linen": 6
+			}
+		},
+		{
+			"id": "village_library",
+			"type": "building",
+			"target": "library",
+			"value": 1,
+			"title_key": "OBJ_VILLAGE_LIBRARY",
+			"reward": {
+				"food": 80,
+				"water": 80
+			}
 		}
 	]
 }

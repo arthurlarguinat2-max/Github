@@ -73,6 +73,62 @@
 				"food": 12
 			},
 			"days": 0.6
+		},
+		"clayworker": {
+			"name_key": "PROF_CLAYWORKER",
+			"icon": "claypit",
+			"cost": {
+				"food": 6
+			},
+			"days": 0.3
+		},
+		"potter": {
+			"name_key": "PROF_POTTER",
+			"icon": "kiln",
+			"cost": {
+				"food": 7
+			},
+			"days": 0.36
+		},
+		"carpenter": {
+			"name_key": "PROF_CARPENTER",
+			"icon": "sawmill",
+			"cost": {
+				"food": 8
+			},
+			"days": 0.42
+		},
+		"flaxgrower": {
+			"name_key": "PROF_FLAXGROWER",
+			"icon": "flaxfield",
+			"cost": {
+				"food": 11
+			},
+			"days": 0.6
+		},
+		"weaver": {
+			"name_key": "PROF_WEAVER",
+			"icon": "weavery",
+			"cost": {
+				"food": 11
+			},
+			"days": 0.6
+		},
+		"papermaker": {
+			"name_key": "PROF_PAPERMAKER",
+			"icon": "papermill",
+			"cost": {
+				"food": 12
+			},
+			"days": 0.66
+		},
+		"binder": {
+			"name_key": "PROF_BINDER",
+			"icon": "bindery",
+			"cost": {
+				"food": 13
+			},
+			"days": 0.72
 		}
 	}
 }

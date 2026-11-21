@@ -48,14 +48,16 @@
 				"field": 2,
 				"orchard": 1,
 				"apiary": 1,
-				"bathhouse": 1
+				"bathhouse": 1,
+				"claypit": 1
 			},
 			"professions": [
 				"water_carrier",
 				"gatherer",
 				"woodcutter",
 				"stonecutter",
-				"farmer"
+				"farmer",
+				"clayworker"
 			],
 			"perks": [
 				{
@@ -95,7 +97,10 @@
 				"outpost": 2,
 				"orchard": 2,
 				"apiary": 1,
-				"bathhouse": 1
+				"bathhouse": 1,
+				"claypit": 1,
+				"kiln": 1,
+				"cistern": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -105,7 +110,9 @@
 				"farmer",
 				"miller",
 				"baker",
-				"artisan"
+				"artisan",
+				"clayworker",
+				"potter"
 			],
 			"perks": [
 				{
@@ -147,7 +154,11 @@
 				"stone_circle": 1,
 				"orchard": 2,
 				"apiary": 2,
-				"bathhouse": 2
+				"bathhouse": 2,
+				"claypit": 2,
+				"kiln": 1,
+				"sawmill": 1,
+				"cistern": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -158,7 +169,10 @@
 				"miller",
 				"baker",
 				"artisan",
-				"healer"
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter"
 			],
 			"perks": [
 				{
@@ -208,7 +222,11 @@
 				"stone_circle": 2,
 				"orchard": 3,
 				"apiary": 2,
-				"bathhouse": 2
+				"bathhouse": 2,
+				"claypit": 2,
+				"kiln": 2,
+				"sawmill": 1,
+				"cistern": 2
 			},
 			"professions": [
 				"water_carrier",
@@ -219,7 +237,10 @@
 				"miller",
 				"baker",
 				"artisan",
-				"healer"
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter"
 			],
 			"perks": [
 				{
@@ -262,7 +283,11 @@
 				"stone_circle": 3,
 				"orchard": 3,
 				"apiary": 3,
-				"bathhouse": 3
+				"bathhouse": 3,
+				"claypit": 3,
+				"kiln": 2,
+				"sawmill": 2,
+				"cistern": 2
 			},
 			"professions": [
 				"water_carrier",
@@ -273,7 +298,10 @@
 				"miller",
 				"baker",
 				"artisan",
-				"healer"
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter"
 			],
 			"perks": [
 				{
@@ -291,6 +319,249 @@
 					}
 				}
 			]
+		},
+		{
+			"level": 7,
+			"cost": {
+				"bricks": 40,
+				"frames": 14,
+				"tools": 24
+			},
+			"requires": {
+				"population": 52
+			},
+			"days": 5,
+			"housing": 17,
+			"territory": 9,
+			"builders": 4,
+			"training_slots": 4,
+			"buildings": {
+				"hut": 19,
+				"longhouse": 14,
+				"campfire": 4,
+				"gatherer": 9,
+				"woodcutter": 9,
+				"well": 9,
+				"quarry": 7,
+				"field": 10,
+				"mill": 5,
+				"bakery": 5,
+				"workshop": 4,
+				"outpost": 6,
+				"healer": 4,
+				"stone_circle": 3,
+				"orchard": 4,
+				"apiary": 3,
+				"bathhouse": 3,
+				"claypit": 3,
+				"kiln": 3,
+				"sawmill": 2,
+				"flaxfield": 1,
+				"weavery": 1,
+				"cistern": 3
+			},
+			"professions": [
+				"water_carrier",
+				"gatherer",
+				"woodcutter",
+				"stonecutter",
+				"farmer",
+				"miller",
+				"baker",
+				"artisan",
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter",
+				"flaxgrower",
+				"weaver"
+			],
+			"perks": []
+		},
+		{
+			"level": 8,
+			"cost": {
+				"linen": 32,
+				"boards": 60,
+				"pots": 16
+			},
+			"requires": {
+				"population": 56
+			},
+			"days": 6,
+			"housing": 20,
+			"territory": 10,
+			"builders": 4,
+			"training_slots": 4,
+			"buildings": {
+				"hut": 20,
+				"longhouse": 14,
+				"campfire": 4,
+				"gatherer": 10,
+				"woodcutter": 10,
+				"well": 10,
+				"quarry": 8,
+				"field": 11,
+				"mill": 6,
+				"bakery": 6,
+				"workshop": 4,
+				"outpost": 6,
+				"healer": 4,
+				"stone_circle": 3,
+				"orchard": 5,
+				"apiary": 3,
+				"bathhouse": 3,
+				"claypit": 4,
+				"kiln": 3,
+				"sawmill": 3,
+				"flaxfield": 1,
+				"weavery": 1,
+				"papermill": 1,
+				"cistern": 3
+			},
+			"professions": [
+				"water_carrier",
+				"gatherer",
+				"woodcutter",
+				"stonecutter",
+				"farmer",
+				"miller",
+				"baker",
+				"artisan",
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter",
+				"flaxgrower",
+				"weaver",
+				"papermaker"
+			],
+			"perks": []
+		},
+		{
+			"level": 9,
+			"cost": {
+				"paper": 60,
+				"linen": 28,
+				"bricks": 50
+			},
+			"requires": {
+				"population": 60
+			},
+			"days": 7,
+			"housing": 23,
+			"territory": 11,
+			"builders": 5,
+			"training_slots": 5,
+			"buildings": {
+				"hut": 21,
+				"longhouse": 14,
+				"campfire": 4,
+				"gatherer": 11,
+				"woodcutter": 11,
+				"well": 11,
+				"quarry": 9,
+				"field": 12,
+				"mill": 7,
+				"bakery": 7,
+				"workshop": 4,
+				"outpost": 6,
+				"healer": 4,
+				"stone_circle": 3,
+				"orchard": 6,
+				"apiary": 3,
+				"bathhouse": 3,
+				"claypit": 4,
+				"kiln": 4,
+				"sawmill": 3,
+				"flaxfield": 2,
+				"weavery": 2,
+				"papermill": 1,
+				"bindery": 1,
+				"cistern": 4
+			},
+			"professions": [
+				"water_carrier",
+				"gatherer",
+				"woodcutter",
+				"stonecutter",
+				"farmer",
+				"miller",
+				"baker",
+				"artisan",
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter",
+				"flaxgrower",
+				"weaver",
+				"papermaker",
+				"binder"
+			],
+			"perks": []
+		},
+		{
+			"level": 10,
+			"cost": {
+				"books": 40,
+				"frames": 25,
+				"paper": 45
+			},
+			"requires": {
+				"population": 66
+			},
+			"days": 8,
+			"housing": 26,
+			"territory": 12,
+			"builders": 5,
+			"training_slots": 5,
+			"buildings": {
+				"hut": 22,
+				"longhouse": 14,
+				"campfire": 4,
+				"gatherer": 12,
+				"woodcutter": 12,
+				"well": 12,
+				"quarry": 10,
+				"field": 13,
+				"mill": 8,
+				"bakery": 8,
+				"workshop": 4,
+				"outpost": 6,
+				"healer": 4,
+				"stone_circle": 3,
+				"orchard": 7,
+				"apiary": 3,
+				"bathhouse": 3,
+				"claypit": 5,
+				"kiln": 4,
+				"sawmill": 4,
+				"flaxfield": 2,
+				"weavery": 2,
+				"papermill": 2,
+				"bindery": 1,
+				"cistern": 4,
+				"library": 1
+			},
+			"professions": [
+				"water_carrier",
+				"gatherer",
+				"woodcutter",
+				"stonecutter",
+				"farmer",
+				"miller",
+				"baker",
+				"artisan",
+				"healer",
+				"clayworker",
+				"potter",
+				"carpenter",
+				"flaxgrower",
+				"weaver",
+				"papermaker",
+				"binder"
+			],
+			"perks": []
 		}
 	]
 }

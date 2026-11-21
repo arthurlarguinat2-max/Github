@@ -49,6 +49,51 @@
 			"name_key": "RES_TOOLS",
 			"hidden": false,
 			"stock": true
+		},
+		"clay": {
+			"name_key": "RES_CLAY",
+			"hidden": false,
+			"stock": true
+		},
+		"bricks": {
+			"name_key": "RES_BRICKS",
+			"hidden": false,
+			"stock": true
+		},
+		"pots": {
+			"name_key": "RES_POTS",
+			"hidden": false,
+			"stock": true
+		},
+		"boards": {
+			"name_key": "RES_BOARDS",
+			"hidden": false,
+			"stock": true
+		},
+		"frames": {
+			"name_key": "RES_FRAMES",
+			"hidden": false,
+			"stock": true
+		},
+		"flax": {
+			"name_key": "RES_FLAX",
+			"hidden": false,
+			"stock": true
+		},
+		"linen": {
+			"name_key": "RES_LINEN",
+			"hidden": false,
+			"stock": true
+		},
+		"paper": {
+			"name_key": "RES_PAPER",
+			"hidden": false,
+			"stock": true
+		},
+		"books": {
+			"name_key": "RES_BOOKS",
+			"hidden": false,
+			"stock": true
 		}
 	}
 }

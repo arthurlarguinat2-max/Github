@@ -36,7 +36,7 @@ const ERR_SLOTS := "TRAIN_ERR_SLOTS"
 const ERR_REQUIREMENT := "TH_ERR_REQUIREMENT"
 const ERR_MAX := "TH_ERR_MAX"
 const ERR_BUSY := "TH_ERR_BUSY"
-const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools"]
+const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools", "clay", "bricks", "pots", "boards", "frames", "flax", "linen", "paper", "books"]
 
 var planet  # PlanetState (untyped to avoid a cyclic preload)
 var defs: Dictionary = {}
@@ -44,6 +44,7 @@ var terrain_defs: Dictionary = {}
 var settings: Dictionary = {}
 
 var stocks: Dictionary = {}
+var recipe_choices: Dictionary = {}
 var population := 0
 var village_center := -1
 ## Village well-being, 0..100.
@@ -107,7 +108,25 @@ func building_cells() -> Array[int]:
 
 
 func def_of(cell: int) -> Dictionary:
-	return defs.get(planet.buildings[cell], {})
+	var base: Dictionary = defs.get(planet.buildings[cell], {})
+	if not recipe_choices.has(cell):
+		return base
+	var active := base.duplicate()
+	active.merge(base.recipes[recipe_choices[cell]], true)
+	return active
+
+
+func select_recipe(cell: int, recipe: String) -> bool:
+	if cell < 0 or cell >= planet.cell_count() or not is_active(cell):
+		return false
+	var base: Dictionary = defs.get(planet.buildings[cell], {})
+	if not base.get("recipes", {}).has(recipe):
+		return false
+	if base.produces.has(recipe):
+		recipe_choices.erase(cell)
+	else:
+		recipe_choices[cell] = recipe
+	return true
 
 
 func housing() -> int:
@@ -523,6 +542,7 @@ func demolish(cell: int) -> bool:
 		stocks[res] = stock(res) + float(cost[res]) * 0.5
 	if preferred_cell == cell:
 		preferred_cell = -1
+	recipe_choices.erase(cell)
 	planet.buildings[cell] = ""
 	construction.erase(cell)
 	_rebuild_caches()
@@ -712,6 +732,7 @@ func to_dict() -> Dictionary:
 		"training": training,
 		"construction": _construction_to_save(),
 		"preferred_cell": preferred_cell,
+		"recipes": recipe_choices.duplicate(),
 		"plans": plans.duplicate(true),
 	}
 
@@ -744,6 +765,11 @@ func from_dict(data: Dictionary) -> void:
 	for key in saved_sites:
 		var site: Dictionary = saved_sites[key]
 		construction[int(key)] = {"left": float(site.get("left", 0.0)), "total": float(site.get("total", 1.0))}
+	recipe_choices.clear()
+	var saved_recipes: Dictionary = data.get("recipes", {})
+	for key in saved_recipes:
+		if str(key).is_valid_int():
+			select_recipe(int(key), str(saved_recipes[key]))
 	preferred_cell = int(data.get("preferred_cell", -1))
 	if preferred_cell < 0 or preferred_cell >= planet.cell_count() or planet.buildings[preferred_cell] == "":
 		preferred_cell = -1
@@ -894,6 +920,7 @@ func _migrate_to_townhall() -> void:
 
 
 func _place(cell: int, id: String) -> void:
+	recipe_choices.erase(cell)
 	planet.buildings[cell] = id
 	_rebuild_caches()
 	changed.emit()
