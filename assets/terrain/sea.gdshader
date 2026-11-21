@@ -25,6 +25,6 @@ void fragment() {
 	surf *= smoothstep(-0.65, 0.8, sin(ripple * 0.53 + swell));
 	float fresnel = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), 4.0);
 	ALBEDO = mix(water, vec3(0.75,0.87,0.84), surf * 0.62 + fresnel * 0.16);
-	ROUGHNESS = mix(0.22, 0.67, surf);
-	SPECULAR = 0.72;
+	ROUGHNESS = mix(0.36, 0.70, surf);
+	SPECULAR = 0.32;
 }

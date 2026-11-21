@@ -132,9 +132,10 @@ func _build_environment() -> void:
 	_env.background_mode = Environment.BG_SKY
 	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.ambient_light_energy = 0.48
-	_env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
-	_env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	_env.ambient_light_energy = 0.53
+	_env.ambient_light_sky_contribution = 0.12
+	_env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world_env := WorldEnvironment.new()
 	world_env.environment = _env
 	add_child(world_env)
@@ -243,7 +244,7 @@ func _build_sun() -> void:
 	add_child(sun_pivot)
 	sun = DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.94, 0.84)  # Warm golden light.
-	sun.light_energy = 1.18
+	sun.light_energy = 0.85
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # No sun disc in the gradient sky.
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
