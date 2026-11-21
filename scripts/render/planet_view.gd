@@ -341,7 +341,8 @@ func _add_mesh(mesh: Mesh) -> void:
 		return
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# The solid globe occludes light from the opposite hemisphere.
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(instance)
 	_surface_nodes.append(instance)
 
@@ -477,13 +478,13 @@ func _build_trees(world_seed: int) -> void:
 	rock.radial_segments = 12
 	rock.rings = 4
 	_add_multimesh(rock, rocks, rock_colors, Color.WHITE)
-	_add_multimesh(_grass_tuft(), grasses, grass_colors, Color.WHITE, true)
+	_add_multimesh(_grass_tuft(), grasses, grass_colors, Color.WHITE, true, false)
 	var bloom := SphereMesh.new()
 	bloom.radius = 0.0016
 	bloom.height = 0.0032
 	bloom.radial_segments = 5
 	bloom.rings = 3
-	_add_multimesh(bloom, flowers, flower_colors, Color.WHITE)
+	_add_multimesh(bloom, flowers, flower_colors, Color.WHITE, false, false)
 
 
 ## Six tapered blades share a single mesh across all meadow patches.
@@ -531,7 +532,7 @@ void fragment() {
 """
 
 
-func _add_multimesh(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], base: Color, sway: bool = false) -> void:
+func _add_multimesh(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color], base: Color, sway: bool = false, casts_shadow: bool = true) -> void:
 	if transforms.is_empty():
 		return
 	var material: Material
@@ -559,7 +560,7 @@ func _add_multimesh(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Co
 	var instance := MultiMeshInstance3D.new()
 	instance.multimesh = mm
 	instance.material_override = material
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if sway else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if casts_shadow else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_trees.add_child(instance)
 
 

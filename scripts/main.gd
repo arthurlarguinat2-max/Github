@@ -248,9 +248,13 @@ func _build_sun() -> void:
 	sun.light_energy = 0.42
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # No sun disc in the gradient sky.
 	sun.shadow_enabled = true
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	# Reserve a near cascade for the village: the entire globe is only two units wide.
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	sun.directional_shadow_split_1 = 0.22
+	sun.directional_shadow_blend_splits = true
 	sun.directional_shadow_max_distance = 6.0
-	sun.shadow_bias = 0.018
+	sun.shadow_bias = 0.025
+	sun.shadow_normal_bias = 0.5
 	sun_pivot.add_child(sun)
 	# Tilted sun so the terminator line crosses the planet nicely.
 	sun.rotation = Vector3(deg_to_rad(-20), deg_to_rad(-60), 0)

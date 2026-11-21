@@ -113,7 +113,7 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 8)
 	_margin.add_child(column)
 
-	_title = _label("", 18, TEXT)
+	_title = _landscape_label("", 18)
 	_title.add_theme_font_override("font", Design.title_font())
 	column.add_child(_title)
 	column.add_child(_build_chip_row(["food", "water", "wood", "stone"]))
@@ -152,7 +152,7 @@ func _ready() -> void:
 	_blocking.append(_management)
 	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet, _goals_sheet, _event_sheet])
 
-	_hint = _label(tr("HINT_DRAG"), 13, MUTED)
+	_hint = _landscape_label(tr("HINT_DRAG"), 13)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_hint)
 	_bottom_bar = _build_bottom_bar()
@@ -236,7 +236,7 @@ func _chip(res: String) -> PanelContainer:
 	var chip := PanelContainer.new()
 	chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 16, 5))
+	chip.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 16, 5, false))
 	chip.clip_contents = true
 	chip.custom_minimum_size = Vector2(40, 0)
 	var line := HBoxContainer.new()
@@ -1685,6 +1685,14 @@ func _apply_safe_area() -> void:
 	_margin.add_theme_constant_override("margin_top", int(insets[1] + BASE_PADDING))
 	_margin.add_theme_constant_override("margin_right", int(insets[2] + BASE_PADDING))
 	_margin.add_theme_constant_override("margin_bottom", int(insets[3] + BASE_PADDING))
+
+
+## Labels drawn directly on scenery must also read against the night sky and sand.
+func _landscape_label(text: String, size: int) -> Label:
+	var label := _label(text, size, Design.CARD)
+	label.add_theme_color_override("font_outline_color", Color("342e30"))
+	label.add_theme_constant_override("outline_size", 4)
+	return label
 
 
 func _label(text: String, size: int, color: Color) -> Label:
