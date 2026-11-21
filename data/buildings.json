@@ -1,0 +1,40 @@
+{
+	"_comment": "Buildings. cost/produces in resources; produces = per day with full workers. extracts = takes that resource from its cell and neighbours. territory = buildable radius (in cells) around it. order = position in the build menu; priority = who gets workers first (lower first).",
+	"buildings": {
+		"campfire": {
+			"name_key": "BLD_CAMPFIRE", "desc_key": "BLD_CAMPFIRE_DESC", "age": "stone",
+			"order": 4, "priority": 0, "cost": {"wood": 8, "stone": 5},
+			"workers": 0, "housing": 0, "territory": 3, "growth_bonus": 1,
+			"terrains": ["plains", "forest", "beach", "desert", "hills"]
+		},
+		"hut": {
+			"name_key": "BLD_HUT", "desc_key": "BLD_HUT_DESC", "age": "stone",
+			"order": 0, "priority": 0, "cost": {"wood": 10},
+			"workers": 0, "housing": 4, "territory": 2,
+			"terrains": ["plains", "forest", "beach", "desert", "hills"]
+		},
+		"gatherer": {
+			"name_key": "BLD_GATHERER", "desc_key": "BLD_GATHERER_DESC", "age": "stone",
+			"order": 1, "priority": 1, "cost": {"wood": 5},
+			"workers": 2, "produces": {"food": 6}, "fertility_bonus": true, "territory": 1,
+			"terrains": ["plains", "forest", "beach"]
+		},
+		"woodcutter": {
+			"name_key": "BLD_WOODCUTTER", "desc_key": "BLD_WOODCUTTER_DESC", "age": "stone",
+			"order": 2, "priority": 2, "cost": {"wood": 5},
+			"workers": 2, "produces": {"wood": 4}, "extracts": "wood", "territory": 1,
+			"terrains": ["plains", "forest", "beach", "desert", "hills"]
+		},
+		"quarry": {
+			"name_key": "BLD_QUARRY", "desc_key": "BLD_QUARRY_DESC", "age": "stone",
+			"order": 3, "priority": 3, "cost": {"wood": 15},
+			"workers": 3, "produces": {"stone": 3}, "extracts": "stone", "territory": 1,
+			"terrains": ["plains", "forest", "beach", "desert", "hills"]
+		}
+	},
+	"start": {
+		"stocks": {"food": 40, "wood": 30, "stone": 0},
+		"population": 4,
+		"buildings": ["campfire", "hut"]
+	}
+}

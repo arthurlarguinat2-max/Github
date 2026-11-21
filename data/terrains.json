@@ -1,14 +1,181 @@
 {
-	"_comment": "Terrain types. color = hex sRGB; height = top above sea level (planet radius 1); peak = extra height at the cell center; fertility 0..1; resources: id -> [chance 0..1, min, max].",
+	"_comment": "Terrain types. color = hex sRGB; height = top above sea level (planet radius 1); peak = extra height at the cell center; fertility 0..1; resources: id -> [chance 0..1, min, max]. regrow: id -> [amount per day, maximum].",
 	"terrains": {
-		"ocean":    {"name_key": "TERRAIN_OCEAN",    "color": "2b5f9e", "height": 0.0,   "peak": 0.0,   "water": true,  "buildable": false, "fertility": 0.0, "resources": {"fish": [0.3, 20, 50]}},
-		"shallow":  {"name_key": "TERRAIN_SHALLOW",  "color": "3f86c6", "height": 0.0,   "peak": 0.0,   "water": true,  "buildable": false, "fertility": 0.0, "resources": {"fish": [0.7, 30, 70], "oil": [0.08, 40, 100]}},
-		"beach":    {"name_key": "TERRAIN_BEACH",    "color": "e8d59a", "height": 0.012, "peak": 0.0,   "water": false, "buildable": true,  "fertility": 0.25, "resources": {"stone": [0.1, 10, 25]}},
-		"plains":   {"name_key": "TERRAIN_PLAINS",   "color": "7cc35f", "height": 0.018, "peak": 0.0,   "water": false, "buildable": true,  "fertility": 0.85, "resources": {"wood": [0.15, 10, 25]}},
-		"forest":   {"name_key": "TERRAIN_FOREST",   "color": "4f9a4e", "height": 0.022, "peak": 0.0,   "water": false, "buildable": true,  "fertility": 0.5,  "resources": {"wood": [1.0, 40, 90]}},
-		"desert":   {"name_key": "TERRAIN_DESERT",   "color": "d9b46a", "height": 0.02,  "peak": 0.0,   "water": false, "buildable": true,  "fertility": 0.08, "resources": {"stone": [0.25, 15, 40], "oil": [0.22, 30, 90]}},
-		"hills":    {"name_key": "TERRAIN_HILLS",    "color": "9fae68", "height": 0.03,  "peak": 0.02,  "water": false, "buildable": true,  "fertility": 0.4,  "resources": {"stone": [0.8, 20, 60], "ore": [0.25, 15, 40]}},
-		"mountain": {"name_key": "TERRAIN_MOUNTAIN", "color": "8a8077", "height": 0.035, "peak": 0.075, "peak_color": "f4f4f4", "water": false, "buildable": false, "fertility": 0.0, "resources": {"stone": [1.0, 50, 100], "ore": [0.5, 30, 80], "uranium": [0.06, 10, 30]}},
-		"ice":      {"name_key": "TERRAIN_ICE",      "color": "eef3f7", "height": 0.016, "peak": 0.0,   "water": false, "buildable": false, "fertility": 0.0, "resources": {}}
+		"ocean": {
+			"name_key": "TERRAIN_OCEAN",
+			"color": "2b5f9e",
+			"height": 0.0,
+			"peak": 0.0,
+			"water": true,
+			"buildable": false,
+			"fertility": 0.0,
+			"resources": {
+				"fish": [
+					0.3,
+					20,
+					50
+				]
+			}
+		},
+		"shallow": {
+			"name_key": "TERRAIN_SHALLOW",
+			"color": "3f86c6",
+			"height": 0.0,
+			"peak": 0.0,
+			"water": true,
+			"buildable": false,
+			"fertility": 0.0,
+			"resources": {
+				"fish": [
+					0.7,
+					30,
+					70
+				],
+				"oil": [
+					0.08,
+					40,
+					100
+				]
+			}
+		},
+		"beach": {
+			"name_key": "TERRAIN_BEACH",
+			"color": "e8d59a",
+			"height": 0.012,
+			"peak": 0.0,
+			"water": false,
+			"buildable": true,
+			"fertility": 0.25,
+			"resources": {
+				"stone": [
+					0.1,
+					10,
+					25
+				]
+			}
+		},
+		"plains": {
+			"name_key": "TERRAIN_PLAINS",
+			"color": "7cc35f",
+			"height": 0.018,
+			"peak": 0.0,
+			"water": false,
+			"buildable": true,
+			"fertility": 0.85,
+			"resources": {
+				"wood": [
+					0.15,
+					10,
+					25
+				]
+			},
+			"regrow": {
+				"wood": [
+					0.1,
+					25
+				]
+			}
+		},
+		"forest": {
+			"name_key": "TERRAIN_FOREST",
+			"color": "4f9a4e",
+			"height": 0.022,
+			"peak": 0.0,
+			"water": false,
+			"buildable": true,
+			"fertility": 0.5,
+			"resources": {
+				"wood": [
+					1.0,
+					40,
+					90
+				]
+			},
+			"regrow": {
+				"wood": [
+					1.0,
+					90
+				]
+			}
+		},
+		"desert": {
+			"name_key": "TERRAIN_DESERT",
+			"color": "d9b46a",
+			"height": 0.02,
+			"peak": 0.0,
+			"water": false,
+			"buildable": true,
+			"fertility": 0.08,
+			"resources": {
+				"stone": [
+					0.25,
+					15,
+					40
+				],
+				"oil": [
+					0.22,
+					30,
+					90
+				]
+			}
+		},
+		"hills": {
+			"name_key": "TERRAIN_HILLS",
+			"color": "9fae68",
+			"height": 0.03,
+			"peak": 0.02,
+			"water": false,
+			"buildable": true,
+			"fertility": 0.4,
+			"resources": {
+				"stone": [
+					0.8,
+					20,
+					60
+				],
+				"ore": [
+					0.25,
+					15,
+					40
+				]
+			}
+		},
+		"mountain": {
+			"name_key": "TERRAIN_MOUNTAIN",
+			"color": "8a8077",
+			"height": 0.035,
+			"peak": 0.075,
+			"peak_color": "f4f4f4",
+			"water": false,
+			"buildable": false,
+			"fertility": 0.0,
+			"resources": {
+				"stone": [
+					1.0,
+					50,
+					100
+				],
+				"ore": [
+					0.5,
+					30,
+					80
+				],
+				"uranium": [
+					0.06,
+					10,
+					30
+				]
+			}
+		},
+		"ice": {
+			"name_key": "TERRAIN_ICE",
+			"color": "eef3f7",
+			"height": 0.016,
+			"peak": 0.0,
+			"water": false,
+			"buildable": false,
+			"fertility": 0.0,
+			"resources": {}
+		}
 	}
 }

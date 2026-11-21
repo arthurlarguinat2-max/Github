@@ -16,6 +16,7 @@ const ZOOM_MIN := 1.75            # Camera distance (planet radius = 1).
 const ZOOM_MAX := 4.2
 const ZOOM_DEFAULT := 3.6
 const PICK_RADIUS := 1.03
+const BuildingMeshes := preload("res://scripts/render/building_meshes.gd")
 const CLOUD_COUNT := 18
 
 const WATER_SHADER := """
@@ -56,15 +57,21 @@ var _tap_start_pos := Vector2.ZERO
 var _tap_start_time := 0.0
 var _clouds: Node3D
 var _highlight: MeshInstance3D
+var _trees: MultiMeshInstance3D
+var _buildings_root: Node3D
+var _world_seed := 0
 
 
 func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed: int) -> void:
 	planet = p_planet
 	terrain_defs = p_terrain_defs
 	camera = p_camera
+	_world_seed = world_seed
 	_compute_heights()
 	_build_surface(world_seed)
-	_build_trees(world_seed)
+	_buildings_root = Node3D.new()
+	add_child(_buildings_root)
+	refresh_buildings()
 	_clouds = _build_clouds(world_seed)
 	add_child(_clouds)
 	_highlight = MeshInstance3D.new()
@@ -163,6 +170,36 @@ func _update_camera() -> void:
 	# Far away the planet sits a bit low (room for the title); close up, centered.
 	var t := (_zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)
 	camera.position = Vector3(0.0, 0.25 * t, _zoom)
+
+
+## Turns the planet so that `cell` faces the camera.
+func focus_cell(cell: int) -> void:
+	if cell < 0:
+		return
+	var target := Vector3(0.0, 0.3, 1.0).normalized()
+	basis = Basis(Quaternion(planet.grid.centers[cell], target))
+	_angular_velocity = Vector2.ZERO
+
+
+## Rebuilds building models (and trees, which make room for buildings).
+func refresh_buildings() -> void:
+	for child in _buildings_root.get_children():
+		child.queue_free()
+	for cell in planet.cell_count():
+		var id: String = planet.buildings[cell]
+		if id == "":
+			continue
+		var node := BuildingMeshes.create(id)
+		var dir: Vector3 = planet.grid.centers[cell]
+		var top := _heights[cell] + float(_def(cell).get("peak", 0.0))
+		node.transform = Transform3D(Basis(Quaternion(Vector3.UP, dir)), dir * top)
+		_buildings_root.add_child(node)
+	if _trees:
+		_trees.queue_free()
+		_trees = null
+	_build_trees(_world_seed)
+	if selected >= 0:
+		_highlight.mesh = _build_highlight_mesh(selected)
 
 
 # --- Selection ---------------------------------------------------------------
@@ -299,13 +336,17 @@ func _build_trees(world_seed: int) -> void:
 			"hills":
 				amount = 1 if rng.randf() < 0.4 else 0
 		var cs: PackedVector3Array = grid.corners[i]
+		var has_building: bool = planet.buildings.size() > i and planet.buildings[i] != ""
 		for t in amount:
 			var corner := cs[rng.randi() % cs.size()]
 			var dir: Vector3 = (grid.centers[i] as Vector3).lerp(corner, rng.randf_range(0.15, 0.6)).normalized()
 			var s := rng.randf_range(0.8, 1.3)
 			var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * s)
+			var tint := rng.randf()
+			if has_building:
+				continue  # Same random draws either way: other trees stay in place.
 			transforms.append(Transform3D(orient, dir * (_heights[i] + 0.02 * s)))
-			colors.append(Color(0.16, 0.42, 0.2).lerp(Color(0.3, 0.55, 0.22), rng.randf()))
+			colors.append(Color(0.16, 0.42, 0.2).lerp(Color(0.3, 0.55, 0.22), tint))
 	if transforms.is_empty():
 		return
 	var cone := CylinderMesh.new()
@@ -327,10 +368,10 @@ func _build_trees(world_seed: int) -> void:
 	for k in transforms.size():
 		mm.set_instance_transform(k, transforms[k])
 		mm.set_instance_color(k, colors[k])
-	var instance := MultiMeshInstance3D.new()
-	instance.multimesh = mm
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(instance)
+	_trees = MultiMeshInstance3D.new()
+	_trees.multimesh = mm
+	_trees.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_trees)
 
 
 func _build_clouds(world_seed: int) -> Node3D:

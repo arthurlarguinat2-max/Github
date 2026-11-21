@@ -22,7 +22,8 @@ func _ready() -> void:
 	planet = PlanetView.new()
 	add_child(planet)
 	planet.setup(sim.planet, sim.terrain_defs, cam, sim.world_seed)
-	planet.rotation = Vector3(0.35, 0.0, 0.0)
+	planet.focus_cell(sim.economy.village_center)
+	sim.economy.changed.connect(planet.refresh_buildings)
 	planet.ui_blocks_point = hud.blocks_point
 	planet.cell_selected.connect(hud.show_cell)
 	planet.selection_cleared.connect(hud.hide_cell)

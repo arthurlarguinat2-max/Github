@@ -26,6 +26,9 @@ func _ready() -> void:
 	config = Config.game_config()
 	config["terrains"] = Config.load_json("res://data/terrains.json").get("terrains", {})
 	config["resources"] = Config.load_json("res://data/resources.json").get("resources", {})
+	var buildings_file := Config.load_json("res://data/buildings.json")
+	config["buildings"] = buildings_file.get("buildings", {})
+	config["start"] = buildings_file.get("start", {})
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()
 

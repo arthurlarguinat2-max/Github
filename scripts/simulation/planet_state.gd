@@ -12,6 +12,8 @@ var fertility := PackedFloat32Array()
 ## One Dictionary per cell: resource id -> remaining amount.
 var resources: Array[Dictionary] = []
 var pollution := PackedFloat32Array()
+## Building id on each cell ("" = none).
+var buildings := PackedStringArray()
 
 
 func _init(frequency: int = 6) -> void:
@@ -30,6 +32,8 @@ func generate(world_seed: int, terrains: Dictionary, settings: Dictionary) -> vo
 	pollution = PackedFloat32Array()
 	pollution.resize(cell_count())
 	pollution.fill(0.0)
+	buildings = PackedStringArray()
+	buildings.resize(cell_count())
 
 
 func count_terrain(terrain_id: String) -> int:
@@ -43,6 +47,7 @@ func to_dict() -> Dictionary:
 		"fertility": Array(fertility),
 		"resources": resources,
 		"pollution": Array(pollution),
+		"buildings": Array(buildings),
 	}
 
 
@@ -64,11 +69,14 @@ func from_dict(data: Dictionary) -> bool:
 		var cell := {}
 		if typeof(r) == TYPE_DICTIONARY:
 			for key in r:
-				cell[str(key)] = int(r[key])  # JSON numbers come back as floats
+				cell[str(key)] = snappedf(float(r[key]), 0.01)
 		resources.append(cell)
 	var saved_pollution: Array = data.get("pollution", [])
 	pollution = PackedFloat32Array(saved_pollution) if saved_pollution.size() == n else PackedFloat32Array()
 	if pollution.size() != n:
 		pollution.resize(n)
 		pollution.fill(0.0)
+	var saved_buildings: Array = data.get("buildings", [])
+	buildings = PackedStringArray(saved_buildings) if saved_buildings.size() == n else PackedStringArray()
+	buildings.resize(n)
 	return true

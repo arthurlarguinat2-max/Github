@@ -8,6 +8,7 @@ extends RefCounted
 signal day_passed(day: int)
 
 const PlanetState := preload("res://scripts/simulation/planet_state.gd")
+const Economy := preload("res://scripts/simulation/economy.gd")
 const DEFAULT_TICKS_PER_DAY := 600
 
 var world_seed: int = 0
@@ -22,6 +23,11 @@ var rng := RandomNumberGenerator.new()
 var planet: PlanetState
 var terrain_defs: Dictionary = {}
 var planet_settings: Dictionary = {}
+## Stocks, buildings, workers, population.
+var economy := Economy.new()
+var building_defs: Dictionary = {}
+var start_settings: Dictionary = {}
+var economy_settings: Dictionary = {}
 
 
 func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
@@ -31,8 +37,13 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	allowed_speeds = config.get("allowed_speeds", allowed_speeds)
 	terrain_defs = config.get("terrains", {})
 	planet_settings = config.get("planet", {})
+	building_defs = config.get("buildings", {})
+	start_settings = config.get("start", {})
+	economy_settings = config.get("economy", {})
 	planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 	planet.generate(world_seed, terrain_defs, planet_settings)
+	economy.setup(planet, building_defs, terrain_defs, economy_settings)
+	economy.found_village(start_settings)
 
 
 ## Current in-game day, starting at 1.
@@ -49,8 +60,9 @@ func time_of_day() -> float:
 func step() -> void:
 	var previous_day := day()
 	tick += 1
-	# Future phases plug their systems here (production, population, pollution...).
+	economy.update(1.0 / float(ticks_per_day))
 	if day() != previous_day:
+		economy.daily_update()
 		day_passed.emit(day())
 
 
@@ -73,9 +85,17 @@ func set_speed(value: int) -> bool:
 func advance_offline(seconds: float, tick_rate_hz: float, cap_seconds: float, efficiency: float) -> int:
 	var effective := clampf(seconds, 0.0, cap_seconds) * clampf(efficiency, 0.0, 1.0)
 	var ticks := int(effective * tick_rate_hz)
-	# Phase 0: a plain fast-forward. Later phases will use an aggregated model
-	# (daily averages) instead of stepping every tick.
-	run_ticks(ticks)
+	# Big steps (1/20 of a day) instead of every tick: same rules, much faster.
+	var chunk := maxi(1, ticks_per_day / 20)
+	var remaining := ticks
+	while remaining > 0:
+		var n := mini(chunk, remaining)
+		var previous_day := day()
+		tick += n
+		economy.update(float(n) / float(ticks_per_day))
+		for d in day() - previous_day:
+			economy.daily_update()
+		remaining -= n
 	return ticks
 
 
@@ -86,6 +106,7 @@ func to_dict() -> Dictionary:
 		"speed": speed,
 		"rng_state": str(rng.state),  # stored as string: JSON numbers are doubles.
 		"planet": planet.to_dict(),
+		"economy": economy.to_dict(),
 	}
 
 
@@ -104,3 +125,10 @@ func from_dict(data: Dictionary) -> void:
 	if not loaded:
 		planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 		planet.generate(world_seed, terrain_defs, planet_settings)
+	economy = Economy.new()
+	economy.setup(planet, building_defs, terrain_defs, economy_settings)
+	if typeof(data.get("economy")) == TYPE_DICTIONARY:
+		economy.from_dict(data["economy"])
+	else:
+		# Saves made before Phase 2: found the village now.
+		economy.found_village(start_settings)
