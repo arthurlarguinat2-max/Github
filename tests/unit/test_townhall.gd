@@ -314,3 +314,116 @@ func test_orchard_hives_and_baths_survive_reload() -> void:
 	for id in placed:
 		assert_eq(restored.planet.buildings[placed[id]], id)
 		assert_true(restored.economy.is_active(placed[id]))
+
+
+func test_food_priority_forecast_matches_work_and_does_not_spend() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	_rich(sim)
+	var gatherer := _spot(sim, "gatherer")
+	eco.build(gatherer, "gatherer")
+	eco.complete_construction()
+	var orchard := _spot(sim, "orchard")
+	eco.build(orchard, "orchard")
+	eco.complete_construction()
+	var dt := 1.0 / sim.ticks_per_day
+	var vacant := eco.forecast(orchard, dt)
+	assert_almost_eq(vacant.staffing[orchard], 0)
+	eco.trained.gatherer = 1
+	var before := eco.forecast(-1,dt)
+	var stocks_before := eco.stocks.duplicate()
+	var deposits_before := sim.planet.resources.duplicate(true)
+	var after := eco.forecast(orchard,dt)
+	assert_eq(eco.stocks,stocks_before)
+	assert_eq(sim.planet.resources,deposits_before)
+	assert_true(before.outputs.has(gatherer))
+	assert_false(after.outputs.has(gatherer))
+	assert_true(after.outputs[orchard].food > 0)
+	eco.preferred_cell = orchard
+	eco.update(dt)
+	assert_eq(eco.workers_at(orchard),1)
+	assert_eq(eco.workers_at(gatherer),0)
+	assert_almost_eq(eco.rates.food,after.net.food)
+	assert_almost_eq(eco.stock("food") - float(stocks_before.food),after.net.food * dt)
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	assert_eq(loaded.economy.preferred_cell,orchard)
+	loaded.economy.preferred_cell = -1
+	loaded.economy.update(dt)
+	assert_eq(loaded.economy.workers_at(gatherer),1)
+
+
+func test_empty_stock_reports_unserved_needs_and_real_inputs() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.stocks.food = 0.0
+	var flow := eco.forecast(-1,0.01)
+	assert_almost_eq(flow.net.food,0)
+	assert_almost_eq(flow.households.food,0)
+	assert_true(flow.unmet.food > 0)
+	_rich(sim)
+	eco.townhall_level = 3
+	var mill := _spot(sim,"mill")
+	eco.build(mill,"mill")
+	eco.complete_construction()
+	assert_false(eco.forecast(-1,0.01).waiting.has(mill))
+	eco.trained.miller = 1
+	assert_eq(eco.forecast(-1,0.01).waiting[mill],"grain")
+	eco.stocks.grain = 4
+	assert_false(eco.forecast(-1,0.01).waiting.has(mill))
+
+
+func test_plans_reorder_cancel_reload_and_offline_cost_once() -> void:
+	var sim := _sim()
+	_rich(sim)
+	var eco := sim.economy
+	var first := _spot(sim,"hut")
+	var second := _spot(sim,"well")
+	if second == first:
+		for cell in sim.planet.cell_count():
+			if cell != first and eco.can_build(cell,"well") == "":
+				second = cell
+				break
+	eco.stocks.wood = 0.0
+	assert_true(eco.enqueue(first,"hut"))
+	assert_false(eco.enqueue(first,"well"))
+	assert_true(eco.enqueue(second,"well"))
+	assert_false(eco.enqueue(eco.village_center,"well"))
+	eco.plans.reverse()
+	eco.plans.remove_at(0)
+	assert_eq(eco.stock("wood"),0.0)
+	eco.update(0.01)
+	assert_eq(eco.plans.size(),1)
+	eco.stocks.wood = 30.0
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	loaded.advance_offline(4,10,10,1)
+	assert_eq(loaded.planet.buildings[first],"hut")
+	assert_eq(loaded.planet.buildings[second],"")
+	assert_true(loaded.economy.plans.is_empty())
+	assert_almost_eq(loaded.economy.stock("wood"),30.0 - float(eco.defs.hut.cost.wood))
+	var saved_wood := loaded.economy.stock("wood")
+	var again := _sim()
+	again.from_dict(JSON.parse_string(JSON.stringify(loaded.to_dict())))
+	again.advance_offline(4,10,10,1)
+	assert_almost_eq(again.economy.stock("wood"),saved_wood)
+
+
+func test_legacy_management_defaults_and_recheck_location() -> void:
+	var sim := _sim()
+	var old := sim.to_dict()
+	old.economy.erase("plans")
+	old.economy.erase("preferred_cell")
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(old)))
+	assert_eq(loaded.economy.preferred_cell,-1)
+	assert_true(loaded.economy.plans.is_empty())
+	_rich(loaded)
+	var spot := _spot(loaded,"hut")
+	assert_true(loaded.economy.enqueue(spot,"hut"))
+	assert_true(loaded.economy.build(spot,"well"))
+	var wood := loaded.economy.stock("wood")
+	loaded.economy.update(0.01)
+	assert_eq(loaded.planet.buildings[spot],"well")
+	assert_eq(loaded.economy.plans.size(),1)
+	assert_almost_eq(loaded.economy.stock("wood"),wood)

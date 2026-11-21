@@ -43,6 +43,8 @@ var _settings_button: Button
 var _bottom_bar: Control
 
 # Sheets (only one visible at a time).
+var _management := preload("res://scripts/ui/village_management.gd").new()
+var _planning := false
 var _sheets: Array[Control] = []
 var _build_sheet: PanelContainer
 var _build_sheet_title: Label
@@ -144,6 +146,10 @@ func _ready() -> void:
 	column.add_child(_goals_sheet)
 	_event_sheet = _build_event_sheet()
 	column.add_child(_event_sheet)
+	_management.setup(self)
+	column.add_child(_management)
+	_sheets.append(_management)
+	_blocking.append(_management)
 	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet, _goals_sheet, _event_sheet])
 
 	_hint = _label(tr("HINT_DRAG"), 13, MUTED)
@@ -193,6 +199,8 @@ func _process(delta: float) -> void:
 	_refresh_timer = 0.0
 	_refresh_chips()
 	_check_tutorial()
+	if _management.visible:
+		_management.refresh()
 	if _goals_sheet.visible:
 		_update_goals_sheet()
 	if _cell_card.visible:
@@ -246,6 +254,13 @@ func _chip(res: String) -> PanelContainer:
 	var rate := _label("", 10, MUTED)
 	rate.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	texts.add_child(rate)
+	if res in Economy.BASE_RESOURCES:
+		var tap := Button.new()
+		tap.flat = true
+		tap.custom_minimum_size.y = 44
+		tap.pressed.connect(_management.open.bind("reserve", res))
+		chip.add_child(tap)
+		_blocking.append(chip)
 	_chips[res] = {"value": value, "rate": rate}
 	return chip
 
@@ -471,10 +486,13 @@ func _build_build_sheet() -> PanelContainer:
 		tab.add_theme_stylebox_override("hover_pressed", Design.outlined(Design.CORAL_SOFT, Design.CORAL, 14, 3))
 		tab.pressed.connect(func():
 			_category = str(cat.id)
-			_open_build_sheet(_target_cell)
+			_open_build_sheet(_target_cell, _planning)
 			Haptics.light())
 		tabs.add_child(tab)
 		_category_buttons[str(cat.id)] = tab
+	var plans := _icon_button("", tr("MG_PLANS"), Vector2(0,44))
+	plans.pressed.connect(_management.open.bind("plans"))
+	parts[1].add_child(plans)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 230)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -487,12 +505,15 @@ func _build_build_sheet() -> PanelContainer:
 
 
 ## Opens the build menu. With a cell: builds right there; without: 2-tap flow.
-func _open_build_sheet(cell: int) -> void:
+func _open_build_sheet(cell: int, planning: bool = false) -> void:
 	_end_placement()
+	_planning = planning
 	_target_cell = cell
 	_build_sheet_title.text = tr("BUILD_HERE") if cell >= 0 else tr("BUILD_WHAT")
 	var eco_b = GameState.sim.economy
-	if not eco_b.townhall_levels.is_empty():
+	if _planning:
+		_build_sheet_title.text = tr("MG_ADD")
+	elif not eco_b.townhall_levels.is_empty():
 		_build_sheet_title.text += "\n" + tr("BUILDERS_FREE") % [eco_b.free_builders(), eco_b.builders()]
 	for child in _build_list.get_children():
 		_build_list.remove_child(child)
@@ -560,6 +581,8 @@ func _update_build_cards() -> void:
 			reason = eco.can_build(_target_cell, id)
 		elif not eco.can_afford(eco.defs[id].get("cost", {})):
 			reason = Economy.ERR_COST
+		if _planning and reason in [Economy.ERR_BUILDERS, Economy.ERR_COST]:
+			reason = ""
 		(card as Button).disabled = reason != ""
 		(card as Button).text = _card_text(id, reason)
 
@@ -592,7 +615,7 @@ func _valid_cells(id: String) -> Array:
 	var eco = GameState.sim.economy
 	var cells: Array = []
 	for i in GameState.sim.planet.cell_count():
-		if eco.can_build(i, id) == "":
+		if (eco.plan_reason(i,id) if _planning else eco.can_build(i,id)) == "":
 			cells.append(i)
 	return cells
 
@@ -632,6 +655,14 @@ func on_cell_tapped(cell: int) -> void:
 	if _placing != "":
 		var eco = GameState.sim.economy
 		var id := _placing
+		if _planning:
+			var block: String = eco.plan_reason(cell,id)
+			if block == "" and eco.enqueue(cell,id):
+				_end_placement()
+				_management.open("plans")
+			else:
+				_show_toast(tr(block))
+			return
 		var reason: String = eco.can_build(cell, id)
 		if reason == "" and eco.build(cell, id):
 			Haptics.medium()
@@ -1164,6 +1195,16 @@ func _stop_pulse() -> void:
 # Goals
 # =============================================================================
 
+func show_people() -> void:
+	_village_tab = "people"
+	_on_goals_pressed()
+
+
+func show_townhall() -> void:
+	_village_tab = "townhall"
+	_on_goals_pressed()
+
+
 func _on_goals_pressed() -> void:
 	_tutorial_flags["goals"] = true
 	_tutorial_flags["village"] = true
@@ -1243,6 +1284,12 @@ func _fill_goals_tab() -> void:
 
 ## Town hall: level, skills, next level (unlocks, conditions, cost), upgrade.
 func _fill_townhall_tab() -> void:
+	var work := _icon_button("",tr("MG_WORK"),Vector2(0,44))
+	work.pressed.connect(_management.open.bind("priority"))
+	_goals_list.add_child(work)
+	var plans := _icon_button("",tr("MG_PLANS"),Vector2(0,44))
+	plans.pressed.connect(_management.open.bind("plans"))
+	_goals_list.add_child(plans)
 	var eco = GameState.sim.economy
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)

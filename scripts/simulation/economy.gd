@@ -66,6 +66,11 @@ var trained: Dictionary = {}
 var training: Array = []
 ## Construction sites: cell -> {"left": days, "total": days}
 var construction: Dictionary = {}
+var plans: Array = []
+var preferred_cell := -1
+var household_used := {}
+var unmet_needs := {}
+
 
 var _building_cells: Array[int] = []
 var _territory: Dictionary = {}
@@ -347,7 +352,7 @@ func can_afford(cost: Dictionary) -> bool:
 ## "" when `id` can be built on `cell`, otherwise the localization key of the reason.
 ## Order matters: the UI hides buildings that can never go on this cell.
 func can_build(cell: int, id: String) -> String:
-	if not defs.has(id):
+	if cell < 0 or cell >= planet.cell_count() or not defs.has(id):
 		return ERR_UNKNOWN
 	if planet.buildings[cell] != "":
 		return ERR_OCCUPIED
@@ -445,6 +450,32 @@ func build(cell: int, id: String) -> bool:
 	return true
 
 
+func plan_reason(cell: int, id: String) -> String:
+	if plans.size() >= 2:
+		return "PLAN_FULL"
+	for plan in plans:
+		if plan.cell == cell:
+			return "PLAN_DUPLICATE"
+	var reason := can_build(cell, id)
+	return "" if reason in [ERR_BUILDERS, ERR_COST] else reason
+
+
+func enqueue(cell: int, id: String) -> bool:
+	if plan_reason(cell, id) != "":
+		return false
+	plans.append({"cell": cell, "id": id})
+	return true
+
+
+func _start_plans() -> void:
+	while not plans.is_empty():
+		var plan: Dictionary = plans[0]
+		if can_build(plan.cell, plan.id) != "":
+			break
+		plans.pop_front()
+		build(plan.cell, plan.id)
+
+
 ## Building this one can be upgraded into ("" if none).
 func upgrade_target(cell: int) -> String:
 	return str(def_of(cell).get("upgrade_to", ""))
@@ -490,6 +521,8 @@ func demolish(cell: int) -> bool:
 	var cost: Dictionary = defs.get(id, {}).get("cost", {})
 	for res in cost:
 		stocks[res] = stock(res) + float(cost[res]) * 0.5
+	if preferred_cell == cell:
+		preferred_cell = -1
 	planet.buildings[cell] = ""
 	construction.erase(cell)
 	_rebuild_caches()
@@ -535,66 +568,99 @@ func found_village(start: Dictionary) -> void:
 func update(dt_days: float) -> void:
 	if dt_days <= 0.0:
 		return
-	var wb := _wb()
 	_advance_timers(dt_days)
+	_start_plans()
 	_compute_staffing()
+	var flow := _flow(dt_days, stocks, _staffing, true)
+	rates = flow.net
+	_building_rates = flow.outputs
+	_building_inputs = flow.inputs
+	_waiting = flow.waiting
+	household_used = flow.households
+	unmet_needs = flow.unmet
+	_short_food = _short_food or unmet_needs.has("food")
+	_short_water = _short_water or unmet_needs.has("water")
+
+
+## A preview spends a scratch inventory and shadows only deposits it touches.
+func forecast(cell: int, dt_days: float) -> Dictionary:
+	var staffing := _allocation(cell)
+	var result := _flow(dt_days, stocks.duplicate(), staffing, false)
+	result.staffing = staffing
+	return result
+
+
+func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: bool) -> Dictionary:
+	var wb := _wb()
+	var consumed := {}
+	var produced := {}
+	var waiting := {}
+	var households := {}
+	var unmet := {}
+	var deposits := {}
 	var new_rates := {}
 	for res in BASE_RESOURCES:
 		new_rates[res] = 0.0
-	_building_rates.clear()
-	_building_inputs.clear()
-	_waiting.clear()
 	var village_productivity := productivity()
 	for cell in _building_cells:
 		var def := def_of(cell)
 		var produces: Dictionary = def.get("produces", {})
 		if produces.is_empty() or not is_active(cell):
 			continue
-		var mult: float = float(_staffing.get(cell, 0.0)) * village_productivity
+		var mult: float = float(staffing.get(cell, 0.0)) * village_productivity
 		if mult <= 0.0:
 			continue
 		if def.get("fertility_bonus", false):
 			mult *= 0.4 + planet.fertility[cell]
 		if def.has("water_bonus") and near_water(cell):
 			mult *= float(def.water_bonus)
-		if def.get("tool_bonus", false) and stock("tools") > 0.0:
+		var inputs := {}
+		if def.get("tool_bonus", false) and float(inventory.get("tools", 0.0)) > 0.0:
 			mult *= float(wb.get("tool_bonus", 1.25))
-			var worn := minf(stock("tools"), float(wb.get("tool_use_per_day", 0.05)) * dt_days)
-			stocks["tools"] = stock("tools") - worn
+			var worn := minf(float(inventory.get("tools", 0.0)), float(wb.get("tool_use_per_day", 0.05)) * dt_days)
+			inventory["tools"] = float(inventory.get("tools", 0.0)) - worn
+			inputs["tools"] = worn / dt_days
 			new_rates["tools"] = float(new_rates["tools"]) - worn / dt_days
 
 		# Inputs: the scarcest one limits the whole production.
 		var consumes: Dictionary = def.get("consumes", {})
 		var supply := 1.0
+		var limiting := ""
 		for res in consumes:
 			var need := float(consumes[res]) * mult * dt_days
-			if need > 0.0:
-				supply = minf(supply, stock(res) / need)
+			if need > 0.0 and float(inventory.get(res, 0.0)) / need < supply:
+				supply = float(inventory.get(res, 0.0)) / need
+				limiting = str(res)
 		if supply < 0.999 and not consumes.is_empty():
-			_waiting[cell] = true
+			waiting[cell] = limiting
+		consumed[cell] = inputs
 		if supply <= 0.0:
 			continue
-		var inputs := {}
 		for res in consumes:
 			var used := float(consumes[res]) * mult * dt_days * supply
-			stocks[res] = maxf(0.0, stock(res) - used)
+			inventory[res] = maxf(0.0, float(inventory.get(res, 0.0)) - used)
 			inputs[res] = used / dt_days
 			new_rates[res] = float(new_rates.get(res, 0.0)) - inputs[res]
 		var outputs := {}
 		for res in produces:
 			var amount := float(produces[res]) * mult * dt_days * supply * _perk_production(str(res))
 			if def.has("extracts"):
-				amount = _extract(cell, str(def.extracts), amount)
-			stocks[res] = stock(res) + amount
+				amount = _extract(cell, str(def.extracts), amount, apply, deposits)
+			inventory[res] = float(inventory.get(res, 0.0)) + amount
 			outputs[res] = amount / dt_days
 			new_rates[res] = float(new_rates.get(res, 0.0)) + outputs[res]
-		_building_rates[cell] = outputs
-		_building_inputs[cell] = inputs
+		produced[cell] = outputs
 
-	# People eat and drink.
-	_consume_needs("food", float(settings.get("food_per_person_per_day", 1.0)), dt_days, new_rates)
-	_consume_needs("water", float(settings.get("water_per_person_per_day", 1.0)), dt_days, new_rates)
-	rates = new_rates
+	for res in ["food", "water"]:
+		var demand := population * float(settings.get(res + "_per_person_per_day", 1.0))
+		var used := minf(float(inventory.get(res, 0.0)), demand * dt_days)
+		households[res] = used / dt_days
+		inventory[res] = maxf(0, float(inventory.get(res, 0.0)) - used)
+		new_rates[res] -= used / dt_days
+		if demand - used / dt_days > 0.00001:
+			unmet[res] = demand - used / dt_days
+	return {"outputs": produced, "inputs": consumed, "waiting": waiting, "households": households,
+		"unmet": unmet, "net": new_rates}
 
 
 ## Once per in-game day: nature regrows, well-being evolves, population changes.
@@ -645,6 +711,8 @@ func to_dict() -> Dictionary:
 		"trained": trained,
 		"training": training,
 		"construction": _construction_to_save(),
+		"preferred_cell": preferred_cell,
+		"plans": plans.duplicate(true),
 	}
 
 
@@ -676,6 +744,15 @@ func from_dict(data: Dictionary) -> void:
 	for key in saved_sites:
 		var site: Dictionary = saved_sites[key]
 		construction[int(key)] = {"left": float(site.get("left", 0.0)), "total": float(site.get("total", 1.0))}
+	preferred_cell = int(data.get("preferred_cell", -1))
+	if preferred_cell < 0 or preferred_cell >= planet.cell_count() or planet.buildings[preferred_cell] == "":
+		preferred_cell = -1
+	plans.clear()
+	for entry in data.get("plans", []):
+		if entry is Dictionary and defs.has(entry.get("id", "")) and plans.size() < 2:
+			var cell := int(entry.get("cell", -1))
+			if cell >= 0 and cell < planet.cell_count():
+				plans.append({"id": str(entry.id), "cell": cell})
 	if data.has("townhall_level"):
 		townhall_level = clampi(int(data.townhall_level), 1, max_level())
 		townhall_upgrade_left = float(data.get("townhall_upgrade_left", -1.0))
@@ -688,19 +765,6 @@ func from_dict(data: Dictionary) -> void:
 
 func _wb() -> Dictionary:
 	return settings.get("wellbeing", {})
-
-
-func _consume_needs(res: String, per_person: float, dt_days: float, new_rates: Dictionary) -> void:
-	var need := population * per_person
-	if need <= 0.0:
-		return
-	if stock(res) < need * dt_days:
-		if res == "food":
-			_short_food = true
-		else:
-			_short_water = true
-	stocks[res] = maxf(0.0, stock(res) - need * dt_days)
-	new_rates[res] = float(new_rates.get(res, 0.0)) - need
 
 
 ## Sum of a village bonus ("happiness", "health", "growth_bonus") from
@@ -874,27 +938,37 @@ func _mark_territory(start: int, radius: int) -> void:
 ## A building only gets villagers trained for its profession. Without
 ## progression data (old saves/tests), anyone can work anywhere.
 func _compute_staffing() -> void:
-	_staffing.clear()
+	_staffing = _allocation(preferred_cell)
+
+
+func _allocation(priority: int) -> Dictionary:
+	var allocation := {}
 	var free := population
 	var pools := trained.duplicate()
-	for cell in _building_cells:
+	var order := _building_cells
+	if priority in _building_cells:
+		order = _building_cells.duplicate()
+		order.erase(priority)
+		order.push_front(priority)
+	for cell in order:
 		var def := def_of(cell)
 		var need := int(def.get("workers", 0))
 		if not is_active(cell):
-			_staffing[cell] = 0.0
+			allocation[cell] = 0.0
 			continue
 		if need <= 0:
-			_staffing[cell] = 1.0
+			allocation[cell] = 1.0
 			continue
 		var got := 0
 		var profession := str(def.get("profession", ""))
 		if townhall_levels.is_empty() or profession == "":
 			got = mini(need, free)
-			free -= got
 		else:
-			got = mini(need, int(pools.get(profession, 0)))
+			got = mini(free, mini(need, int(pools.get(profession, 0))))
 			pools[profession] = int(pools.get(profession, 0)) - got
-		_staffing[cell] = float(got) / float(need)
+		free -= got
+		allocation[cell] = float(got) / float(need)
+	return allocation
 
 
 func _cell_and_neighbors(cell: int) -> Array:
@@ -905,12 +979,16 @@ func _cell_and_neighbors(cell: int) -> Array:
 
 ## Takes up to `wanted` of `res` from the cell, then its neighbours.
 ## Returns the amount actually taken (deposits run out).
-func _extract(cell: int, res: String, wanted: float) -> float:
+func _extract(cell: int, res: String, wanted: float, apply: bool, deposits: Dictionary) -> float:
 	var remaining := wanted
 	for c in _cell_and_neighbors(cell):
 		if remaining <= 0.0:
 			break
 		var deposit: Dictionary = planet.resources[c]
+		if not apply:
+			if not deposits.has(c):
+				deposits[c] = deposit.duplicate()
+			deposit = deposits[c]
 		var available := float(deposit.get(res, 0.0))
 		if available <= 0.0:
 			continue

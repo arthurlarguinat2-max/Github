@@ -6,6 +6,7 @@
 extends Node3D
 
 signal cell_selected(cell: int)
+signal villager_tapped
 signal selection_cleared
 ## For the tutorial: the player spun / zoomed the planet.
 signal rotated
@@ -263,6 +264,9 @@ func clear_placement() -> void:
 # --- Selection ---------------------------------------------------------------
 
 func _select_at(screen_pos: Vector2) -> void:
+	if not _placement.visible and _life.walker_at(screen_pos, camera):
+		villager_tapped.emit()
+		return
 	var origin := camera.project_ray_origin(screen_pos)
 	var direction := camera.project_ray_normal(screen_pos)
 	# Work in the planet's local space (it only rotates).

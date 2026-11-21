@@ -53,6 +53,7 @@ func _ready() -> void:
 	apply_appearance(false)
 	planet.focus_cell(sim.economy.village_center)
 	planet.ui_blocks_point = hud.blocks_point
+	planet.villager_tapped.connect(hud._management.open.bind("voice"))
 	planet.cell_selected.connect(hud.on_cell_tapped)
 	planet.selection_cleared.connect(hud.hide_cell)
 	sim.economy.changed.connect(planet.refresh_buildings)

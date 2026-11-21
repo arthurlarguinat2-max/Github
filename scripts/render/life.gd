@@ -294,3 +294,14 @@ func _bird_mesh() -> Mesh:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh.surface_set_material(0, mat)
 	return mesh
+
+## Pick the nearest visible walker in screen space, excluding the far hemisphere.
+func walker_at(point: Vector2, camera: Camera3D) -> bool:
+	for i in _bodies.visible_instance_count:
+		var local := _bodies.get_instance_transform(i).origin
+		var world := to_global(local)
+		if (world - global_position).dot(camera.global_position - world) <= 0 or camera.is_position_behind(world):
+			continue
+		if camera.unproject_position(world).distance_to(point) <= 13.0:
+			return true
+	return false
