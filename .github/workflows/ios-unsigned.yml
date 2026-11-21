@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, "claude/**"]
-    paths-ignore: ["**.md"]
+    paths-ignore: ["**.md", "docs/**"]
 
 env:
   GODOT_VERSION: "4.7.2"
