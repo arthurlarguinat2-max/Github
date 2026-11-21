@@ -184,3 +184,16 @@ func test_huge_planet_is_playable() -> void:
 	assert_true(sim.economy.village_center >= 0)
 	sim.run_ticks(sim.ticks_per_day)
 	assert_eq(sim.day(), 2)
+
+
+func test_tutorial_buildings_are_affordable_at_start() -> void:
+	# The tutorial asks for a well, a gatherer and a hut with the starting stocks.
+	var sim := _sim()
+	var eco := sim.economy
+	var total := {}
+	for id in ["well", "gatherer", "hut"]:
+		var cost: Dictionary = eco.defs[id].cost
+		for res in cost:
+			total[res] = float(total.get(res, 0.0)) + float(cost[res])
+	for res in total:
+		assert_true(eco.stock(res) >= total[res], "%s: need %d, have %d" % [res, total[res], eco.stock(res)])

@@ -215,8 +215,7 @@
 			"order": 22,
 			"priority": 1,
 			"cost": {
-				"wood": 8,
-				"stone": 6
+				"wood": 10
 			},
 			"workers": 1,
 			"produces": {
@@ -341,7 +340,7 @@
 		"stocks": {
 			"food": 40,
 			"wood": 30,
-			"stone": 0,
+			"stone": 10,
 			"water": 40
 		},
 		"population": 4,
