@@ -60,6 +60,7 @@ func _ready() -> void:
 	hud.placement_ended.connect(planet.clear_placement)
 	hud.appearance_changed.connect(apply_appearance.bind(true))
 	planet.rotated.connect(hud.on_planet_rotated)
+	_maybe_start_screenshots()
 	planet.zoomed.connect(hud.on_planet_zoomed)
 
 
@@ -70,6 +71,16 @@ func _process(delta: float) -> void:
 	var t: float = sim.time_of_day() + GameState.stepper.interpolation_alpha() / float(sim.ticks_per_day)
 	sun_pivot.rotation.y = t * TAU
 	_moon_pivot.rotate_y(delta * 0.05)
+
+
+## CI only: "-- --screenshot-dir=<folder>" captures the main screens and quits.
+func _maybe_start_screenshots() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--screenshot-dir="):
+			var runner = load("res://scripts/dev/screenshot_runner.gd").new()
+			runner.hud = hud
+			runner.out_dir = arg.trim_prefix("--screenshot-dir=")
+			add_child(runner)
 
 
 ## Applies the planet customization (palette, village color) and the device

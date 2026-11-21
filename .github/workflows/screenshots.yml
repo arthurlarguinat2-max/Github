@@ -1,0 +1,63 @@
+# Renders the real game in a virtual screen and captures the main screens,
+# so the visual design can be checked without an iPhone. The images are
+# published on the "screenshots" pre-release (never marked as latest).
+name: Captures d'écran
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["scripts/**", "data/**", "assets/**", "scenes/**", "project.godot"]
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache Godot
+        uses: actions/cache@v5
+        with:
+          path: ~/godot
+          key: godot-linux-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        run: ci/install_godot.sh linux
+
+      - name: Virtual screen + OpenGL
+        run: sudo apt-get update -q && sudo apt-get install -y -q xvfb libgl1 libgl1-mesa-dri libglx-mesa0
+
+      - name: Capture screens
+        run: |
+          "$GODOT_BIN" --headless --path . --import >/dev/null 2>&1 || true
+          mkdir -p build/shots
+          xvfb-run -a -s "-screen 0 1280x1024x24" \
+            "$GODOT_BIN" --rendering-method gl_compatibility --rendering-driver opengl3 \
+            --resolution 390x844 --path . -- --screenshot-dir="$PWD/build/shots" 2>&1 | tail -n 30
+          ls -la build/shots
+
+      - name: Publish screenshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view screenshots >/dev/null 2>&1 || \
+            gh release create screenshots --prerelease --latest=false \
+              --title "Captures d'écran (automatiques)" --notes "Images générées par la CI."
+          gh release upload screenshots build/shots/*.png --clobber
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: screenshots
+          path: build/shots/*.png
+          retention-days: 14
