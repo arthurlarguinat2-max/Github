@@ -20,27 +20,33 @@ const ZOOM_MAX := 4.2
 const ZOOM_DEFAULT := 3.6
 const PICK_RADIUS := 1.03
 const BuildingMeshes := preload("res://scripts/render/building_meshes.gd")
+const TerrainBuilder := preload("res://scripts/render/terrain_builder.gd")
+const Life := preload("res://scripts/render/life.gd")
 const CLOUD_COUNT := 18
 
+## Sea sphere: gentle swell, sparkles, bright rim; slightly see-through so
+## sandy shallows show under the water.
 const WATER_SHADER := """
 shader_type spatial;
-render_mode specular_schlick_ggx;
-
+render_mode blend_mix, depth_draw_always, cull_back, specular_schlick_ggx;
+uniform vec3 shallow_color : source_color = vec3(0.53, 0.82, 0.88);
+uniform vec3 deep_color : source_color = vec3(0.35, 0.66, 0.84);
 varying vec3 local_pos;
 
 void vertex() {
 	local_pos = VERTEX;
+	float swell = sin(TIME * 1.1 + VERTEX.x * 40.0 + VERTEX.z * 31.0) * sin(TIME * 0.8 + VERTEX.y * 37.0);
+	VERTEX += NORMAL * swell * 0.0012;
 }
 
 void fragment() {
-	// Gentle shimmer: brightness waves travelling over the ocean.
-	float wave = sin(TIME * 1.3 + local_pos.x * 23.0 + local_pos.z * 17.0)
-		* sin(TIME * 0.9 + local_pos.y * 19.0);
-	vec3 base = pow(COLOR.rgb, vec3(2.2)); // sRGB -> linear
-	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
-	ALBEDO = mix(base * (0.95 + 0.05 * wave), vec3(1.0), rim * 0.35);
-	ROUGHNESS = 0.22;
-	SPECULAR = 0.7;
+	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.5);
+	float sparkle = sin(TIME * 1.7 + local_pos.x * 90.0) * sin(TIME * 1.3 + local_pos.z * 80.0);
+	vec3 water = mix(deep_color, shallow_color, 0.45 + 0.12 * sparkle);
+	ALBEDO = mix(water, vec3(1.0), rim * 0.35);
+	ALPHA = 0.7 + rim * 0.22;
+	ROUGHNESS = 0.16;
+	SPECULAR = 0.8;
 }
 """
 
@@ -70,6 +76,9 @@ var _surface_nodes: Array[Node] = []
 var _placement: MeshInstance3D
 ## Objects (trees, buildings) shrink when the planet has more, smaller cells.
 var _object_scale := 1.0
+## Smooth terrain sampler (heights and colors anywhere on the planet).
+var terrain := TerrainBuilder.new()
+var _life: Node3D
 
 ## Terrain id -> hex color overriding terrains.json (player palette).
 var palette: Dictionary = {}
@@ -97,6 +106,9 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 	refresh_buildings()
 	_clouds = _build_clouds(world_seed)
 	add_child(_clouds)
+	_life = Life.new()
+	add_child(_life)
+	_life.setup(self)
 	_highlight = MeshInstance3D.new()
 	_highlight.material_override = _highlight_material()
 	_highlight.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -221,8 +233,9 @@ func refresh_buildings() -> void:
 		else:
 			node = BuildingMeshes.create(id, economy.townhall_level if economy != null else 1)
 		var dir: Vector3 = planet.grid.centers[cell]
-		var top := _heights[cell] + float(_def(cell).get("peak", 0.0))
-		var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * _object_scale)
+		var top := _heights[cell]
+		var yaw := float(posmod(hash(cell * 31 + _world_seed), 628)) / 100.0
+		var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * _object_scale)
 		node.transform = Transform3D(orient, dir * top)
 		_buildings_root.add_child(node)
 	if _trees:
@@ -238,6 +251,7 @@ func rebuild_surface() -> void:
 	for node in _surface_nodes:
 		node.queue_free()
 	_surface_nodes.clear()
+	_compute_heights()
 	_build_surface(_world_seed)
 
 
@@ -253,10 +267,12 @@ func set_placement(cells: Array) -> void:
 	for cell in cells:
 		var center: Vector3 = planet.grid.centers[cell]
 		var cs: PackedVector3Array = planet.grid.corners[cell]
-		var h := _heights[cell] + float(_def(cell).get("peak", 0.0)) + 0.006
+		var h := _heights[cell] + 0.006
 		for k in cs.size():
-			var a := center.lerp(cs[k], 0.82).normalized() * (_heights[cell] + 0.006)
-			var b := center.lerp(cs[(k + 1) % cs.size()], 0.82).normalized() * (_heights[cell] + 0.006)
+			var da := center.lerp(cs[k], 0.82).normalized()
+			var db := center.lerp(cs[(k + 1) % cs.size()], 0.82).normalized()
+			var a := da * (maxf(terrain.surface_radius(da, cell), 1.0) + 0.006)
+			var b := db * (maxf(terrain.surface_radius(db, cell), 1.0) + 0.006)
 			buffer.add_tri(center * h, a, b, green, green, green, center)
 	_placement.mesh = buffer.to_mesh(null)
 	_placement.visible = not cells.is_empty()
@@ -312,79 +328,36 @@ func _def(cell: int) -> Dictionary:
 
 
 func _compute_heights() -> void:
+	terrain.setup(planet, terrain_defs, palette, _world_seed)
 	_heights.resize(planet.cell_count())
 	for i in planet.cell_count():
-		_heights[i] = 1.0 + float(_def(i).get("height", 0.0))
+		_heights[i] = terrain.cell_top(i)
 
 
-func _build_surface(world_seed: int) -> void:
-	var land := MeshBuffer.new()
-	var water := MeshBuffer.new()
-	var grid = planet.grid
-	for i in planet.cell_count():
-		var def := _def(i)
-		var is_water := bool(def.get("water", false))
-		var buffer := water if is_water else land
-		var h := _heights[i]
-		var peak := float(def.get("peak", 0.0))
-		# Small per-cell tint variation so neighbouring cells stay readable.
-		var tint := float(posmod(hash(i * 7919 + world_seed), 100)) / 100.0
-		var color := Color(str(palette.get(planet.terrain[i], def.get("color", "ff00ff")))).darkened(tint * 0.09)
-		var peak_color := Color(str(def.get("peak_color", color.to_html(false))))
-		var center: Vector3 = grid.centers[i]
-		var cs: PackedVector3Array = grid.corners[i]
-		var top := center * (h + peak)
-		var count := cs.size()
-		var border := outlines and not is_water
-		var edge_color := color.darkened(0.28)
-		for k in count:
-			var c0 := cs[k]
-			var c1 := cs[(k + 1) % count]
-			if border:
-				# Inner polygon + thin darker ring along the edges.
-				var i0 := center.lerp(c0, 0.9).normalized() * (h + peak * 0.1)
-				var i1 := center.lerp(c1, 0.9).normalized() * (h + peak * 0.1)
-				buffer.add_tri(top, i0, i1, peak_color, color, color, center)
-				buffer.add_tri(i0, c0 * h, c1 * h, edge_color, edge_color, edge_color, center)
-				buffer.add_tri(i0, c1 * h, i1, edge_color, edge_color, edge_color, center)
-			else:
-				buffer.add_tri(top, c0 * h, c1 * h, peak_color, color, color, center)
-			# Wall down to the lower neighbour across this edge (visible relief).
-			var mid := (c0 + c1).normalized()
-			var nb := _neighbor_across(i, mid)
-			var nh := _heights[nb] if nb >= 0 else 1.0
-			if nh < h - 0.0001:
-				var wall := color.darkened(0.22)
-				var outward := mid - center
-				buffer.add_tri(c0 * h, c1 * h, c1 * nh, wall, wall, wall, outward)
-				buffer.add_tri(c0 * h, c1 * nh, c0 * nh, wall, wall, wall, outward)
-
-	var land_mat := StandardMaterial3D.new()
-	land_mat.vertex_color_use_as_albedo = true
-	land_mat.vertex_color_is_srgb = true
-	land_mat.roughness = 0.95
-	land_mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
-	_add_mesh(land.to_mesh(land_mat))
-
-	var water_mat := ShaderMaterial.new()
+## Smooth land + animated sea + optional thin cell outlines.
+func _build_surface(_seed: int) -> void:
+	var subdivisions := 5 if planet.grid.frequency <= 12 else 6
+	_add_mesh(terrain.build_land_mesh(subdivisions))
+	var sea := SphereMesh.new()
+	sea.radius = TerrainBuilder.SEA_LEVEL
+	sea.height = TerrainBuilder.SEA_LEVEL * 2.0
+	sea.radial_segments = 96
+	sea.rings = 48
+	var water := ShaderMaterial.new()
 	var shader := Shader.new()
 	shader.code = WATER_SHADER
-	water_mat.shader = shader
-	_add_mesh(water.to_mesh(water_mat))
+	water.shader = shader
+	var shallow := Color(str(palette.get("shallow", terrain_defs.get("shallow", {}).get("color", "86d0e0"))))
+	var deep := Color(str(palette.get("ocean", terrain_defs.get("ocean", {}).get("color", "5aa9d6"))))
+	water.set_shader_parameter("shallow_color", shallow)
+	water.set_shader_parameter("deep_color", deep)
+	sea.material = water
+	_add_mesh(sea)
+	if outlines:
+		_add_mesh(terrain.build_outline_mesh())
 
 
-func _neighbor_across(cell: int, edge_dir: Vector3) -> int:
-	var best := -1
-	var best_dot := -INF
-	for nb in planet.grid.neighbors[cell]:
-		var dot: float = planet.grid.centers[nb].dot(edge_dir)
-		if dot > best_dot:
-			best_dot = dot
-			best = nb
-	return best
-
-
-func _add_mesh(mesh: ArrayMesh) -> void:
+func _add_mesh(mesh: Mesh) -> void:
 	if mesh == null:
 		return
 	var instance := MeshInstance3D.new()
@@ -394,80 +367,166 @@ func _add_mesh(mesh: ArrayMesh) -> void:
 	_surface_nodes.append(instance)
 
 
-## Toy-like trees: round canopies in forests and plains, little pines on the
-## hills. Three MultiMeshes (trunks, canopies, pines) = three draw calls.
+## Vegetation and details, all in MultiMeshes (one draw call per kind):
+## leafy trees made of 2-3 round puffs (they sway in the wind), layered pines,
+## rounded boulders on hills and mountains, little flowers on the plains.
 func _build_trees(world_seed: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 31
 	var trunks: Array[Transform3D] = []
-	var canopies: Array[Transform3D] = []
-	var canopy_colors: Array[Color] = []
+	var puffs: Array[Transform3D] = []
+	var puff_colors: Array[Color] = []
 	var pines: Array[Transform3D] = []
 	var pine_colors: Array[Color] = []
+	var rocks: Array[Transform3D] = []
+	var rock_colors: Array[Color] = []
+	var flowers: Array[Transform3D] = []
+	var flower_colors: Array[Color] = []
+	var flower_palette := [Color("ff9ec2"), Color("ffe17a"), Color("ffffff"), Color("c9a7ff"), Color("ff8a7a")]
 	var grid = planet.grid
 	for i in planet.cell_count():
-		var amount := 0
+		var terrain_id: String = planet.terrain[i]
+		var trees := 0
 		var is_pine := false
-		match planet.terrain[i]:
+		var stones := 0
+		var blooms := 0
+		match terrain_id:
 			"forest":
-				amount = rng.randi_range(4, 6)
+				trees = rng.randi_range(4, 6)
 			"plains":
-				amount = 1 if rng.randf() < 0.3 else 0
+				trees = 1 if rng.randf() < 0.3 else 0
+				blooms = rng.randi_range(0, 4)
 			"hills":
-				amount = 1 if rng.randf() < 0.45 else 0
+				trees = 1 if rng.randf() < 0.45 else 0
 				is_pine = true
+				stones = rng.randi_range(0, 2)
+			"mountain":
+				stones = rng.randi_range(2, 4)
+			"desert":
+				stones = 1 if rng.randf() < 0.35 else 0
+			"beach":
+				stones = 1 if rng.randf() < 0.2 else 0
 		var cs: PackedVector3Array = grid.corners[i]
-		var has_building: bool = planet.buildings.size() > i and planet.buildings[i] != ""
-		for t in amount:
-			var corner := cs[rng.randi() % cs.size()]
-			var dir: Vector3 = (grid.centers[i] as Vector3).lerp(corner, rng.randf_range(0.15, 0.6)).normalized()
+		var free_cell: bool = not (planet.buildings.size() > i and planet.buildings[i] != "")
+		var center: Vector3 = grid.centers[i]
+		for t in trees:
+			var dir := _scatter(rng, center, cs, 0.15, 0.65)
 			var s := rng.randf_range(0.8, 1.3) * _object_scale
-			var up := Basis(Quaternion(Vector3.UP, dir))
+			var up := Basis(Quaternion(Vector3.UP, dir)) * Basis(Vector3.UP, rng.randf() * TAU)
 			var tint := rng.randf()
-			if has_building:
+			if not free_cell:
 				continue  # Same random draws either way: other trees stay in place.
-			var ground := dir * _heights[i]
-			trunks.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.006 * s))
+			var ground := dir * terrain.surface_radius(dir, i)
+			trunks.append(Transform3D(up * Basis.from_scale(Vector3(1.0, 1.0 + 0.3 * tint, 1.0) * s), ground + dir * 0.006 * s))
 			if is_pine:
-				pines.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.022 * s))
-				pine_colors.append(Color("4f9a6a").lerp(Color("6fb586"), tint))
+				for layer in 3:
+					var k := 1.0 - 0.28 * layer
+					pines.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s * k), ground + dir * (0.014 + 0.009 * layer) * s))
+					pine_colors.append(Color("4f9a6a").lerp(Color("78bd8c"), tint * 0.7 + 0.1 * layer))
 			else:
-				canopies.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.02 * s))
-				canopy_colors.append(Color("6cc070").lerp(Color("a6d96a"), tint))
+				var base := Color("6cc070").lerp(Color("a6d96a"), tint)
+				var offsets := [Vector3(0, 0.02, 0), Vector3(0.006, 0.015, 0.003), Vector3(-0.005, 0.016, -0.004)]
+				for p in rng.randi_range(2, 3):
+					var o: Vector3 = offsets[p]
+					var k := 1.0 if p == 0 else 0.7
+					puffs.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s * k), ground + up * (o * s)))
+					puff_colors.append(base.lightened(0.06 * p))
+		for r in stones:
+			var dir := _scatter(rng, center, cs, 0.1, 0.8)
+			var size := rng.randf_range(0.6, 1.4) * _object_scale
+			var squash := Vector3(rng.randf_range(0.9, 1.4), rng.randf_range(0.55, 0.85), rng.randf_range(0.8, 1.2)) * size
+			var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis(Vector3.UP, rng.randf() * TAU) * Basis.from_scale(squash)
+			var grey := rng.randf()
+			if not free_cell:
+				continue
+			rocks.append(Transform3D(orient, dir * (terrain.surface_radius(dir, i) + 0.002 * size)))
+			rock_colors.append(Color("b3aba2").lerp(Color("8f877e"), grey))
+		for f in blooms:
+			var dir := _scatter(rng, center, cs, 0.1, 0.85)
+			var pick: Color = flower_palette[rng.randi() % flower_palette.size()]
+			if not free_cell:
+				continue
+			flowers.append(Transform3D(Basis.from_scale(Vector3.ONE * _object_scale), dir * (terrain.surface_radius(dir, i) + 0.0015)))
+			flower_colors.append(pick)
 	_trees = Node3D.new()
 	add_child(_trees)
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.0022
-	trunk.bottom_radius = 0.003
-	trunk.height = 0.012
-	trunk.radial_segments = 5
-	trunk.rings = 1
 	var no_colors: Array[Color] = []
+	var trunk := CylinderMesh.new()
+	trunk.top_radius = 0.0018
+	trunk.bottom_radius = 0.003
+	trunk.height = 0.014
+	trunk.radial_segments = 6
+	trunk.rings = 1
 	_add_multimesh(trunk, trunks, no_colors, Color("9a6a45"))
-	var canopy := SphereMesh.new()
-	canopy.radius = 0.011
-	canopy.height = 0.02
-	canopy.radial_segments = 8
-	canopy.rings = 4
-	_add_multimesh(canopy, canopies, canopy_colors, Color.WHITE)
+	var puff := SphereMesh.new()
+	puff.radius = 0.0095
+	puff.height = 0.018
+	puff.radial_segments = 10
+	puff.rings = 6
+	_add_multimesh(puff, puffs, puff_colors, Color.WHITE, true)
 	var pine := CylinderMesh.new()
 	pine.top_radius = 0.0
 	pine.bottom_radius = 0.01
-	pine.height = 0.03
-	pine.radial_segments = 6
+	pine.height = 0.016
+	pine.radial_segments = 8
 	pine.rings = 1
-	pine.cap_top = false
-	_add_multimesh(pine, pines, pine_colors, Color.WHITE)
+	_add_multimesh(pine, pines, pine_colors, Color.WHITE, true)
+	var rock := SphereMesh.new()
+	rock.radius = 0.006
+	rock.height = 0.012
+	rock.radial_segments = 7
+	rock.rings = 4
+	_add_multimesh(rock, rocks, rock_colors, Color.WHITE)
+	var bloom := SphereMesh.new()
+	bloom.radius = 0.0016
+	bloom.height = 0.0032
+	bloom.radial_segments = 5
+	bloom.rings = 3
+	_add_multimesh(bloom, flowers, flower_colors, Color.WHITE)
 
 
-func _add_multimesh(mesh: PrimitiveMesh, transforms: Array[Transform3D], colors: Array[Color], base: Color) -> void:
+## Random point inside a cell, between `inner` and `outer` (0 = center).
+func _scatter(rng: RandomNumberGenerator, center: Vector3, corners: PackedVector3Array, inner: float, outer: float) -> Vector3:
+	var a := corners[rng.randi() % corners.size()]
+	var b := corners[rng.randi() % corners.size()]
+	var edge := a.lerp(b, rng.randf())
+	return center.lerp(edge, rng.randf_range(inner, outer)).normalized()
+
+
+## Leaves sway gently: each instance moves with its own phase.
+const SWAY_SHADER := """
+shader_type spatial;
+render_mode specular_disabled;
+varying vec3 leaf;
+void vertex() {
+	float phase = float(INSTANCE_ID) * 1.7;
+	float lift = clamp(VERTEX.y / 0.009 + 1.0, 0.0, 2.0);
+	VERTEX.x += sin(TIME * 1.6 + phase) * 0.0011 * lift;
+	VERTEX.z += cos(TIME * 1.3 + phase) * 0.0008 * lift;
+	leaf = COLOR.rgb;
+}
+void fragment() {
+	ALBEDO = leaf;
+	ROUGHNESS = 1.0;
+}
+"""
+
+
+func _add_multimesh(mesh: PrimitiveMesh, transforms: Array[Transform3D], colors: Array[Color], base: Color, sway: bool = false) -> void:
 	if transforms.is_empty():
 		return
-	var mat := StandardMaterial3D.new()
-	mat.roughness = 1.0
-	mat.albedo_color = base
-	mat.vertex_color_use_as_albedo = not colors.is_empty()
-	mesh.material = mat
+	if sway and not colors.is_empty():
+		var shader := Shader.new()
+		shader.code = SWAY_SHADER
+		var sway_mat := ShaderMaterial.new()
+		sway_mat.shader = shader
+		mesh.material = sway_mat
+	else:
+		var mat := StandardMaterial3D.new()
+		mat.roughness = 1.0
+		mat.albedo_color = base
+		mat.vertex_color_use_as_albedo = not colors.is_empty()
+		mesh.material = mat
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = not colors.is_empty()
@@ -520,22 +579,23 @@ func _build_clouds(world_seed: int) -> Node3D:
 	return pivot
 
 
-## Bright ring along the border of the selected cell.
+## Bright ring along the border of the selected cell, following the terrain.
 func _build_highlight_mesh(cell: int) -> ArrayMesh:
 	var buffer := MeshBuffer.new()
 	var center: Vector3 = planet.grid.centers[cell]
 	var cs: PackedVector3Array = planet.grid.corners[cell]
-	var h := _heights[cell] + 0.004
-	var peak := float(_def(cell).get("peak", 0.0))
-	var inner_h := h + peak * 0.22
 	var white := Color.WHITE
 	for k in cs.size():
-		var a := cs[k]
-		var b := cs[(k + 1) % cs.size()]
-		var a_in := center.lerp(a, 0.78).normalized()
-		var b_in := center.lerp(b, 0.78).normalized()
-		buffer.add_tri(a * h, b * h, b_in * inner_h, white, white, white, center)
-		buffer.add_tri(a * h, b_in * inner_h, a_in * inner_h, white, white, white, center)
+		var da: Vector3 = cs[k]
+		var db: Vector3 = cs[(k + 1) % cs.size()]
+		var ia := center.lerp(da, 0.8).normalized()
+		var ib := center.lerp(db, 0.8).normalized()
+		var a := da * (maxf(terrain.surface_radius(da, cell), 1.0) + 0.005)
+		var b := db * (maxf(terrain.surface_radius(db, cell), 1.0) + 0.005)
+		var a_in := ia * (maxf(terrain.surface_radius(ia, cell), 1.0) + 0.005)
+		var b_in := ib * (maxf(terrain.surface_radius(ib, cell), 1.0) + 0.005)
+		buffer.add_tri(a, b, b_in, white, white, white, center)
+		buffer.add_tri(a, b_in, a_in, white, white, white, center)
 	return buffer.to_mesh(null)
 
 

@@ -80,6 +80,7 @@ func _maybe_start_screenshots() -> void:
 		if arg.begins_with("--screenshot-dir="):
 			var runner = load("res://scripts/dev/screenshot_runner.gd").new()
 			runner.hud = hud
+			runner.planet = planet
 			runner.out_dir = arg.trim_prefix("--screenshot-dir=")
 			add_child(runner)
 
