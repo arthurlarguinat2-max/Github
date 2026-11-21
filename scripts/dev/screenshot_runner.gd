@@ -70,7 +70,8 @@ func _build_demo_village() -> void:
 	eco._rebuild_caches()
 	for id in ["hut", "well", "gatherer", "woodcutter", "field", "bakery", "hut", "campfire"]:
 		for i in GameState.sim.planet.cell_count():
-			if eco.can_build(i, id) == "" or eco.can_build(i, id) == eco.ERR_BUILDERS:
+			var reason: String = eco.can_build(i, id)
+			if reason == "" or reason == "BUILD_ERR_BUILDERS":
 				GameState.sim.planet.buildings[i] = id
 				eco._rebuild_caches()
 				break

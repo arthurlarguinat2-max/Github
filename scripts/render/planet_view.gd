@@ -211,7 +211,7 @@ func _update_camera() -> void:
 	var t := clampf((_zoom - _zoom_min) / (ZOOM_MAX - _zoom_min), 0.0, 1.0)
 	var close := pow(1.0 - t, 1.5)
 	var target := Vector3(0.0, 0.25 * t, 0.0).lerp(Vector3(0.0, 0.0, 1.0), 1.0 - t)
-	var tilt := deg_to_rad(55.0) * close
+	var tilt := deg_to_rad(48.0) * close
 	var distance := lerpf(_zoom - 1.0, _zoom, t)
 	camera.position = target + Vector3(0.0, -sin(tilt), cos(tilt)) * distance
 	camera.look_at(target, Vector3.UP)
@@ -223,7 +223,7 @@ func _update_camera() -> void:
 func focus_cell(cell: int) -> void:
 	if cell < 0:
 		return
-	var target := Vector3(0.0, 0.05, 1.0).normalized()
+	var target := Vector3(0.0, -0.08, 1.0).normalized()
 	basis = Basis(Quaternion(planet.grid.centers[cell], target))
 	_angular_velocity = Vector2.ZERO
 
