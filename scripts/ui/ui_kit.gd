@@ -51,6 +51,7 @@ static func button(text: String, icon_id: String = "", min_height: int = 50) -> 
 		b.add_theme_constant_override("icon_max_width", 30)
 	b.custom_minimum_size = Vector2(0, min_height)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.clip_text = true
 	return b
 
 
@@ -70,6 +71,7 @@ static func choice_grid(choices: Dictionary, current: String, on_pick: Callable,
 		b.button_group = group
 		b.custom_minimum_size = Vector2(0, 44)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.clip_text = true
 		b.text = TranslationServer.translate(str(choice.get("name_key", id)))
 		if choice.has("subtitle"):
 			b.text += "\n" + str(choice.subtitle)
@@ -90,7 +92,7 @@ static func swatches(colors: Array, current: String, on_pick: Callable) -> GridC
 		var swatch := Button.new()
 		swatch.toggle_mode = true
 		swatch.button_group = group
-		swatch.custom_minimum_size = Vector2(44, 44)
+		swatch.custom_minimum_size = Vector2(36, 40)
 		swatch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var color := Color(str(hex))
 		swatch.add_theme_stylebox_override("normal", box(color, 22, 0))

@@ -155,6 +155,8 @@ func _ready() -> void:
 	_start_menu.tutorial_requested.connect(restart_tutorial)
 	_start_menu.closed.connect(func(): GameState.start_menu_shown = true)
 	_start_menu.visible = not GameState.start_menu_shown
+	_start_menu.visibility_changed.connect(func(): _margin.visible = not _start_menu.visible)
+	_margin.visible = not _start_menu.visible
 	_blocking.append_array([_bottom_bar, _banner, _build_sheet, _cell_card, _settings_sheet, _needs_sheet, _needs_row,
 		_tutorial_panel, _goals_sheet, _event_sheet, _start_menu])
 	get_viewport().size_changed.connect(_apply_safe_area)
@@ -209,7 +211,7 @@ func blocks_point(point: Vector2) -> bool:
 
 func _build_chip_row(resources: Array) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 5)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for res in resources:
 		row.add_child(_chip(res))
@@ -220,12 +222,14 @@ func _chip(res: String) -> PanelContainer:
 	var chip := PanelContainer.new()
 	chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 18, 6))
+	chip.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 16, 5))
+	chip.clip_contents = true
+	chip.custom_minimum_size = Vector2(40, 0)
 	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 4)
+	line.add_theme_constant_override("separation", 3)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(line)
-	line.add_child(_icon(res, 24))
+	line.add_child(_icon(res, 20))
 	var texts := VBoxContainer.new()
 	texts.add_theme_constant_override("separation", -4)
 	texts.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -322,26 +326,26 @@ func _show_toast(text: String) -> void:
 
 func _build_bottom_bar() -> PanelContainer:
 	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 8)
-	_pause_button = _icon_button("pause", "", Vector2(52, 58))
+	bar.add_theme_constant_override("separation", 6)
+	_pause_button = _icon_button("pause", "", Vector2(48, 54))
 	_pause_button.pressed.connect(_on_pause_pressed)
 	bar.add_child(_pause_button)
-	_speed_button = _icon_button("", "x1", Vector2(52, 58))
+	_speed_button = _icon_button("", "x1", Vector2(48, 54))
 	_speed_button.pressed.connect(_on_speed_pressed)
 	bar.add_child(_speed_button)
-	_build_button = _icon_button("build", tr("BUILD"), Vector2(0, 58))
+	_build_button = _icon_button("build", tr("BUILD"), Vector2(0, 54))
 	_build_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Design.make_primary(_build_button, 22)
 	_build_button.pressed.connect(_on_build_pressed)
 	bar.add_child(_build_button)
-	_goals_button = _icon_button("goals", "", Vector2(52, 58))
+	_goals_button = _icon_button("goals", "", Vector2(48, 54))
 	_goals_button.pressed.connect(_on_goals_pressed)
 	bar.add_child(_goals_button)
-	_settings_button = _icon_button("settings", "", Vector2(52, 58))
+	_settings_button = _icon_button("settings", "", Vector2(48, 54))
 	_settings_button.pressed.connect(_on_settings_pressed)
 	bar.add_child(_settings_button)
 	var pill := PanelContainer.new()
-	pill.add_theme_stylebox_override("panel", Design.panel(Design.CREAM, 30, 8))
+	pill.add_theme_stylebox_override("panel", Design.panel(Design.CREAM, 30, 6))
 	pill.add_child(bar)
 	return pill
 
@@ -398,12 +402,14 @@ func _show_sheet(sheet: Control) -> void:
 	for s in _sheets:
 		s.visible = s == sheet
 	_hint.visible = false
+	_tutorial_panel.visible = not _current_step().is_empty() and (sheet == _build_sheet or sheet == _cell_card)
 
 
 func _close_sheets() -> void:
 	for s in _sheets:
 		s.visible = false
 	_hint.visible = _placing == ""
+	_tutorial_panel.visible = not _current_step().is_empty()
 
 
 func _sheet(title_label: Label) -> Array:
@@ -448,7 +454,8 @@ func _build_build_sheet() -> PanelContainer:
 		tab.text = tr(str(cat.name_key))
 		tab.custom_minimum_size = Vector2(0, 40)
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tab.add_theme_font_size_override("font_size", 13)
+		tab.clip_text = true
+		tab.add_theme_font_size_override("font_size", 12)
 		tab.pressed.connect(func():
 			_category = str(cat.id)
 			_open_build_sheet(_target_cell)
@@ -456,7 +463,7 @@ func _build_build_sheet() -> PanelContainer:
 		tabs.add_child(tab)
 		_category_buttons[str(cat.id)] = tab
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 300)
+	scroll.custom_minimum_size = Vector2(0, 230)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	parts[1].add_child(scroll)
 	_build_list = VBoxContainer.new()
@@ -495,6 +502,7 @@ func _build_card(id: String) -> Button:
 	var card := Button.new()
 	card.name = id
 	card.custom_minimum_size = Vector2(0, 62)
+	card.clip_text = true
 	card.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	card.icon = _texture(id)
 	card.expand_icon = false
@@ -741,7 +749,7 @@ func _on_demolish_pressed() -> void:
 func _build_needs_sheet() -> PanelContainer:
 	var parts := _sheet(_label(tr("NEEDS_TITLE"), 20, TEXT))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 360)
+	scroll.custom_minimum_size = Vector2(0, 280)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	parts[1].add_child(scroll)
 	_needs_text = RichTextLabel.new()
@@ -810,7 +818,7 @@ func _factor_lines(factors: Array) -> String:
 func _build_settings_sheet() -> PanelContainer:
 	var parts := _sheet(_label(tr("SETTINGS"), 20, TEXT))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 430)
+	scroll.custom_minimum_size = Vector2(0, 300)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	parts[1].add_child(scroll)
 	var box := VBoxContainer.new()
@@ -1117,7 +1125,7 @@ func _on_goals_pressed() -> void:
 func _build_goals_sheet() -> PanelContainer:
 	var parts := _sheet(_label(tr("GOALS_TITLE"), 20, TEXT))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 360)
+	scroll.custom_minimum_size = Vector2(0, 280)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	parts[1].add_child(scroll)
 	_goals_list = VBoxContainer.new()
@@ -1288,6 +1296,7 @@ func _icon_button(icon_name: String, text: String, min_size: Vector2) -> Button:
 	if icon_name != "":
 		button.icon = _texture(icon_name)
 	button.custom_minimum_size = min_size
+	button.clip_text = true
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER if text == "" else HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_constant_override("icon_max_width", 30)
 	button.add_theme_font_size_override("font_size", 18)
