@@ -4,12 +4,21 @@ extends CanvasLayer
 
 const Haptics := preload("res://scripts/platform/haptics.gd")
 
+signal close_requested
+
 const BASE_PADDING := 16.0
 
 var _margin: MarginContainer
 var _day_label: Label
 var _toast: Label
 var _speed_buttons := {}
+var _speed_bar: HBoxContainer
+var _hint: Label
+var _cell_panel: PanelContainer
+var _cell_title: Label
+var _cell_details: Label
+## Controls that capture touches (the planet ignores touches starting on them).
+var _blocking: Array[Control] = []
 
 
 func _ready() -> void:
@@ -41,10 +50,17 @@ func _ready() -> void:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(spacer)
 
-	column.add_child(_label(tr("HINT_DRAG"), 14, Color("7c86a8")))
+	_cell_panel = _build_cell_panel()
+	column.add_child(_cell_panel)
+	_hint = _label(tr("HINT_DRAG"), 14, Color("7c86a8"))
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_hint)
 	_day_label = _label("", 20, Color("f2f4ff"))
 	column.add_child(_day_label)
-	column.add_child(_build_speed_bar())
+	_speed_bar = _build_speed_bar()
+	column.add_child(_speed_bar)
+	_blocking.append(_speed_bar)
+	_blocking.append(_cell_panel)
 	column.add_child(_label(tr("VERSION") % ProjectSettings.get_setting("application/config/version", "?"), 11, Color("5a6380")))
 
 	get_viewport().size_changed.connect(_apply_safe_area)
@@ -67,6 +83,84 @@ func _build_speed_bar() -> HBoxContainer:
 		bar.add_child(button)
 		_speed_buttons[speed] = button
 	return bar
+
+
+## True when `point` (viewport coordinates) is over an interactive UI element.
+func blocks_point(point: Vector2) -> bool:
+	for control in _blocking:
+		if control.is_visible_in_tree() and control.get_global_rect().has_point(point):
+			return true
+	return false
+
+
+## Shows the information card of a planet cell.
+func show_cell(cell: int) -> void:
+	var sim = GameState.sim
+	var planet = sim.planet
+	var terrain_id: String = planet.terrain[cell]
+	var def: Dictionary = sim.terrain_defs.get(terrain_id, {})
+	_cell_title.text = tr(str(def.get("name_key", terrain_id)))
+	var lines := PackedStringArray()
+	if def.get("water", false):
+		lines.append(tr("CELL_WATER"))
+	else:
+		lines.append(tr("CELL_FERTILITY") % roundi(planet.fertility[cell] * 100.0))
+		lines.append(tr("CELL_BUILDABLE") if def.get("buildable", false) else tr("CELL_NOT_BUILDABLE"))
+	var found := PackedStringArray()
+	var res_defs: Dictionary = GameState.config.get("resources", {})
+	var cell_res: Dictionary = planet.resources[cell]
+	for res_id in cell_res:
+		var res_def: Dictionary = res_defs.get(res_id, {})
+		if res_def.get("hidden", false):
+			continue  # Revealed by a later age.
+		found.append("%s (%d)" % [tr(str(res_def.get("name_key", res_id))), int(cell_res[res_id])])
+	if found.is_empty():
+		lines.append(tr("CELL_NO_RESOURCE"))
+	else:
+		lines.append(tr("CELL_RESOURCES") % " · ".join(found))
+	if planet.grid.is_pentagon(cell):
+		lines.append(tr("CELL_PENTAGON"))
+	_cell_details.text = "\n".join(lines)
+	_cell_panel.visible = true
+	_hint.visible = false
+	Haptics.light()
+
+
+func hide_cell() -> void:
+	_cell_panel.visible = false
+	_hint.visible = true
+
+
+func _build_cell_panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.12, 0.19, 0.92)
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(14)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.visible = false
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+
+	var header := HBoxContainer.new()
+	box.add_child(header)
+	_cell_title = _label("", 21, Color("f2f4ff"))
+	_cell_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_cell_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_cell_title)
+	var close := Button.new()
+	close.text = "×"
+	close.custom_minimum_size = Vector2(44, 44)
+	close.pressed.connect(func(): close_requested.emit())
+	header.add_child(close)
+
+	_cell_details = _label("", 15, Color("c4cbe6"))
+	_cell_details.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_cell_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_cell_details)
+	return panel
 
 
 func _on_speed_pressed(speed: int) -> void:

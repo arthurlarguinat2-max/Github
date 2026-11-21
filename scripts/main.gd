@@ -8,18 +8,25 @@ const Hud := preload("res://scripts/ui/hud.gd")
 var planet: PlanetView
 var sun_pivot: Node3D
 var sun: DirectionalLight3D
+var hud: Hud
 
 
 func _ready() -> void:
 	_build_environment()
-	_build_camera()
+	var cam := _build_camera()
 	_build_sun()
+	hud = Hud.new()
+	add_child(hud)
+
+	var sim = GameState.sim
 	planet = PlanetView.new()
 	add_child(planet)
-	planet.setup(GameState.sim.world_seed)
+	planet.setup(sim.planet, sim.terrain_defs, cam, sim.world_seed)
 	planet.rotation = Vector3(0.35, 0.0, 0.0)
-	var hud := Hud.new()
-	add_child(hud)
+	planet.ui_blocks_point = hud.blocks_point
+	planet.cell_selected.connect(hud.show_cell)
+	planet.selection_cleared.connect(hud.hide_cell)
+	hud.close_requested.connect(planet.clear_selection)
 
 
 func _process(_delta: float) -> void:
@@ -44,14 +51,14 @@ func _build_environment() -> void:
 	add_child(world_env)
 
 
-func _build_camera() -> void:
+func _build_camera() -> Camera3D:
 	var cam := Camera3D.new()
 	cam.keep_aspect = Camera3D.KEEP_WIDTH  # Portrait: fit the planet to the width.
 	cam.fov = 42.0
-	cam.position = Vector3(0, 0.25, 4.2)
+	cam.near = 0.02
 	add_child(cam)
-	cam.look_at(Vector3(0, 0.25, 0))
 	cam.current = true
+	return cam
 
 
 func _build_sun() -> void:

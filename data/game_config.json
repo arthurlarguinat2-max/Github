@@ -3,8 +3,26 @@
 	"tick_rate_hz": 10,
 	"ticks_per_day": 600,
 	"max_ticks_per_frame": 40,
-	"allowed_speeds": [0, 1, 2, 4],
+	"allowed_speeds": [
+		0,
+		1,
+		2,
+		4
+	],
 	"autosave_interval_seconds": 30,
 	"offline_progress_cap_hours": 8,
-	"offline_progress_efficiency": 0.5
+	"offline_progress_efficiency": 0.5,
+	"planet": {
+		"_comment": "frequency 6 = 362 cells (10*f*f+2). 8 = 642 cells.",
+		"frequency": 6,
+		"ocean_fraction": 0.55,
+		"shallow_band": 0.12,
+		"mountain_threshold": 0.7,
+		"hills_threshold": 0.48,
+		"beach_threshold": 0.1,
+		"ice_latitude_land": 0.8,
+		"ice_latitude_water": 0.9,
+		"noise_frequency": 1.3,
+		"moisture_frequency": 1.7
+	}
 }

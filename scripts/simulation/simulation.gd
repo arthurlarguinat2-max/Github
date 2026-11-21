@@ -7,6 +7,7 @@ extends RefCounted
 
 signal day_passed(day: int)
 
+const PlanetState := preload("res://scripts/simulation/planet_state.gd")
 const DEFAULT_TICKS_PER_DAY := 600
 
 var world_seed: int = 0
@@ -17,6 +18,10 @@ var allowed_speeds: Array = [0, 1, 2, 4]
 
 ## Deterministic random generator owned by the simulation (seeded from world_seed).
 var rng := RandomNumberGenerator.new()
+## Every cell of the planet (terrain, resources...).
+var planet: PlanetState
+var terrain_defs: Dictionary = {}
+var planet_settings: Dictionary = {}
 
 
 func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
@@ -24,6 +29,10 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	rng.seed = p_seed
 	ticks_per_day = maxi(int(config.get("ticks_per_day", DEFAULT_TICKS_PER_DAY)), 1)
 	allowed_speeds = config.get("allowed_speeds", allowed_speeds)
+	terrain_defs = config.get("terrains", {})
+	planet_settings = config.get("planet", {})
+	planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
+	planet.generate(world_seed, terrain_defs, planet_settings)
 
 
 ## Current in-game day, starting at 1.
@@ -76,6 +85,7 @@ func to_dict() -> Dictionary:
 		"tick": tick,
 		"speed": speed,
 		"rng_state": str(rng.state),  # stored as string: JSON numbers are doubles.
+		"planet": planet.to_dict(),
 	}
 
 
@@ -87,3 +97,10 @@ func from_dict(data: Dictionary) -> void:
 	rng.seed = world_seed
 	if data.has("rng_state"):
 		rng.state = str(data["rng_state"]).to_int()
+	# Saves made before Phase 1 have no planet: generate it from the seed.
+	var loaded := false
+	if typeof(data.get("planet")) == TYPE_DICTIONARY:
+		loaded = planet.from_dict(data["planet"])
+	if not loaded:
+		planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
+		planet.generate(world_seed, terrain_defs, planet_settings)

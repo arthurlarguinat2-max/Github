@@ -1,0 +1,11 @@
+{
+	"_comment": "Natural resources found on cells. hidden = not shown until a later age reveals it.",
+	"resources": {
+		"wood":    {"name_key": "RES_WOOD",    "hidden": false},
+		"stone":   {"name_key": "RES_STONE",   "hidden": false},
+		"ore":     {"name_key": "RES_ORE",     "hidden": false},
+		"fish":    {"name_key": "RES_FISH",    "hidden": false},
+		"oil":     {"name_key": "RES_OIL",     "hidden": true},
+		"uranium": {"name_key": "RES_URANIUM", "hidden": true}
+	}
+}

@@ -24,6 +24,8 @@ func _ready() -> void:
 	# Keep simulating when a modal UI pauses the tree later on.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	config = Config.game_config()
+	config["terrains"] = Config.load_json("res://data/terrains.json").get("terrains", {})
+	config["resources"] = Config.load_json("res://data/resources.json").get("resources", {})
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()
 
