@@ -81,5 +81,6 @@ func test_old_save_without_planet_is_generated() -> void:
 	var config := {"terrains": _terrains(), "planet": _settings()}
 	var sim := Simulation.new(1, config)
 	sim.from_dict({"world_seed": 99, "tick": 5})
-	assert_eq(sim.planet.cell_count(), 362)
+	var f := int(_settings().frequency)
+	assert_eq(sim.planet.cell_count(), 10 * f * f + 2)
 	assert_eq(sim.planet.terrain, _planet(99).terrain)

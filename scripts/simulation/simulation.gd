@@ -28,6 +28,9 @@ var economy := Economy.new()
 var building_defs: Dictionary = {}
 var start_settings: Dictionary = {}
 var economy_settings: Dictionary = {}
+## Player customization of this planet (name, colors).
+var custom := {"planet_name": "", "palette": "classic", "village_color": "d9b45c"}
+var name_syllables: Array = []
 
 
 func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
@@ -40,6 +43,8 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	building_defs = config.get("buildings", {})
 	start_settings = config.get("start", {})
 	economy_settings = config.get("economy", {})
+	name_syllables = config.get("customization", {}).get("name_syllables", [])
+	custom.planet_name = generate_name(world_seed, name_syllables)
 	planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 	planet.generate(world_seed, terrain_defs, planet_settings)
 	economy.setup(planet, building_defs, terrain_defs, economy_settings)
@@ -69,6 +74,17 @@ func step() -> void:
 func run_ticks(count: int) -> void:
 	for i in count:
 		step()
+
+
+## Pleasant planet name made of 2-3 syllables, deterministic for a seed.
+static func generate_name(name_seed: int, syllables: Array) -> String:
+	var parts: Array = syllables if not syllables.is_empty() else ["ka", "lo", "mi", "ra", "ze", "no"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = name_seed + 97
+	var result := ""
+	for i in rng.randi_range(2, 3):
+		result += str(parts[rng.randi() % parts.size()])
+	return result.capitalize()
 
 
 func set_speed(value: int) -> bool:
@@ -107,6 +123,7 @@ func to_dict() -> Dictionary:
 		"rng_state": str(rng.state),  # stored as string: JSON numbers are doubles.
 		"planet": planet.to_dict(),
 		"economy": economy.to_dict(),
+		"custom": custom,
 	}
 
 
@@ -116,6 +133,12 @@ func from_dict(data: Dictionary) -> void:
 	var saved_speed := int(data.get("speed", 1))
 	speed = saved_speed if saved_speed in allowed_speeds else 1
 	rng.seed = world_seed
+	custom.planet_name = generate_name(world_seed, name_syllables)
+	var saved_custom = data.get("custom")
+	if typeof(saved_custom) == TYPE_DICTIONARY:
+		for key in custom:
+			if saved_custom.has(key) and str(saved_custom[key]) != "":
+				custom[key] = str(saved_custom[key])
 	if data.has("rng_state"):
 		rng.state = str(data["rng_state"]).to_int()
 	# Saves made before Phase 1 have no planet: generate it from the seed.

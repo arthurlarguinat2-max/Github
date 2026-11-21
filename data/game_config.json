@@ -13,8 +13,8 @@
 	"offline_progress_cap_hours": 8,
 	"offline_progress_efficiency": 0.5,
 	"planet": {
-		"_comment": "frequency 6 = 362 cells (10*f*f+2). 8 = 642 cells.",
-		"frequency": 6,
+		"_comment": "Default size for new planets: frequency 8 = 642 cells (10*f*f+2). Sizes offered in-game: data/customization.json.",
+		"frequency": 8,
 		"ocean_fraction": 0.55,
 		"shallow_band": 0.12,
 		"mountain_threshold": 0.7,

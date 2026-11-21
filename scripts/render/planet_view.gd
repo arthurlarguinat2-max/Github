@@ -60,6 +60,15 @@ var _highlight: MeshInstance3D
 var _trees: MultiMeshInstance3D
 var _buildings_root: Node3D
 var _world_seed := 0
+var _surface_nodes: Array[Node] = []
+var _placement: MeshInstance3D
+## Objects (trees, buildings) shrink when the planet has more, smaller cells.
+var _object_scale := 1.0
+
+## Terrain id -> hex color overriding terrains.json (player palette).
+var palette: Dictionary = {}
+## Draws a darker border around each land cell (easier to tell cells apart).
+var outlines := true
 
 
 func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed: int) -> void:
@@ -67,8 +76,14 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 	terrain_defs = p_terrain_defs
 	camera = p_camera
 	_world_seed = world_seed
+	_object_scale = clampf(6.0 / float(planet.grid.frequency), 0.5, 1.2)
 	_compute_heights()
 	_build_surface(world_seed)
+	_placement = MeshInstance3D.new()
+	_placement.material_override = _placement_material()
+	_placement.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_placement.visible = false
+	add_child(_placement)
 	_buildings_root = Node3D.new()
 	add_child(_buildings_root)
 	refresh_buildings()
@@ -192,7 +207,8 @@ func refresh_buildings() -> void:
 		var node := BuildingMeshes.create(id)
 		var dir: Vector3 = planet.grid.centers[cell]
 		var top := _heights[cell] + float(_def(cell).get("peak", 0.0))
-		node.transform = Transform3D(Basis(Quaternion(Vector3.UP, dir)), dir * top)
+		var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * _object_scale)
+		node.transform = Transform3D(orient, dir * top)
 		_buildings_root.add_child(node)
 	if _trees:
 		_trees.queue_free()
@@ -200,6 +216,39 @@ func refresh_buildings() -> void:
 	_build_trees(_world_seed)
 	if selected >= 0:
 		_highlight.mesh = _build_highlight_mesh(selected)
+
+
+## Rebuilds the ground (after a palette or outline change).
+func rebuild_surface() -> void:
+	for node in _surface_nodes:
+		node.queue_free()
+	_surface_nodes.clear()
+	_build_surface(_world_seed)
+
+
+func set_clouds_visible(value: bool) -> void:
+	if _clouds:
+		_clouds.visible = value
+
+
+## Lights up the cells where the chosen building can go.
+func set_placement(cells: Array) -> void:
+	var buffer := MeshBuffer.new()
+	var green := Color(0.45, 1.0, 0.55)
+	for cell in cells:
+		var center: Vector3 = planet.grid.centers[cell]
+		var cs: PackedVector3Array = planet.grid.corners[cell]
+		var h := _heights[cell] + float(_def(cell).get("peak", 0.0)) + 0.006
+		for k in cs.size():
+			var a := center.lerp(cs[k], 0.82).normalized() * (_heights[cell] + 0.006)
+			var b := center.lerp(cs[(k + 1) % cs.size()], 0.82).normalized() * (_heights[cell] + 0.006)
+			buffer.add_tri(center * h, a, b, green, green, green, center)
+	_placement.mesh = buffer.to_mesh(null)
+	_placement.visible = not cells.is_empty()
+
+
+func clear_placement() -> void:
+	_placement.visible = false
 
 
 # --- Selection ---------------------------------------------------------------
@@ -265,16 +314,26 @@ func _build_surface(world_seed: int) -> void:
 		var peak := float(def.get("peak", 0.0))
 		# Small per-cell tint variation so neighbouring cells stay readable.
 		var tint := float(posmod(hash(i * 7919 + world_seed), 100)) / 100.0
-		var color := Color(str(def.get("color", "ff00ff"))).darkened(tint * 0.09)
+		var color := Color(str(palette.get(planet.terrain[i], def.get("color", "ff00ff")))).darkened(tint * 0.09)
 		var peak_color := Color(str(def.get("peak_color", color.to_html(false))))
 		var center: Vector3 = grid.centers[i]
 		var cs: PackedVector3Array = grid.corners[i]
 		var top := center * (h + peak)
 		var count := cs.size()
+		var border := outlines and not is_water
+		var edge_color := color.darkened(0.28)
 		for k in count:
 			var c0 := cs[k]
 			var c1 := cs[(k + 1) % count]
-			buffer.add_tri(top, c0 * h, c1 * h, peak_color, color, color, center)
+			if border:
+				# Inner polygon + thin darker ring along the edges.
+				var i0 := center.lerp(c0, 0.9).normalized() * (h + peak * 0.1)
+				var i1 := center.lerp(c1, 0.9).normalized() * (h + peak * 0.1)
+				buffer.add_tri(top, i0, i1, peak_color, color, color, center)
+				buffer.add_tri(i0, c0 * h, c1 * h, edge_color, edge_color, edge_color, center)
+				buffer.add_tri(i0, c1 * h, i1, edge_color, edge_color, edge_color, center)
+			else:
+				buffer.add_tri(top, c0 * h, c1 * h, peak_color, color, color, center)
 			# Wall down to the lower neighbour across this edge (visible relief).
 			var mid := (c0 + c1).normalized()
 			var nb := _neighbor_across(i, mid)
@@ -317,6 +376,7 @@ func _add_mesh(mesh: ArrayMesh) -> void:
 	instance.mesh = mesh
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(instance)
+	_surface_nodes.append(instance)
 
 
 ## Low-poly trees drawn in a single MultiMesh (one draw call for all of them).
@@ -340,7 +400,7 @@ func _build_trees(world_seed: int) -> void:
 		for t in amount:
 			var corner := cs[rng.randi() % cs.size()]
 			var dir: Vector3 = (grid.centers[i] as Vector3).lerp(corner, rng.randf_range(0.15, 0.6)).normalized()
-			var s := rng.randf_range(0.8, 1.3)
+			var s := rng.randf_range(0.8, 1.3) * _object_scale
 			var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * s)
 			var tint := rng.randf()
 			if has_building:
@@ -421,6 +481,17 @@ func _build_highlight_mesh(cell: int) -> ArrayMesh:
 		buffer.add_tri(a * h, b * h, b_in * inner_h, white, white, white, center)
 		buffer.add_tri(a * h, b_in * inner_h, a_in * inner_h, white, white, white, center)
 	return buffer.to_mesh(null)
+
+
+func _placement_material() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_color = Color(1, 1, 1, 0.42)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.render_priority = 1
+	return mat
 
 
 func _highlight_material() -> StandardMaterial3D:

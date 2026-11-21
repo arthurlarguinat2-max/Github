@@ -15,6 +15,7 @@ const COLORS := {
 	"log": Color(0.45, 0.3, 0.17),
 	"bush": Color(0.24, 0.55, 0.26),
 	"berry": Color(0.85, 0.18, 0.25),
+	"accent": Color(0.85, 0.71, 0.36),
 }
 const GLOW := {
 	"fire": [Color(1.0, 0.55, 0.15), 3.0],
@@ -28,7 +29,7 @@ static func create(id: String) -> Node3D:
 	match id:
 		"hut":
 			_add(root, _cylinder(0.022, 0.024, 0.022, 7), "wall", Vector3(0, 0.011, 0))
-			_add(root, _cylinder(0.0, 0.033, 0.028, 7), "straw", Vector3(0, 0.036, 0))
+			_add(root, _cylinder(0.0, 0.033, 0.028, 7), "accent", Vector3(0, 0.036, 0))
 			_add(root, _box(Vector3(0.008, 0.01, 0.003)), "window", Vector3(0, 0.01, 0.022))
 		"campfire":
 			for k in 6:
@@ -44,7 +45,7 @@ static func create(id: String) -> Node3D:
 			_add(root, _cylinder(0.008, 0.006, 0.01, 6), "straw", Vector3(0.0, 0.005, -0.012))
 		"woodcutter":
 			_add(root, _box(Vector3(0.03, 0.02, 0.024)), "wall", Vector3(-0.01, 0.01, 0))
-			_add(root, _prism(Vector3(0.034, 0.014, 0.028)), "roof", Vector3(-0.01, 0.027, 0))
+			_add(root, _prism(Vector3(0.034, 0.014, 0.028)), "accent", Vector3(-0.01, 0.027, 0))
 			_add(root, _box(Vector3(0.006, 0.008, 0.002)), "window", Vector3(-0.01, 0.01, 0.0125))
 			for k in 3:
 				_add(root, _cylinder(0.004, 0.004, 0.026, 6), "log",
@@ -56,6 +57,12 @@ static func create(id: String) -> Node3D:
 		_:
 			_add(root, _box(Vector3(0.02, 0.02, 0.02)), "berry", Vector3(0, 0.01, 0))
 	return root
+
+
+## Village color chosen by the player (roofs). Updates existing buildings too,
+## since the material is shared.
+static func set_accent(color: Color) -> void:
+	_material("accent").albedo_color = color
 
 
 static func _add(parent: Node3D, mesh: Mesh, material_key: String, pos: Vector3, rot: Vector3 = Vector3.ZERO) -> void:

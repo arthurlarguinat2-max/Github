@@ -29,6 +29,7 @@ func _ready() -> void:
 	var buildings_file := Config.load_json("res://data/buildings.json")
 	config["buildings"] = buildings_file.get("buildings", {})
 	config["start"] = buildings_file.get("start", {})
+	config["customization"] = Config.load_json("res://data/customization.json")
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()
 
@@ -59,6 +60,18 @@ func save_game() -> void:
 	var err := SaveManager.save_to_file(sim.to_dict())
 	if err != OK:
 		push_warning("Save failed: %s" % error_string(err))
+
+
+## Replaces the current planet with a brand new one of the given size,
+## saves it and restarts the scene. The previous planet is lost.
+func new_world(frequency: int) -> void:
+	var world_config := config.duplicate(true)
+	world_config["planet"]["frequency"] = frequency
+	sim = Simulation.new(randi(), world_config)
+	_saving_enabled = true
+	stepper.reset()
+	save_game()
+	get_tree().reload_current_scene()
 
 
 func new_game(seed_value: int = -1) -> void:

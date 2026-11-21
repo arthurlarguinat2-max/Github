@@ -1,0 +1,22 @@
+{
+	"_comment": "Player customization options. Palettes override terrain colors (hex sRGB); missing terrains keep their default color from terrains.json.",
+	"planet_sizes": [
+		{"id": "small",  "name_key": "SIZE_SMALL",  "frequency": 6},
+		{"id": "medium", "name_key": "SIZE_MEDIUM", "frequency": 8},
+		{"id": "large",  "name_key": "SIZE_LARGE",  "frequency": 10}
+	],
+	"palettes": {
+		"classic": {"name_key": "PALETTE_CLASSIC", "order": 0, "colors": {}},
+		"autumn":  {"name_key": "PALETTE_AUTUMN",  "order": 1, "colors": {"plains": "c9b458", "forest": "c46b2e", "hills": "a8834f", "beach": "ead9a6", "desert": "d9a066"}},
+		"pastel":  {"name_key": "PALETTE_PASTEL",  "order": 2, "colors": {"ocean": "6c9fd8", "shallow": "8ec5ea", "plains": "a8dba0", "forest": "7cbf8e", "desert": "f0d9a8", "hills": "c3cf9a", "mountain": "b0a7b8", "beach": "f6e7c1"}},
+		"mars":    {"name_key": "PALETTE_MARS",    "order": 3, "colors": {"ocean": "3b4f7a", "shallow": "5672a1", "plains": "c8754a", "forest": "8f4a3a", "desert": "e0a066", "hills": "b06a45", "mountain": "7a4b3e", "beach": "e8c29a", "ice": "f2e6e0"}},
+		"frost":   {"name_key": "PALETTE_FROST",   "order": 4, "colors": {"ocean": "244a7a", "shallow": "3a6fa8", "plains": "b9d6c9", "forest": "5f8f86", "desert": "d8d2c4", "hills": "9fb3b0", "beach": "dfe6e8"}}
+	},
+	"village_colors": ["d9b45c", "c0503a", "3a7bc0", "5aa35a", "8a5ac0", "e8e8e8"],
+	"skies": {
+		"stars": {"name_key": "SKY_STARS", "order": 0, "color": "080a14", "stars": 1.0},
+		"dusk":  {"name_key": "SKY_DUSK",  "order": 1, "color": "2a1838", "stars": 0.4},
+		"deep":  {"name_key": "SKY_DEEP",  "order": 2, "color": "0b1d33", "stars": 0.0}
+	},
+	"name_syllables": ["ka", "lo", "mi", "ra", "ze", "vu", "no", "ta", "li", "so", "bel", "dra", "or", "in", "ul", "ma", "pe", "ri", "go", "ny"]
+}
