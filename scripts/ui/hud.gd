@@ -13,6 +13,7 @@ signal appearance_changed
 const Haptics := preload("res://scripts/platform/haptics.gd")
 const Economy := preload("res://scripts/simulation/economy.gd")
 const UiKit := preload("res://scripts/ui/ui_kit.gd")
+const Design := preload("res://scripts/ui/design.gd")
 const StartMenu := preload("res://scripts/ui/start_menu.gd")
 const Objectives := preload("res://scripts/simulation/objectives.gd")
 const Events := preload("res://scripts/simulation/events.gd")
@@ -20,12 +21,13 @@ const ICON_DIR := "res://assets/icons/ui/"
 
 const BASE_PADDING := 14.0
 const REFRESH_INTERVAL := 0.25
-const TEXT := Color("f2f4ff")
-const MUTED := Color("aab4d4")
-const WARN := Color("ffb36b")
-const GOOD := Color("8fd18f")
-const BAD := Color("ff8b7b")
-const PANEL_BG := Color(0.09, 0.11, 0.18, 0.95)
+# Colors come from the design system (scripts/ui/design.gd).
+const TEXT := Design.INK
+const MUTED := Design.INK_SOFT
+const WARN := Design.WARN
+const GOOD := Design.GOOD
+const BAD := Design.BAD
+const PANEL_BG := Design.CREAM
 const SPEEDS := [1, 2, 4]
 
 var _margin: MarginContainer
@@ -38,7 +40,7 @@ var _pause_button: Button
 var _speed_button: Button
 var _build_button: Button
 var _settings_button: Button
-var _bottom_bar: HBoxContainer
+var _bottom_bar: Control
 
 # Sheets (only one visible at a time).
 var _sheets: Array[Control] = []
@@ -107,13 +109,16 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 8)
 	_margin.add_child(column)
 
-	_title = _label("", 17, MUTED)
+	_title = _label("", 18, TEXT)
+	_title.add_theme_font_override("font", Design.title_font())
 	column.add_child(_title)
 	column.add_child(_build_chip_row(["food", "water", "wood", "stone"]))
 	_needs_row = _build_needs_row()
 	column.add_child(_needs_row)
-	_toast = _label("", 15, WARN)
+	_toast = _label("", 15, TEXT)
 	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_toast.add_theme_stylebox_override("normal", Design.panel(Color("fff3c4"), 18, 10))
+	_toast.visible = false
 	column.add_child(_toast)
 	_tutorial_panel = _build_tutorial_panel()
 	column.add_child(_tutorial_panel)
@@ -139,7 +144,7 @@ func _ready() -> void:
 	column.add_child(_event_sheet)
 	_sheets.append_array([_build_sheet, _cell_card, _settings_sheet, _needs_sheet, _goals_sheet, _event_sheet])
 
-	_hint = _label(tr("HINT_DRAG"), 13, Color("7c86a8"))
+	_hint = _label(tr("HINT_DRAG"), 13, MUTED)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_hint)
 	_bottom_bar = _build_bottom_bar()
@@ -215,7 +220,7 @@ func _chip(res: String) -> PanelContainer:
 	var chip := PanelContainer.new()
 	chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_theme_stylebox_override("panel", _box(Color(0.1, 0.12, 0.2, 0.82), 12, 6))
+	chip.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 18, 6))
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 4)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -301,19 +306,21 @@ func _on_alert(key: String) -> void:
 
 func _show_toast(text: String) -> void:
 	_toast.text = text
+	_toast.visible = true
 	_toast.modulate.a = 1.0
 	if _toast_tween:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
 	_toast_tween.tween_interval(4.0)
 	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 1.0)
+	_toast_tween.tween_callback(func(): _toast.visible = false)
 
 
 # =============================================================================
 # Bottom bar: pause, speed, build, settings
 # =============================================================================
 
-func _build_bottom_bar() -> HBoxContainer:
+func _build_bottom_bar() -> PanelContainer:
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
 	_pause_button = _icon_button("pause", "", Vector2(52, 58))
@@ -324,8 +331,7 @@ func _build_bottom_bar() -> HBoxContainer:
 	bar.add_child(_speed_button)
 	_build_button = _icon_button("build", tr("BUILD"), Vector2(0, 58))
 	_build_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_build_button.add_theme_stylebox_override("normal", _box(Color(0.3, 0.5, 0.9, 0.95), 16, 8))
-	_build_button.add_theme_stylebox_override("hover", _box(Color(0.35, 0.56, 0.95, 0.95), 16, 8))
+	Design.make_primary(_build_button, 22)
 	_build_button.pressed.connect(_on_build_pressed)
 	bar.add_child(_build_button)
 	_goals_button = _icon_button("goals", "", Vector2(52, 58))
@@ -334,7 +340,10 @@ func _build_bottom_bar() -> HBoxContainer:
 	_settings_button = _icon_button("settings", "", Vector2(52, 58))
 	_settings_button.pressed.connect(_on_settings_pressed)
 	bar.add_child(_settings_button)
-	return bar
+	var pill := PanelContainer.new()
+	pill.add_theme_stylebox_override("panel", Design.panel(Design.CREAM, 30, 8))
+	pill.add_child(bar)
+	return pill
 
 
 func _on_pause_pressed() -> void:
@@ -399,7 +408,7 @@ func _close_sheets() -> void:
 
 func _sheet(title_label: Label) -> Array:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _box(PANEL_BG, 20, 14))
+	panel.add_theme_stylebox_override("panel", Design.panel(PANEL_BG, 28, 16))
 	panel.visible = false
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
@@ -407,6 +416,7 @@ func _sheet(title_label: Label) -> Array:
 	var header := HBoxContainer.new()
 	box.add_child(header)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title_label.add_theme_font_override("font", Design.title_font())
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	header.add_child(title_label)
@@ -542,7 +552,7 @@ func _valid_cells(id: String) -> Array:
 
 func _build_banner() -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _box(Color(0.16, 0.36, 0.22, 0.95), 16, 10))
+	panel.add_theme_stylebox_override("panel", Design.panel(Design.TEAL_SOFT, 20, 12))
 	panel.visible = false
 	var row := HBoxContainer.new()
 	panel.add_child(row)
@@ -603,7 +613,7 @@ func _build_cell_card() -> PanelContainer:
 	_cell_title = _label("", 20, TEXT)
 	var parts := _sheet(_cell_title)
 	var box: VBoxContainer = parts[1]
-	_cell_text = _label("", 15, Color("c4cbe6"))
+	_cell_text = _label("", 15, MUTED)
 	_cell_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_cell_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_cell_text)
@@ -767,19 +777,19 @@ func _update_needs_sheet() -> void:
 	t += _need_line(tr("RES_WATER"), water_rate >= 0.0 or eco.stock("water") > 0.0, tr("NEED_WATER") % [floori(eco.stock("water")), _format_signed(water_rate)])
 	t += _need_line(tr("NEED_HOUSING"), eco.population <= eco.housing(), tr("NEED_HOUSING_TEXT") % [eco.population, eco.housing()])
 	t += _need_line(tr("NEED_WORK"), eco.employed() >= eco.population * 0.6, tr("NEED_WORK_TEXT") % [eco.employed(), eco.jobs()])
-	t += "\n[b]%s : %d %%[/b]  [color=#8f9abf](%s)[/color]\n" % [tr("HAPPINESS"), roundi(eco.happiness), tr("NEED_PRODUCTIVITY") % roundi(eco.productivity() * 100.0)]
+	t += "\n[b]%s : %d %%[/b]  [color=#8a7564](%s)[/color]\n" % [tr("HAPPINESS"), roundi(eco.happiness), tr("NEED_PRODUCTIVITY") % roundi(eco.productivity() * 100.0)]
 	t += _factor_lines(eco.happiness_factors())
 	t += "\n[b]%s : %d %%[/b]\n" % [tr("HEALTH"), roundi(eco.health)]
 	t += _factor_lines(eco.health_factors())
 	t += "\n[b]%s[/b]\n" % tr("NEED_STOCKS")
 	for res in ["grain", "flour", "tools"]:
 		t += "%s : %d\n" % [tr(_res_key(res)), floori(eco.stock(res))]
-	t += "\n[color=#8f9abf]%s[/color]" % tr("NEED_TIP")
+	t += "\n[color=#8a7564]%s[/color]" % tr("NEED_TIP")
 	_needs_text.text = t
 
 
 func _need_line(title: String, ok: bool, text: String) -> String:
-	var color := "#8fd18f" if ok else "#ff8b7b"
+	var color := "%s" % Design.HEX_GOOD if ok else "%s" % Design.HEX_BAD
 	return "[color=%s]•[/color] [b]%s[/b] — %s\n" % [color, title, text]
 
 
@@ -790,7 +800,7 @@ func _factor_lines(factors: Array) -> String:
 		if str(f[0]) == "WB_BASE":
 			out += "   %s %d\n" % [tr("WB_BASE"), roundi(value)]
 			continue
-		var color := "#8fd18f" if value > 0.0 else "#ff8b7b"
+		var color := "%s" % Design.HEX_GOOD if value > 0.0 else "%s" % Design.HEX_BAD
 		out += "   [color=%s]%s%d[/color] %s\n" % [color, "+" if value > 0.0 else "", roundi(value), tr(str(f[0]))]
 	return out
 
@@ -905,7 +915,7 @@ func _refresh_settings_sheet() -> void:
 				_close_sheets()
 				_start_menu.open("main"))
 			box.add_child(home)
-			box.add_child(_label(tr("VERSION") % ProjectSettings.get_setting("application/config/version", "?"), 11, Color("5a6380")))
+			box.add_child(_label(tr("VERSION") % ProjectSettings.get_setting("application/config/version", "?"), 11, Design.INK_FAINT))
 
 
 func _section(text: String) -> Label:
@@ -966,7 +976,7 @@ func _toggle(text: String, key: String, affects_view: bool) -> CheckButton:
 
 func _build_tutorial_panel() -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _box(Color(0.16, 0.2, 0.36, 0.95), 16, 12))
+	panel.add_theme_stylebox_override("panel", Design.panel(Design.SKY_SOFT, 20, 12))
 	panel.visible = false
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
@@ -996,7 +1006,7 @@ func _build_tutorial_panel() -> PanelContainer:
 	_tutorial_next.text = tr("TUTO_NEXT")
 	_tutorial_next.custom_minimum_size = Vector2(0, 38)
 	_tutorial_next.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tutorial_next.add_theme_stylebox_override("normal", _box(Color(0.3, 0.5, 0.9, 0.95), 12, 6))
+	Design.make_primary(_tutorial_next, 14)
 	_tutorial_next.pressed.connect(_advance_tutorial)
 	buttons.add_child(_tutorial_next)
 	return panel
@@ -1075,7 +1085,7 @@ func _check_tutorial() -> void:
 func _start_pulse(control: Control) -> void:
 	_pulsing = control
 	_pulse_tween = create_tween().set_loops()
-	_pulse_tween.tween_property(control, "modulate", Color(1.5, 1.4, 0.7), 0.5)
+	_pulse_tween.tween_property(control, "modulate", Color(1.2, 1.05, 0.75), 0.5)
 	_pulse_tween.tween_property(control, "modulate", Color.WHITE, 0.5)
 
 
@@ -1143,7 +1153,7 @@ func _update_goals_sheet() -> void:
 func _goal_row(obj: Dictionary, done: bool) -> PanelContainer:
 	var sim = GameState.sim
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _box(Color(0.14, 0.24, 0.18, 0.9) if done else Color(0.14, 0.16, 0.25, 0.9), 12, 10))
+	panel.add_theme_stylebox_override("panel", Design.panel(Design.TEAL_SOFT if done else Design.CARD, 16, 10, not done))
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	var title := tr(str(obj.title_key))
@@ -1184,7 +1194,7 @@ func _on_objective_completed(id: String) -> void:
 func _build_event_sheet() -> PanelContainer:
 	_event_title = _label("", 20, TEXT)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _box(Color(0.2, 0.15, 0.1, 0.97), 20, 14))
+	panel.add_theme_stylebox_override("panel", Design.panel(Design.PARCHMENT, 26, 16))
 	panel.visible = false
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -1197,7 +1207,7 @@ func _build_event_sheet() -> PanelContainer:
 	_event_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	head.add_child(_event_title)
 	box.add_child(head)
-	_event_text = _label("", 15, Color("eadfcf"))
+	_event_text = _label("", 15, TEXT)
 	_event_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_event_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_event_text)
@@ -1340,26 +1350,6 @@ func _label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
-## Sober dark theme with rounded buttons (a rounded font arrives in Phase 7).
+## The "Diorama doux" theme (see scripts/ui/design.gd).
 func _make_theme() -> Theme:
-	var theme := Theme.new()
-	theme.default_font_size = 16
-	var normal := _box(Color(0.15, 0.17, 0.26, 0.95), 14, 8)
-	var pressed := _box(Color(0.36, 0.55, 0.95, 0.95), 14, 8)
-	var hover := _box(Color(0.19, 0.21, 0.31, 0.95), 14, 8)
-	var disabled := _box(Color(0.11, 0.12, 0.17, 0.75), 14, 8)
-	for type in ["Button", "CheckButton"]:
-		theme.set_stylebox("normal", type, normal)
-		theme.set_stylebox("hover", type, hover)
-		theme.set_stylebox("pressed", type, pressed)
-		theme.set_stylebox("hover_pressed", type, pressed)
-		theme.set_stylebox("disabled", type, disabled)
-		theme.set_stylebox("focus", type, StyleBoxEmpty.new())
-		theme.set_color("font_color", type, Color("dfe5ff"))
-		theme.set_color("font_pressed_color", type, Color.WHITE)
-		theme.set_color("font_hover_color", type, Color.WHITE)
-		theme.set_color("font_disabled_color", type, Color("5d6584"))
-	theme.set_stylebox("normal", "LineEdit", _box(Color(0.15, 0.17, 0.26, 0.95), 12, 10))
-	theme.set_stylebox("focus", "LineEdit", _box(Color(0.2, 0.23, 0.35, 0.95), 12, 10))
-	theme.set_color("font_color", "LineEdit", TEXT)
-	return theme
+	return Design.make_theme()

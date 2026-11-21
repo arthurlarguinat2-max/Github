@@ -90,9 +90,7 @@
 	"PALETTE_MARS": "Martian",
 	"PALETTE_FROST": "Frost",
 	"SKY": "Sky",
-	"SKY_STARS": "Starry",
-	"SKY_DUSK": "Dusk",
-	"SKY_DEEP": "Deep blue",
+	"SKY_STARS": "Starry night",
 	"CLOUDS": "Clouds",
 	"OUTLINES": "Tile outlines",
 	"HAPTICS": "Vibrations",
@@ -255,5 +253,7 @@
 	"EV_FESTIVAL": "Village feast",
 	"EV_FESTIVAL_TEXT": "People would like to celebrate the new moon.",
 	"EV_FESTIVAL_A": "A big feast!",
-	"EV_FESTIVAL_B": "Not this time"
+	"EV_FESTIVAL_B": "Not this time",
+	"SKY_SOFT": "Soft day",
+	"SKY_MIST": "Mist"
 }

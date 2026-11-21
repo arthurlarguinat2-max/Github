@@ -11,7 +11,7 @@ const DEFAULTS := {
 	"language": "",     # "" = follow the device language
 	"clouds": true,
 	"outlines": true,
-	"sky": "stars",
+	"sky": "soft",
 	"last_version": "",  # Used to greet the player after an update.
 }
 
@@ -25,6 +25,9 @@ func _ready() -> void:
 			for key in parsed:
 				if DEFAULTS.has(key) and typeof(parsed[key]) == typeof(DEFAULTS[key]):
 					values[key] = parsed[key]
+	# Skies from older versions no longer exist: fall back to the default.
+	if not (str(values.sky) in ["soft", "sunset", "stars", "aurora", "mist"]):
+		values.sky = DEFAULTS.sky
 	_apply()
 
 

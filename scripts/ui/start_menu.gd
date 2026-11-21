@@ -7,6 +7,7 @@ signal tutorial_requested
 
 const UiKit := preload("res://scripts/ui/ui_kit.gd")
 const Haptics := preload("res://scripts/platform/haptics.gd")
+const Design := preload("res://scripts/ui/design.gd")
 
 var _main_page: VBoxContainer
 var _new_page: VBoxContainer
@@ -18,9 +19,18 @@ var _create_button: Button
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var shade := ColorRect.new()
-	shade.color = Color(0.03, 0.04, 0.08, 0.86)
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(Design.CREAM, 0.0))
+	gradient.set_color(1, Color(Design.CREAM, 0.97))
+	gradient.add_point(0.45, Color(Design.CREAM, 0.35))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill_from = Vector2(0.5, 0.0)
+	texture.fill_to = Vector2(0.5, 1.0)
+	var shade := TextureRect.new()
+	shade.texture = texture
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.stretch_mode = TextureRect.STRETCH_SCALE
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 	var margin := MarginContainer.new()
@@ -52,52 +62,65 @@ func open(page: String) -> void:
 
 func _build_main_page() -> VBoxContainer:
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 14)
+	page.add_theme_constant_override("separation", 12)
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var spacer_top := Control.new()
-	spacer_top.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(spacer_top)
-	var logo := TextureRect.new()
-	logo.texture = load("res://assets/icons/app_icon_1024.png")
-	logo.custom_minimum_size = Vector2(150, 150)
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	page.add_child(logo)
-	page.add_child(UiKit.label(tr("APP_TITLE"), 34))
-	var sim = GameState.sim
-	page.add_child(UiKit.label(tr("START_CURRENT") % [sim.custom.planet_name, sim.day(), sim.economy.population], 16, UiKit.MUTED))
+	var title := UiKit.label(tr("APP_TITLE"), 40)
+	title.add_theme_font_override("font", Design.title_font())
+	title.add_theme_color_override("font_shadow_color", Color(1, 1, 1, 0.8))
+	title.add_theme_constant_override("shadow_offset_y", 2)
+	page.add_child(title)
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 20)
-	page.add_child(spacer)
-	var play := UiKit.button(tr("START_CONTINUE"), "play", 60)
-	play.add_theme_stylebox_override("normal", UiKit.box(Color(0.3, 0.5, 0.9, 0.95), 16, 8))
-	play.add_theme_font_size_override("font_size", 20)
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	page.add_child(spacer)  # The real planet shows through here.
+
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", Design.panel(Design.CREAM, 30, 18))
+	page.add_child(card)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	card.add_child(box)
+	var sim = GameState.sim
+	var current := UiKit.label(tr("START_CURRENT") % [sim.custom.planet_name, sim.day(), sim.economy.population], 16, UiKit.MUTED)
+	box.add_child(current)
+	var play := UiKit.button(tr("START_CONTINUE"), "", 62)
+	Design.make_primary(play, 22)
+	play.add_theme_font_size_override("font_size", 22)
 	play.pressed.connect(func():
 		Haptics.light()
 		visible = false
 		closed.emit())
-	page.add_child(play)
+	box.add_child(play)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	box.add_child(row)
 	var new_planet := UiKit.button(tr("START_NEW"), "build", 54)
 	new_planet.pressed.connect(func(): open("new"))
-	page.add_child(new_planet)
+	row.add_child(new_planet)
 	var tuto := UiKit.button(tr("START_TUTORIAL"), "help", 54)
 	tuto.pressed.connect(func():
 		visible = false
 		tutorial_requested.emit()
 		closed.emit())
-	page.add_child(tuto)
-	var spacer_bottom := Control.new()
-	spacer_bottom.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(spacer_bottom)
+	row.add_child(tuto)
 	return page
 
 
 # --- New planet page -------------------------------------------------------------
 
 func _build_new_page() -> VBoxContainer:
+	var holder := VBoxContainer.new()
+	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var card := PanelContainer.new()
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", Design.panel(Design.CREAM, 30, 16))
+	holder.add_child(card)
 	var page := VBoxContainer.new()
-	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(UiKit.label(tr("NEW_PLANET_TITLE"), 24))
+	page.add_theme_constant_override("separation", 10)
+	card.add_child(page)
+	var title := UiKit.label(tr("NEW_PLANET_TITLE"), 26)
+	title.add_theme_font_override("font", Design.title_font())
+	page.add_child(title)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -113,11 +136,11 @@ func _build_new_page() -> VBoxContainer:
 	var back := UiKit.button(tr("BACK"), "", 54)
 	back.pressed.connect(func(): open("main"))
 	actions.add_child(back)
-	_create_button = UiKit.button(tr("NEW_PLANET"), "play", 54)
-	_create_button.add_theme_stylebox_override("normal", UiKit.box(Color(0.3, 0.5, 0.9, 0.95), 14, 8))
+	_create_button = UiKit.button(tr("NEW_PLANET"), "", 54)
+	Design.make_primary(_create_button, 18)
 	_create_button.pressed.connect(_on_create)
 	actions.add_child(_create_button)
-	return page
+	return holder
 
 
 func _reset_options() -> void:

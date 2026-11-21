@@ -1,5 +1,5 @@
 {
-	"_comment": "Player customization options. Palettes override terrain colors (hex sRGB); missing terrains keep their default color from terrains.json.",
+	"_comment": "Player customization options. Palettes override terrain colors (hex sRGB); missing terrains keep their default color from terrains.json. Skies: top/horizon/bottom gradient colors, stars 0..1, ambient and sun light colors.",
 	"planet_sizes": [
 		{
 			"id": "small",
@@ -135,35 +135,55 @@
 		"4a4a4a"
 	],
 	"skies": {
+		"soft": {
+			"name_key": "SKY_SOFT",
+			"order": 0,
+			"top": "8ecae6",
+			"horizon": "ffe3cf",
+			"bottom": "fff1e2",
+			"stars": 0.0,
+			"ambient": "f3e6ff",
+			"sun": "fff0d6"
+		},
+		"sunset": {
+			"name_key": "SKY_SUNSET",
+			"order": 1,
+			"top": "7a6ad8",
+			"horizon": "ffb08a",
+			"bottom": "ffd9b8",
+			"stars": 0.15,
+			"ambient": "ffd8e6",
+			"sun": "ffc79a"
+		},
 		"stars": {
 			"name_key": "SKY_STARS",
-			"order": 0,
-			"color": "080a14",
-			"stars": 1.0
-		},
-		"dusk": {
-			"name_key": "SKY_DUSK",
-			"order": 1,
-			"color": "2a1838",
-			"stars": 0.4
-		},
-		"deep": {
-			"name_key": "SKY_DEEP",
 			"order": 2,
-			"color": "0b1d33",
-			"stars": 0.0
+			"top": "141a3a",
+			"horizon": "3a3f78",
+			"bottom": "241d48",
+			"stars": 1.0,
+			"ambient": "b8c2ff",
+			"sun": "fff0d6"
 		},
 		"aurora": {
 			"name_key": "SKY_AURORA",
 			"order": 3,
-			"color": "0a2226",
-			"stars": 0.8
+			"top": "0f3440",
+			"horizon": "7fe0c3",
+			"bottom": "1d4a52",
+			"stars": 0.6,
+			"ambient": "cff7ec",
+			"sun": "f0fff6"
 		},
-		"sunset": {
-			"name_key": "SKY_SUNSET",
+		"mist": {
+			"name_key": "SKY_MIST",
 			"order": 4,
-			"color": "3a1c2c",
-			"stars": 0.25
+			"top": "cfd8e3",
+			"horizon": "f5efe6",
+			"bottom": "ebe3d8",
+			"stars": 0.0,
+			"ambient": "f2f0ff",
+			"sun": "ffffff"
 		}
 	},
 	"name_syllables": [

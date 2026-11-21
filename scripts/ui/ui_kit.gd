@@ -3,9 +3,10 @@
 extends RefCounted
 
 const ICON_DIR := "res://assets/icons/ui/"
-const TEXT := Color("f2f4ff")
-const MUTED := Color("aab4d4")
-const PANEL_BG := Color(0.09, 0.11, 0.18, 0.96)
+const Design := preload("res://scripts/ui/design.gd")
+const TEXT := Design.INK
+const MUTED := Design.INK_SOFT
+const PANEL_BG := Design.CREAM
 
 
 static func box(color: Color, radius: int, margin: int) -> StyleBoxFlat:

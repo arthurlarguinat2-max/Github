@@ -90,9 +90,7 @@
 	"PALETTE_MARS": "Martienne",
 	"PALETTE_FROST": "Givre",
 	"SKY": "Ciel",
-	"SKY_STARS": "Étoilé",
-	"SKY_DUSK": "Crépuscule",
-	"SKY_DEEP": "Bleu profond",
+	"SKY_STARS": "Nuit étoilée",
 	"CLOUDS": "Nuages",
 	"OUTLINES": "Contours des cases",
 	"HAPTICS": "Vibrations",
@@ -177,7 +175,7 @@
 	"PALETTE_GOLDEN": "Dorée",
 	"PALETTE_NIGHT": "Nuit",
 	"SKY_AURORA": "Aurore",
-	"SKY_SUNSET": "Couchant",
+	"SKY_SUNSET": "Coucher de soleil",
 	"DECORATIONS": "Décorations",
 	"DECOR_RINGS": "Anneaux",
 	"DECOR_MOON": "Lune",
@@ -255,5 +253,7 @@
 	"EV_FESTIVAL": "Fête du village",
 	"EV_FESTIVAL_TEXT": "Les habitants voudraient fêter la nouvelle lune.",
 	"EV_FESTIVAL_A": "Une grande fête !",
-	"EV_FESTIVAL_B": "Pas cette fois"
+	"EV_FESTIVAL_B": "Pas cette fois",
+	"SKY_SOFT": "Jour doux",
+	"SKY_MIST": "Brume"
 }

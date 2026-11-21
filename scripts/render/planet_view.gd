@@ -37,9 +37,10 @@ void fragment() {
 	float wave = sin(TIME * 1.3 + local_pos.x * 23.0 + local_pos.z * 17.0)
 		* sin(TIME * 0.9 + local_pos.y * 19.0);
 	vec3 base = pow(COLOR.rgb, vec3(2.2)); // sRGB -> linear
-	ALBEDO = base * (0.93 + 0.07 * wave);
-	ROUGHNESS = 0.32;
-	SPECULAR = 0.6;
+	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	ALBEDO = mix(base * (0.95 + 0.05 * wave), vec3(1.0), rim * 0.35);
+	ROUGHNESS = 0.22;
+	SPECULAR = 0.7;
 }
 """
 
@@ -61,7 +62,7 @@ var _tap_start_pos := Vector2.ZERO
 var _tap_start_time := 0.0
 var _clouds: Node3D
 var _highlight: MeshInstance3D
-var _trees: MultiMeshInstance3D
+var _trees: Node3D
 var _buildings_root: Node3D
 var _world_seed := 0
 var _surface_nodes: Array[Node] = []
@@ -243,7 +244,7 @@ func set_clouds_visible(value: bool) -> void:
 ## Lights up the cells where the chosen building can go.
 func set_placement(cells: Array) -> void:
 	var buffer := MeshBuffer.new()
-	var green := Color(0.45, 1.0, 0.55)
+	var green := Color(0.36, 0.86, 0.74)  # Soft turquoise (design system TEAL).
 	for cell in cells:
 		var center: Vector3 = planet.grid.centers[cell]
 		var cs: PackedVector3Array = planet.grid.corners[cell]
@@ -388,84 +389,125 @@ func _add_mesh(mesh: ArrayMesh) -> void:
 	_surface_nodes.append(instance)
 
 
-## Low-poly trees drawn in a single MultiMesh (one draw call for all of them).
+## Toy-like trees: round canopies in forests and plains, little pines on the
+## hills. Three MultiMeshes (trunks, canopies, pines) = three draw calls.
 func _build_trees(world_seed: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 31
-	var transforms: Array[Transform3D] = []
-	var colors: Array[Color] = []
+	var trunks: Array[Transform3D] = []
+	var canopies: Array[Transform3D] = []
+	var canopy_colors: Array[Color] = []
+	var pines: Array[Transform3D] = []
+	var pine_colors: Array[Color] = []
 	var grid = planet.grid
 	for i in planet.cell_count():
 		var amount := 0
+		var is_pine := false
 		match planet.terrain[i]:
 			"forest":
 				amount = rng.randi_range(4, 6)
 			"plains":
 				amount = 1 if rng.randf() < 0.3 else 0
 			"hills":
-				amount = 1 if rng.randf() < 0.4 else 0
+				amount = 1 if rng.randf() < 0.45 else 0
+				is_pine = true
 		var cs: PackedVector3Array = grid.corners[i]
 		var has_building: bool = planet.buildings.size() > i and planet.buildings[i] != ""
 		for t in amount:
 			var corner := cs[rng.randi() % cs.size()]
 			var dir: Vector3 = (grid.centers[i] as Vector3).lerp(corner, rng.randf_range(0.15, 0.6)).normalized()
 			var s := rng.randf_range(0.8, 1.3) * _object_scale
-			var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * s)
+			var up := Basis(Quaternion(Vector3.UP, dir))
 			var tint := rng.randf()
 			if has_building:
 				continue  # Same random draws either way: other trees stay in place.
-			transforms.append(Transform3D(orient, dir * (_heights[i] + 0.02 * s)))
-			colors.append(Color(0.16, 0.42, 0.2).lerp(Color(0.3, 0.55, 0.22), tint))
+			var ground := dir * _heights[i]
+			trunks.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.006 * s))
+			if is_pine:
+				pines.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.022 * s))
+				pine_colors.append(Color("4f9a6a").lerp(Color("6fb586"), tint))
+			else:
+				canopies.append(Transform3D(up * Basis.from_scale(Vector3.ONE * s), ground + dir * 0.02 * s))
+				canopy_colors.append(Color("6cc070").lerp(Color("a6d96a"), tint))
+	_trees = Node3D.new()
+	add_child(_trees)
+	var trunk := CylinderMesh.new()
+	trunk.top_radius = 0.0022
+	trunk.bottom_radius = 0.003
+	trunk.height = 0.012
+	trunk.radial_segments = 5
+	trunk.rings = 1
+	var no_colors: Array[Color] = []
+	_add_multimesh(trunk, trunks, no_colors, Color("9a6a45"))
+	var canopy := SphereMesh.new()
+	canopy.radius = 0.011
+	canopy.height = 0.02
+	canopy.radial_segments = 8
+	canopy.rings = 4
+	_add_multimesh(canopy, canopies, canopy_colors, Color.WHITE)
+	var pine := CylinderMesh.new()
+	pine.top_radius = 0.0
+	pine.bottom_radius = 0.01
+	pine.height = 0.03
+	pine.radial_segments = 6
+	pine.rings = 1
+	pine.cap_top = false
+	_add_multimesh(pine, pines, pine_colors, Color.WHITE)
+
+
+func _add_multimesh(mesh: PrimitiveMesh, transforms: Array[Transform3D], colors: Array[Color], base: Color) -> void:
 	if transforms.is_empty():
 		return
-	var cone := CylinderMesh.new()
-	cone.top_radius = 0.0
-	cone.bottom_radius = 0.014
-	cone.height = 0.04
-	cone.radial_segments = 6
-	cone.rings = 1
-	cone.cap_top = false
 	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 1.0
-	cone.material = mat
+	mat.albedo_color = base
+	mat.vertex_color_use_as_albedo = not colors.is_empty()
+	mesh.material = mat
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
-	mm.mesh = cone
+	mm.use_colors = not colors.is_empty()
+	mm.mesh = mesh
 	mm.instance_count = transforms.size()
 	for k in transforms.size():
 		mm.set_instance_transform(k, transforms[k])
-		mm.set_instance_color(k, colors[k])
-	_trees = MultiMeshInstance3D.new()
-	_trees.multimesh = mm
-	_trees.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_trees)
+		if not colors.is_empty():
+			mm.set_instance_color(k, colors[k])
+	var instance := MultiMeshInstance3D.new()
+	instance.multimesh = mm
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_trees.add_child(instance)
 
 
+## Fluffy clouds: each one is 3 puffs of different sizes (one MultiMesh).
 func _build_clouds(world_seed: int) -> Node3D:
 	var pivot := Node3D.new()
-	var blob := SphereMesh.new()
-	blob.radius = 0.09
-	blob.height = 0.11
-	blob.radial_segments = 7
-	blob.rings = 3
+	var puff := SphereMesh.new()
+	puff.radius = 0.05
+	puff.height = 0.085
+	puff.radial_segments = 10
+	puff.rings = 5
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1, 1, 1, 0.9)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.99, 0.97)
 	mat.roughness = 1.0
-	blob.material = mat
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.97, 0.93)
+	mat.emission_energy_multiplier = 0.25  # Stay soft and bright on the night side.
+	puff.material = mat
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = blob
-	mm.instance_count = CLOUD_COUNT
+	mm.mesh = puff
+	mm.instance_count = CLOUD_COUNT * 3
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 1
 	for i in CLOUD_COUNT:
 		var dir := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.7, 0.7), rng.randf_range(-1, 1)).normalized()
 		var orient := Basis.looking_at(dir).rotated(dir, rng.randf() * TAU)
-		orient = orient * Basis.from_scale(Vector3(rng.randf_range(1.0, 2.2), rng.randf_range(0.6, 1.0), 1.0))
-		mm.set_instance_transform(i, Transform3D(orient, dir * 1.2))
+		var size := rng.randf_range(0.8, 1.3)
+		for p in 3:
+			var offset := orient.x * (float(p) - 1.0) * 0.06 * size
+			var puff_scale := size * (1.25 if p == 1 else 0.85)
+			var puff_basis := orient * Basis.from_scale(Vector3(puff_scale, puff_scale * 0.8, puff_scale))
+			mm.set_instance_transform(i * 3 + p, Transform3D(puff_basis, dir * 1.2 + offset))
 	var instance := MultiMeshInstance3D.new()
 	instance.multimesh = mm
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

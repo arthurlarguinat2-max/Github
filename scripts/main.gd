@@ -17,6 +17,21 @@ var _env: Environment
 var _stars: MultiMeshInstance3D
 var _star_material: StandardMaterial3D
 var _rings: MeshInstance3D
+var _sky_material: ProceduralSkyMaterial
+var _atmosphere_material: ShaderMaterial
+
+## Soft glow around the planet (fresnel rim), tinted by the sky.
+const ATMOSPHERE_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_back;
+uniform vec4 glow_color : source_color = vec4(1.0, 0.9, 0.8, 1.0);
+uniform float strength = 0.9;
+void fragment() {
+	float rim = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+	ALBEDO = glow_color.rgb;
+	ALPHA = pow(rim, 2.6) * strength;
+}
+"""
 var _moon_pivot: Node3D
 
 
@@ -70,27 +85,62 @@ func apply_appearance(rebuild: bool) -> void:
 	planet.set_clouds_visible(bool(UserSettings.get_value("clouds")))
 	BuildingMeshes.set_accent(Color(str(custom.get("village_color", "d9b45c"))))
 	var skies: Dictionary = options.get("skies", {})
-	var sky: Dictionary = skies.get(str(UserSettings.get_value("sky")), {})
-	_env.background_color = Color(str(sky.get("color", "080a14")))
-	var star_strength := float(sky.get("stars", 1.0))
+	var sky: Dictionary = skies.get(str(UserSettings.get_value("sky")), skies.get("soft", {}))
+	var top := Color(str(sky.get("top", "8ecae6")))
+	var horizon := Color(str(sky.get("horizon", "ffe3cf")))
+	_sky_material.sky_top_color = top
+	_sky_material.sky_horizon_color = horizon
+	_sky_material.ground_horizon_color = horizon
+	_sky_material.ground_bottom_color = Color(str(sky.get("bottom", "fff1e2")))
+	_env.ambient_light_color = Color(str(sky.get("ambient", "f3e6ff")))
+	sun.light_color = Color(str(sky.get("sun", "fff0d6")))
+	_atmosphere_material.set_shader_parameter("glow_color", horizon.lerp(Color.WHITE, 0.35))
+	var star_strength := float(sky.get("stars", 0.0))
 	_stars.visible = star_strength > 0.0
 	_star_material.albedo_color = Color(1, 1, 1, star_strength)
 	_rings.visible = bool(custom.get("rings", false))
 	_moon_pivot.visible = bool(custom.get("moon", true))
 
 
+## Diorama look: a soft gradient sky instead of black space, pastel ambient
+## light so the night side stays gentle, and a linear tonemap that keeps the
+## pastel colors as designed.
 func _build_environment() -> void:
+	_sky_material = ProceduralSkyMaterial.new()
+	_sky_material.sky_curve = 0.12
+	_sky_material.ground_curve = 0.08
+	_sky_material.sun_angle_max = 0.0
+	_sky_material.sky_energy_multiplier = 1.0
+	var sky := Sky.new()
+	sky.sky_material = _sky_material
+	sky.process_mode = Sky.PROCESS_MODE_QUALITY
+	sky.radiance_size = Sky.RADIANCE_SIZE_32
 	_env = Environment.new()
-	_env.background_mode = Environment.BG_COLOR
-	_env.background_color = Color(0.03, 0.04, 0.08)
-	# Soft blue ambient so the night side stays readable.
+	_env.background_mode = Environment.BG_SKY
+	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.ambient_light_color = Color(0.35, 0.42, 0.65)
-	_env.ambient_light_energy = 0.45
-	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_env.ambient_light_energy = 0.62
+	_env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	_env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	var world_env := WorldEnvironment.new()
 	world_env.environment = _env
 	add_child(world_env)
+
+	# Atmosphere halo, slightly larger than the planet.
+	var halo := SphereMesh.new()
+	halo.radius = 1.16
+	halo.height = 2.32
+	halo.radial_segments = 48
+	halo.rings = 24
+	_atmosphere_material = ShaderMaterial.new()
+	var shader := Shader.new()
+	shader.code = ATMOSPHERE_SHADER
+	_atmosphere_material.shader = shader
+	halo.material = _atmosphere_material
+	var halo_instance := MeshInstance3D.new()
+	halo_instance.mesh = halo
+	halo_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(halo_instance)
 
 
 ## Distant stars: tiny unshaded spheres in one MultiMesh (a single draw call).
@@ -179,8 +229,9 @@ func _build_sun() -> void:
 	sun_pivot = Node3D.new()
 	add_child(sun_pivot)
 	sun = DirectionalLight3D.new()
-	sun.light_color = Color(1.0, 0.93, 0.8)  # Warm light.
-	sun.light_energy = 1.3
+	sun.light_color = Color(1.0, 0.94, 0.84)  # Warm golden light.
+	sun.light_energy = 0.95
+	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # No sun disc in the gradient sky.
 	sun.shadow_enabled = false  # Shadows are costly on mobile.
 	sun_pivot.add_child(sun)
 	# Tilted sun so the terminator line crosses the planet nicely.
