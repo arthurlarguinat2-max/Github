@@ -92,8 +92,8 @@ func _build_main_page() -> VBoxContainer:
 		visible = false
 		closed.emit())
 	box.add_child(play)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
 	box.add_child(row)
 	var new_planet := UiKit.button(tr("START_NEW"), "build", 54)
 	new_planet.pressed.connect(func(): open("new"))
