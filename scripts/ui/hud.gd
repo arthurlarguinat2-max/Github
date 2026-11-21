@@ -152,6 +152,7 @@ func _ready() -> void:
 
 	_start_menu = StartMenu.new()
 	root.add_child(_start_menu)
+	_start_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_start_menu.tutorial_requested.connect(restart_tutorial)
 	_start_menu.closed.connect(func(): GameState.start_menu_shown = true)
 	_start_menu.visible = not GameState.start_menu_shown
@@ -336,6 +337,9 @@ func _build_bottom_bar() -> PanelContainer:
 	_build_button = _icon_button("build", tr("BUILD"), Vector2(0, 54))
 	_build_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Design.make_primary(_build_button, 22)
+	_build_button.add_theme_font_size_override("font_size", 16)
+	_build_button.add_theme_constant_override("icon_max_width", 22)
+	_build_button.add_theme_constant_override("h_separation", 4)
 	_build_button.pressed.connect(_on_build_pressed)
 	bar.add_child(_build_button)
 	_goals_button = _icon_button("goals", "", Vector2(48, 54))
@@ -443,7 +447,7 @@ func _build_build_sheet() -> PanelContainer:
 	_build_sheet_title = _label("", 20, TEXT)
 	var parts := _sheet(_build_sheet_title)
 	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 6)
+	tabs.add_theme_constant_override("separation", 4)
 	parts[1].add_child(tabs)
 	var group := ButtonGroup.new()
 	var categories: Array = GameState.config.get("building_categories", [])
@@ -456,6 +460,10 @@ func _build_build_sheet() -> PanelContainer:
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tab.clip_text = true
 		tab.add_theme_font_size_override("font_size", 12)
+		tab.add_theme_stylebox_override("normal", Design.panel(Design.CARD, 14, 3))
+		tab.add_theme_stylebox_override("hover", Design.panel(Design.CARD, 14, 3))
+		tab.add_theme_stylebox_override("pressed", Design.outlined(Design.CORAL_SOFT, Design.CORAL, 14, 3))
+		tab.add_theme_stylebox_override("hover_pressed", Design.outlined(Design.CORAL_SOFT, Design.CORAL, 14, 3))
 		tab.pressed.connect(func():
 			_category = str(cat.id)
 			_open_build_sheet(_target_cell)
