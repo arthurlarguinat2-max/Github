@@ -1,0 +1,25 @@
+shader_type spatial;
+render_mode specular_disabled;
+uniform sampler2D grain : repeat_enable, filter_linear_mipmap;
+varying vec3 pos;
+varying float slope;
+
+void vertex() {
+	pos = VERTEX;
+	slope = 1.0 - dot(normalize(VERTEX), NORMAL);
+}
+
+void fragment() {
+	// Two oblique projections avoid a longitude seam and pole pinching.
+	vec2 a = vec2(pos.x + 0.47 * pos.y, pos.z - 0.61 * pos.y);
+	vec2 b = vec2(pos.y + 0.36 * pos.z, pos.x - 0.71 * pos.z);
+	float patches = texture(grain, a * 3.4).r;
+	float grit = texture(grain, b * 17.0 + patches * 0.09).r;
+	float strata = texture(grain, vec2(b.x * 7.0, length(pos) * 110.0 + grit * 0.24)).r;
+	float cliff = smoothstep(0.025, 0.21, slope);
+	vec3 soil = COLOR.rgb;
+	if (!OUTPUT_IS_SRGB) { soil = pow(soil, vec3(2.2)); }
+	ALBEDO = soil * (0.68 + 0.45 * patches + 0.26 * grit)
+		* mix(vec3(1.0), vec3(0.66, 0.61, 0.57) + 0.48 * strata, cliff);
+	ROUGHNESS = 0.94;
+}

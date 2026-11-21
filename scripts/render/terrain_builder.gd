@@ -112,13 +112,15 @@ func sample(dir: Vector3, hint: int = -1) -> Array:
 		b += col.b * w
 	h /= total
 	var color := Color(r / total, g / total, b / total)
+	var weathering := _noise.get_noise_3dv(dir * 6.0)
 	if _peaks[c] > 0.0:
-		var d := clampf(1.0 - dir.angle_to(grid.centers[c]) / (spacing * 1.05), 0.0, 1.0)
-		var bump := d * d * (3.0 - 2.0 * d)
-		h += _peaks[c] * bump
-		color = color.lerp(_peak_colors[c], clampf(bump * 1.4 - 0.3, 0.0, 1.0))
+		var d := clampf(1.0 - dir.angle_to(grid.centers[c]) / (spacing * 0.68), 0.0, 1.0)
+		var ridge := 1.0 - absf(_noise.get_noise_3dv(dir * 12.0))
+		var summit := d * d * (2.0 - d) * (0.68 + 0.72 * ridge)
+		h += _peaks[c] * summit
+		color = color.lerp(_peak_colors[c], smoothstep(0.4, 0.95, summit + weathering * 0.22))
 	if h > SEA_LEVEL:
-		h += _noise.get_noise_3dv(dir * 6.0) * NOISE_AMPLITUDE
+		h += weathering * NOISE_AMPLITUDE
 	return [h, color, c]
 
 
@@ -172,11 +174,9 @@ func build_land_mesh(subdivisions: int) -> ArrayMesh:
 	arrays[Mesh.ARRAY_INDEX] = faces
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.vertex_color_is_srgb = true
-	mat.roughness = 0.92
-	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://assets/terrain/ground.gdshader")
+	mat.set_shader_parameter("grain", preload("res://assets/terrain/surface_noise.tres"))
 	mesh.surface_set_material(0, mat)
 	return mesh
 
@@ -197,8 +197,8 @@ func build_outline_mesh() -> ArrayMesh:
 		for k in count:
 			var a := lifted[k]
 			var b := lifted[(k + 1) % count]
-			var a_in := a.lerp(center * a.length(), 0.07)
-			var b_in := b.lerp(center * b.length(), 0.07)
+			var a_in := a.lerp(center * a.length(), 0.025)
+			var b_in := b.lerp(center * b.length(), 0.025)
 			positions.append_array(PackedVector3Array([a, b, b_in, a, b_in, a_in]))
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -207,7 +207,7 @@ func build_outline_mesh() -> ArrayMesh:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 0.98, 0.92, 0.17)
+	mat.albedo_color = Color(1.0, 0.98, 0.92, 0.10)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.no_depth_test = false

@@ -25,7 +25,7 @@ const ATMOSPHERE_SHADER := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_back;
 uniform vec4 glow_color : source_color = vec4(1.0, 0.9, 0.8, 1.0);
-uniform float strength = 0.9;
+uniform float strength = 0.37;
 void fragment() {
 	float rim = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
 	ALBEDO = glow_color.rgb;
@@ -132,8 +132,8 @@ func _build_environment() -> void:
 	_env.background_mode = Environment.BG_SKY
 	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.ambient_light_energy = 0.62
-	_env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	_env.ambient_light_energy = 0.48
+	_env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	_env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	var world_env := WorldEnvironment.new()
 	world_env.environment = _env
@@ -141,8 +141,8 @@ func _build_environment() -> void:
 
 	# Atmosphere halo, slightly larger than the planet.
 	var halo := SphereMesh.new()
-	halo.radius = 1.16
-	halo.height = 2.32
+	halo.radius = 1.048
+	halo.height = halo.radius * 2.0
 	halo.radial_segments = 48
 	halo.rings = 24
 	_atmosphere_material = ShaderMaterial.new()
@@ -243,9 +243,12 @@ func _build_sun() -> void:
 	add_child(sun_pivot)
 	sun = DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.94, 0.84)  # Warm golden light.
-	sun.light_energy = 0.95
+	sun.light_energy = 1.18
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # No sun disc in the gradient sky.
-	sun.shadow_enabled = false  # Shadows are costly on mobile.
+	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = 6.0
+	sun.shadow_bias = 0.018
 	sun_pivot.add_child(sun)
 	# Tilted sun so the terminator line crosses the planet nicely.
 	sun.rotation = Vector3(deg_to_rad(-20), deg_to_rad(-60), 0)

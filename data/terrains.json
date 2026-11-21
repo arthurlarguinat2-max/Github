@@ -3,7 +3,7 @@
 	"terrains": {
 		"ocean": {
 			"name_key": "TERRAIN_OCEAN",
-			"color": "5aa9d6",
+			"color": "245d7b",
 			"height": 0.0,
 			"peak": 0.0,
 			"water": true,
@@ -19,7 +19,7 @@
 		},
 		"shallow": {
 			"name_key": "TERRAIN_SHALLOW",
-			"color": "86d0e0",
+			"color": "67b8ad",
 			"height": 0.0,
 			"peak": 0.0,
 			"water": true,
@@ -56,7 +56,7 @@
 		},
 		"plains": {
 			"name_key": "TERRAIN_PLAINS",
-			"color": "a8d98a",
+			"color": "91a367",
 			"height": 0.018,
 			"peak": 0.0,
 			"water": false,
@@ -78,7 +78,7 @@
 		},
 		"forest": {
 			"name_key": "TERRAIN_FOREST",
-			"color": "79c47a",
+			"color": "546f49",
 			"height": 0.022,
 			"peak": 0.0,
 			"water": false,
@@ -100,7 +100,7 @@
 		},
 		"desert": {
 			"name_key": "TERRAIN_DESERT",
-			"color": "f1d39b",
+			"color": "d5b581",
 			"height": 0.02,
 			"peak": 0.0,
 			"water": false,
@@ -121,7 +121,7 @@
 		},
 		"hills": {
 			"name_key": "TERRAIN_HILLS",
-			"color": "c5d68f",
+			"color": "989763",
 			"height": 0.03,
 			"peak": 0.02,
 			"water": false,
@@ -142,7 +142,7 @@
 		},
 		"mountain": {
 			"name_key": "TERRAIN_MOUNTAIN",
-			"color": "b8aea4",
+			"color": "89847d",
 			"height": 0.035,
 			"peak": 0.075,
 			"peak_color": "fffaf3",

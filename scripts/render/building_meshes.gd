@@ -126,11 +126,21 @@ static func create(id: String, level: int = 1) -> Node3D:
 ## Round wattle house with a domed thatch roof (and a little top knob).
 static func _round_house(root: Node3D, radius: float, wall_h: float, roof: String, knob: bool, at: Vector3 = Vector3.ZERO) -> void:
 	_add(root, _cylinder(radius * 0.92, radius, wall_h, 14), "daub", at + Vector3(0, wall_h * 0.5, 0))
-	_add(root, _dome(radius * 1.32, radius * 1.15), roof, at + Vector3(0, wall_h * 0.82, 0))
+	_roof(root, at + Vector3.UP * wall_h * 0.88, radius * 1.32, radius * 1.15, roof)
 	if knob:
 		_add(root, _sphere(radius * 0.18, 8), roof, at + Vector3(0, wall_h * 0.82 + radius * 1.12, 0))
 	_add(root, _capsule(radius * 0.22, radius * 0.62), "door", at + Vector3(0, radius * 0.3, radius * 0.97), Vector3.ZERO, Vector3(1, 1, 0.35))
 	_add(root, _sphere(radius * 0.14, 6), "window", at + Vector3(radius * 0.66, wall_h * 0.55, radius * 0.66), Vector3.ZERO, Vector3(1, 1.2, 0.45))
+
+
+## Overlapping pitched courses with a deep, dark timber eave.
+static func _roof(root: Node3D, eave: Vector3, radius: float, height: float, finish: String) -> void:
+	_add(root, _cylinder(radius, radius * 0.97, height * 0.09, 16), "bark", eave)
+	for course in 3:
+		var t := float(course) / 3.0
+		var bottom := radius * (1.0 - t * 0.92)
+		var top := radius * (1.0 - (t + 1.0 / 3.0) * 0.92)
+		_add(root, _cylinder(top, bottom * 1.035, height / 3.0, 16), finish, eave + Vector3.UP * height * (t + 1.0 / 6.0))
 
 
 ## Town hall: a big round hall with a dome; a stone ring from level 2, an
@@ -144,7 +154,11 @@ static func _townhall(root: Node3D, level: int) -> void:
 		base_h = 0.009
 	var wall_h := 0.026 * s
 	_add(root, _cylinder(0.031 * s, 0.034 * s, wall_h, 20), "daub", Vector3(0, base_h + wall_h * 0.5, 0))
-	_add(root, _dome(0.045 * s, 0.038 * s), "accent", Vector3(0, base_h + wall_h * 0.85, 0))
+	_roof(root, Vector3.UP * (base_h + wall_h * 0.85), 0.045 * s, 0.038 * s, "accent")
+	for k in 8:
+		var bearing := TAU * (float(k) + 0.5) / 8.0
+		var post := Vector3(sin(bearing) * 0.032 * s, base_h + wall_h * 0.5, cos(bearing) * 0.032 * s)
+		_add(root, _cylinder(0.0014 * s, 0.0018 * s, wall_h, 5), "bark", post)
 	_add(root, _capsule(0.008 * s, 0.02 * s), "door", Vector3(0, base_h + 0.008 * s, 0.033 * s), Vector3.ZERO, Vector3(1, 1, 0.35))
 	for k in 4:
 		var a := TAU * k / 4.0 + 0.6
@@ -201,7 +215,7 @@ static func _add(parent: Node3D, mesh: Mesh, material_key: String, pos: Vector3,
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = _material(material_key)
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	mi.position = pos
 	mi.rotation = rot
 	mi.scale = scale

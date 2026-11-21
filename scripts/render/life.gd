@@ -28,11 +28,16 @@ func setup(p_view) -> void:
 	_bodies = _make_multimesh(_body_mesh(), MAX_WALKERS, true)
 	_heads = _make_multimesh(_head_mesh(), MAX_WALKERS, false)
 	_birds = _make_multimesh(_bird_mesh(), BIRD_COUNT, false)
-	for i in BIRD_COUNT:
-		var axis := Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-1, 1)).normalized()
+	# A shared orbit per flock keeps the silhouettes together through a turn.
+	for flock in 3:
+		var axis := Vector3(_rng.randfn(), _rng.randfn(), _rng.randfn()).normalized()
 		var start := axis.cross(Vector3.UP if absf(axis.y) < 0.9 else Vector3.RIGHT).normalized()
-		_bird_paths.append({"axis": axis, "start": start, "phase": _rng.randf() * TAU,
-			"radius": _rng.randf_range(1.18, 1.3), "speed": _rng.randf_range(0.12, 0.22) * (1 if _rng.randf() < 0.5 else -1)})
+		var phase := _rng.randf() * TAU
+		var speed := _rng.randf_range(0.072, 0.12)
+		for member in range(BIRD_COUNT / 3):
+			var trail := start.rotated(axis.cross(start), 0.019 * member * (-1 if member % 2 else 1))
+			_bird_paths.append({"axis": axis, "start": trail, "phase": phase - member * 0.029,
+				"radius": 1.15 + flock * 0.023, "speed": speed})
 	_smoke_root = Node3D.new()
 	add_child(_smoke_root)
 	if view.economy != null:
@@ -76,7 +81,7 @@ func _update_walkers(dt: float) -> void:
 		var home: int = eco.village_center if eco.village_center >= 0 else places[0]
 		_walkers.append({"from": home, "to": places[_rng.randi() % places.size()], "t": _rng.randf(),
 			"wait": _rng.randf() * 2.0, "color": CLOTHES[_walkers.size() % CLOTHES.size()],
-			"offset": Vector2(_rng.randf_range(-0.35, 0.35), _rng.randf_range(-0.35, 0.35))})
+			"start_angle": _rng.randf() * TAU, "end_angle": _rng.randf() * TAU})
 	while _walkers.size() > wanted:
 		_walkers.pop_back()
 	var grid = view.planet.grid
@@ -85,8 +90,8 @@ func _update_walkers(dt: float) -> void:
 		var w: Dictionary = _walkers[i]
 		if not (int(w.to) < view.planet.cell_count()) or view.planet.buildings[int(w.to)] == "":
 			w.to = places[_rng.randi() % places.size()]
-		var a: Vector3 = _spot(grid, int(w.from), w.offset)
-		var b: Vector3 = _spot(grid, int(w.to), w.offset)
+		var a: Vector3 = _spot(grid, int(w.from), float(w.start_angle))
+		var b: Vector3 = _spot(grid, int(w.to), float(w.end_angle))
 		var walking := false
 		if float(w.wait) > 0.0:
 			w.wait = float(w.wait) - dt
@@ -96,12 +101,16 @@ func _update_walkers(dt: float) -> void:
 			walking = true
 			if float(w.t) >= 1.0:
 				w.from = w.to
+				w.start_angle = w.end_angle
+				w.end_angle = float(w.start_angle) + _rng.randf_range(0.6, 1.8)
 				w.to = places[_rng.randi() % places.size()] if _rng.randf() < 0.6 else eco.village_center
 				w.t = 0.0
 				w.wait = _rng.randf_range(0.5, 3.0)
 				a = b
 		var k := float(w.t)
 		var dir := a.slerp(b, k * k * (3.0 - 2.0 * k)) if walking else a
+		if w.from == w.to and walking:
+			dir = _spot(grid, int(w.from), lerp_angle(float(w.start_angle), float(w.end_angle), k))
 		var radius := maxf(view.terrain.surface_radius(dir, int(w.from)), 1.0)
 		var bob := absf(sin(_time * 11.0 + i)) * 0.0012 if walking else 0.0
 		var basis := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * s)
@@ -114,12 +123,12 @@ func _update_walkers(dt: float) -> void:
 
 
 ## A point near the cell center, different for each walker (no queue).
-func _spot(grid, cell: int, offset: Vector2) -> Vector3:
+func _spot(grid, cell: int, angle: float) -> Vector3:
 	var center: Vector3 = grid.centers[cell]
-	var cs: PackedVector3Array = grid.corners[cell]
-	var side := (cs[0] - center)
-	var other := (cs[1] - center)
-	return (center + side * offset.x * 0.8 + other * offset.y * 0.8).normalized()
+	var edge: Vector3 = grid.corners[cell][0]
+	var tangent := (edge - center * center.dot(edge)).normalized()
+	var direction := tangent * cos(angle) + center.cross(tangent) * sin(angle)
+	return (center + direction * 0.058 * float(view._object_scale)).normalized()
 
 
 # --- Birds -----------------------------------------------------------------------
@@ -132,9 +141,9 @@ func _update_birds() -> void:
 		var dir := Vector3(p.start).rotated(axis, angle)
 		var ahead := Vector3(p.start).rotated(axis, angle + 0.05 * signf(float(p.speed)))
 		var forward := (ahead - dir).normalized()
-		var flap := 0.35 + 0.65 * absf(sin(_time * 7.0 + i * 1.3))
+		var flap := 0.63 + 0.58 * sin(_time * 9.0 + i) * smoothstep(-0.4, 0.5, sin(_time * 1.4 + i * 0.3))
 		var basis := Basis.looking_at(forward, dir) * Basis.from_scale(Vector3(1.0, flap, 1.0) * view._object_scale * 1.3)
-		_birds.set_instance_transform(i, Transform3D(basis, dir * float(p.radius)))
+		_birds.set_instance_transform(i, Transform3D(basis, dir * (float(p.radius) + 0.008 * sin(angle * 5.0 + i * 0.2))))
 
 
 # --- Smoke -----------------------------------------------------------------------
@@ -164,7 +173,7 @@ func _make_smoke(s: float) -> CPUParticles3D:
 	p.local_coords = true
 	p.direction = Vector3.UP
 	p.spread = 14.0
-	p.gravity = Vector3(0.0, 0.0025 * s, 0.0)
+	p.gravity = Vector3(0.0018, 0.0025, -0.0008) * s
 	p.initial_velocity_min = 0.004 * s
 	p.initial_velocity_max = 0.007 * s
 	p.scale_amount_min = 0.7
@@ -174,7 +183,7 @@ func _make_smoke(s: float) -> CPUParticles3D:
 	grow.add_point(Vector2(1.0, 1.6))
 	p.scale_amount_curve = grow
 	var fade := Gradient.new()
-	fade.set_color(0, Color(1, 1, 1, 0.75))
+	fade.set_color(0, Color(0.72, 0.68, 0.62, 0.5))
 	fade.set_color(1, Color(1, 1, 1, 0.0))
 	p.color_ramp = fade
 	var puff := SphereMesh.new()
