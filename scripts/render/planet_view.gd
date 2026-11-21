@@ -44,7 +44,7 @@ void fragment() {
 	float sparkle = sin(TIME * 1.7 + local_pos.x * 90.0) * sin(TIME * 1.3 + local_pos.z * 80.0);
 	vec3 water = mix(deep_color, shallow_color, 0.45 + 0.12 * sparkle);
 	ALBEDO = mix(water, vec3(1.0), rim * 0.35);
-	ALPHA = 0.7 + rim * 0.22;
+	ALPHA = 0.76 + rim * 0.2;
 	ROUGHNESS = 0.16;
 	SPECULAR = 0.8;
 }
@@ -214,7 +214,7 @@ func _update_camera() -> void:
 func focus_cell(cell: int) -> void:
 	if cell < 0:
 		return
-	var target := Vector3(0.0, 0.3, 1.0).normalized()
+	var target := Vector3(0.0, 0.05, 1.0).normalized()
 	basis = Basis(Quaternion(planet.grid.centers[cell], target))
 	_angular_velocity = Vector2.ZERO
 

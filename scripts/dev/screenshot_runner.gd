@@ -46,11 +46,13 @@ func _prepare(state: String) -> void:
 		"goals":
 			hud._on_goals_pressed()
 		"closeup":
+			GameState.sim.tutorial_step = -1
+			hud._refresh_tutorial()
+			_build_demo_village()
 			planet.focus_cell(GameState.sim.economy.village_center)
 			planet._zoom = planet._zoom_min + 0.15
 			planet._zoom_target = planet._zoom
 			planet._update_camera()
-			_build_demo_village()
 		"wide":
 			planet._zoom = 3.2
 			planet._zoom_target = 3.2

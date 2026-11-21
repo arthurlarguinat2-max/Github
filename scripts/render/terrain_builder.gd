@@ -59,11 +59,12 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_palette: Dictionary, p_seed: 
 		if def.get("water", false):
 			_heights[i] = DEEP_FLOOR if id == "ocean" else SHALLOW_FLOOR
 			# Seabed: sand under shallow water, dark blue in the deep.
-			color = Color("e9d9a6").lerp(color, 0.55) if id == "shallow" else color.darkened(0.35)
+			color = Color("cfe9d8").lerp(color, 0.7) if id == "shallow" else color.darkened(0.3)
 		else:
 			_heights[i] = LAND_LIFT + float(def.get("height", 0.0))
 		_colors[i] = color
-		_peaks[i] = float(def.get("peak", 0.0)) * 1.3
+		# Peaks scale with the cell size: soft round mountains on any planet size.
+		_peaks[i] = float(def.get("peak", 0.0)) * clampf(spacing / 0.12, 0.35, 1.3)
 		_peak_colors[i] = Color(str(def.get("peak_color", color.to_html(false))))
 
 
@@ -112,7 +113,7 @@ func sample(dir: Vector3, hint: int = -1) -> Array:
 	h /= total
 	var color := Color(r / total, g / total, b / total)
 	if _peaks[c] > 0.0:
-		var d := clampf(1.0 - dir.angle_to(grid.centers[c]) / (spacing * 0.75), 0.0, 1.0)
+		var d := clampf(1.0 - dir.angle_to(grid.centers[c]) / (spacing * 1.05), 0.0, 1.0)
 		var bump := d * d * (3.0 - 2.0 * d)
 		h += _peaks[c] * bump
 		color = color.lerp(_peak_colors[c], clampf(bump * 1.4 - 0.3, 0.0, 1.0))
@@ -206,7 +207,7 @@ func build_outline_mesh() -> ArrayMesh:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 0.98, 0.92, 0.22)
+	mat.albedo_color = Color(1.0, 0.98, 0.92, 0.17)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mat.no_depth_test = false
