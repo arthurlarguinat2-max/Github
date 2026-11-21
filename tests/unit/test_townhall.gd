@@ -503,3 +503,79 @@ func test_book_chain_supplies_library_and_level_ten() -> void:
 	assert_true(eco.build(_spot(sim, "library"), "library"))
 	eco.complete_construction()
 	assert_eq(eco.building_count("library"), 1)
+
+
+func test_bronze_study_and_first_ingot_survive_reload() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	var legacy := sim.to_dict()
+	for key in ["bronze_study", "first_ingot", "bronze_equipment"]:
+		legacy.economy.erase(key)
+	sim.from_dict(JSON.parse_string(JSON.stringify(legacy)))
+	eco = sim.economy
+	assert_eq(eco.bronze_study, -1.0)
+	assert_false(eco.start_bronze_study())
+	eco.townhall_level = 10
+	eco.population = 20
+	eco._rebuild_caches()
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 100
+	eco.stocks.bronze = 0.0
+	eco.stocks.food = 500.0
+	eco.stocks.water = 500.0
+	assert_eq(eco.building_limit("metal_mine"), 0)
+	assert_false(eco.is_profession_unlocked("founder"))
+	var library := _spot(sim,"library")
+	assert_true(eco.build(library,"library"))
+	eco.complete_construction()
+	assert_eq(eco.study_blocker(), "ANT_SCHOLAR")
+	assert_true(eco.train("scholar"))
+	eco.update(1.0)
+	eco.stocks.books = 12.0
+	assert_true(eco.start_bronze_study())
+	assert_eq(eco.stock("books"), 0.0)
+	assert_false(eco.start_bronze_study())
+	eco.update(0.5)
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	assert_eq(eco.bronze_study, 1.5)
+	eco.update(1.5)
+	assert_true(eco.building_limit("metal_mine") > 0)
+	assert_true(eco.is_profession_unlocked("founder"))
+	var mine := _spot(loaded, "metal_mine")
+	assert_true(eco.build(mine, "metal_mine"))
+	eco.complete_construction()
+	var foundry := _spot(loaded, "foundry")
+	assert_true(eco.build(foundry, "foundry"))
+	eco.complete_construction()
+	eco.stocks.tin = 0.0
+	eco.stocks.copper = 0.0
+	eco.trained.miner = 1
+	eco.trained.founder = 1
+	eco.update(1.0)
+	assert_true(eco.stock("copper") > 0)
+	assert_eq(eco.first_ingot, 0.0)
+	assert_true(eco.select_recipe(mine, "tin"))
+	eco.update(0.1)
+	assert_true(eco.first_ingot > 0 and eco.first_ingot < 1)
+	assert_false(eco.equip_bronze("field"))
+	var partial := eco.first_ingot
+	loaded.from_dict(JSON.parse_string(JSON.stringify(loaded.to_dict())))
+	eco = loaded.economy
+	assert_true(is_equal_approx(eco.first_ingot, partial))
+	loaded.advance_offline(60, 10, 3600, 1.0)
+	assert_eq(eco.first_ingot, 1.0)
+	var field := _spot(loaded, "field")
+	assert_true(eco.build(field, "field"))
+	eco.complete_construction()
+	eco.trained.farmer = 2
+	var before: float = eco.forecast(-1, 0.01).outputs[field].grain
+	var stock_before := eco.stock("bronze")
+	assert_true(eco.equip_bronze("field"))
+	assert_false(eco.equip_bronze("field"))
+	assert_eq(eco.stock("bronze"), stock_before - 1.0)
+	assert_true(is_equal_approx(eco.forecast(-1,0.01).outputs[field].grain, before*1.25))
+	sim.from_dict(JSON.parse_string(JSON.stringify(loaded.to_dict())))
+	assert_eq(sim.economy.first_ingot, 1.0)
+	assert_true(sim.economy.bronze_equipment.has("field"))

@@ -778,6 +778,86 @@
 			],
 			"build_days": 1.1,
 			"happiness": 7
+		},
+		"metal_mine": {
+			"name_key": "BLD_METAL_MINE",
+			"short_key": "BLD_METAL_MINE_SHORT",
+			"desc_key": "BLD_METAL_MINE_DESC",
+			"age": "antiquity",
+			"bronze_research": true,
+			"category": "resources",
+			"order": 81,
+			"priority": 81,
+			"cost": {
+				"boards": 10,
+				"tools": 4
+			},
+			"workers": 1,
+			"consumes": {
+				"water": 1
+			},
+			"produces": {
+				"copper": 4
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"desert",
+				"hills"
+			],
+			"profession": "miner",
+			"build_days": 1.2,
+			"recipes": {
+				"copper": {
+					"consumes": {
+						"water": 1
+					},
+					"produces": {
+						"copper": 4
+					}
+				},
+				"tin": {
+					"consumes": {
+						"water": 1
+					},
+					"produces": {
+						"tin": 2
+					}
+				}
+			}
+		},
+		"foundry": {
+			"name_key": "BLD_FOUNDRY",
+			"short_key": "BLD_FOUNDRY_SHORT",
+			"desc_key": "BLD_FOUNDRY_DESC",
+			"age": "antiquity",
+			"bronze_research": true,
+			"category": "resources",
+			"order": 82,
+			"priority": 82,
+			"cost": {
+				"bricks": 12,
+				"frames": 4
+			},
+			"workers": 1,
+			"consumes": {
+				"copper": 3,
+				"tin": 1,
+				"wood": 1
+			},
+			"produces": {
+				"bronze": 2
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"desert",
+				"hills"
+			],
+			"profession": "founder",
+			"build_days": 1.2
 		}
 	},
 	"start": {

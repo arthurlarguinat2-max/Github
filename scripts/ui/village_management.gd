@@ -69,6 +69,7 @@ func refresh() -> void:
 	match mode:
 		"reserve": _reserve(eco)
 		"recipes": _recipes(eco)
+		"bronze": _bronze(eco)
 		"priority": _priority(eco)
 		"plans": _plans(eco)
 		"voice": _voice(eco)
@@ -199,6 +200,45 @@ func _apply_priority(cell: int) -> void:
 	eco.preferred_cell = cell
 	eco._compute_staffing()
 	open("reserve", resource)
+
+
+func _bronze(eco) -> void:
+	title.text = tr("ANT_AGE") if eco.first_ingot >= 1.0 else tr("ANT_PAGE")
+	if eco.bronze_study != 0.0:
+		var block: String = eco.study_blocker()
+		detail.text = tr("ANT_INTRO") if eco.bronze_study < 0.0 else tr("ANT_STUDY") % hud._format_days(eco.bronze_study)
+		if block != "":
+			detail.text += "\n" + tr(block)
+		if block == "ANT_SCHOLAR":
+			action("scholars", tr("TAB_PEOPLE"), hud.show_people)
+		elif block == "ANT_BOOKS":
+			action("books", tr("MG_SEE") % _res("books"), open.bind("reserve", "books"))
+		elif block == "" and eco.bronze_study < 0.0:
+			action("study", tr("ANT_BEGIN"), _study)
+	elif eco.first_ingot < 1.0:
+		detail.text = tr("ANT_CAST") % floori(100.0 * eco.first_ingot)
+		action("miners", tr("TAB_PEOPLE"), hud.show_people)
+		for id in ["copper", "tin", "bronze"]:
+			action("stock"+id, tr("MG_SEE") % _res(id), open.bind("reserve", id))
+	else:
+		detail.text = tr("ANT_TOOLS") % eco.stock("bronze")
+		for sector in ["field", "quarry"]:
+			var label := tr("ANT_FIELD") if sector == "field" else tr("ANT_QUARRY")
+			if eco.bronze_equipment.has(sector):
+				detail.text += "\n%s · %s" % [label, tr("ANT_DONE")]
+			else:
+				action("equip"+sector, label, _equip.bind(sector))
+				_buttons["equip"+sector].disabled = not eco.can_afford(eco.EQUIPMENT_COST)
+
+
+func _study() -> void:
+	GameState.sim.economy.start_bronze_study()
+	refresh()
+
+
+func _equip(sector: String) -> void:
+	GameState.sim.economy.equip_bronze(sector)
+	refresh()
 
 
 func _recipes(eco) -> void:

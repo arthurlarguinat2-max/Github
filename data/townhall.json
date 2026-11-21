@@ -541,7 +541,9 @@
 				"papermill": 2,
 				"bindery": 1,
 				"cistern": 4,
-				"library": 1
+				"library": 1,
+				"metal_mine": 3,
+				"foundry": 2
 			},
 			"professions": [
 				"water_carrier",
@@ -559,7 +561,10 @@
 				"flaxgrower",
 				"weaver",
 				"papermaker",
-				"binder"
+				"binder",
+				"scholar",
+				"miner",
+				"founder"
 			],
 			"perks": []
 		}

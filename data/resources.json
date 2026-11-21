@@ -94,6 +94,21 @@
 			"name_key": "RES_BOOKS",
 			"hidden": false,
 			"stock": true
+		},
+		"copper": {
+			"name_key": "RES_COPPER",
+			"hidden": false,
+			"stock": true
+		},
+		"tin": {
+			"name_key": "RES_TIN",
+			"hidden": false,
+			"stock": true
+		},
+		"bronze": {
+			"name_key": "RES_BRONZE",
+			"hidden": false,
+			"stock": true
 		}
 	}
 }

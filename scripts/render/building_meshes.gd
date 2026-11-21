@@ -149,6 +149,18 @@ static func create(id: String, level: int = 1) -> Node3D:
 			_add(root, _torus(0.016, 0.022), "stone", Vector3.UP * 0.005)
 			for j in 3:
 				_add(root, _sphere(0.005, 10), "clay", Vector3(-0.014 + j * 0.011, 0.006, 0.019), Vector3.ZERO, Vector3(1, 1.35, 1))
+		"metal_mine":
+			_add(root, _dome(0.024, 0.024), "rock", Vector3.ZERO)
+			_add(root, _sphere(0.008, 10), "door", Vector3(0, 0.006, 0.018))
+			for side in [-1, 1]:
+				_add(root, _capsule(0.002, 0.018), "log", Vector3(side*0.009, 0.009, 0.02))
+			_add(root, _capsule(0.0025, 0.025), "log", Vector3(0, 0.018, 0.02), Vector3(0, 0, PI/2))
+		"foundry":
+			_add(root, _cylinder(0.009, 0.017, 0.035, 16), "clay", Vector3.UP * 0.0175)
+			_add(root, _torus(0.006, 0.010), "bark", Vector3.UP * 0.035)
+			_add(root, _sphere(0.004, 8), "ember", Vector3(0, 0.005, 0.015))
+			for j in 3:
+				_add(root, _cylinder(0.004, 0.005, 0.003, 8), "accent", Vector3(-0.012+j*0.009, 0.002, 0.023))
 		"kiln":
 			_add(root, _dome(0.022, 0.027), "clay", Vector3.ZERO)
 			_add(root, _cylinder(0.006, 0.007, 0.018, 12), "bark", Vector3(0, 0.028, -0.006))

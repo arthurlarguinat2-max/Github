@@ -36,7 +36,7 @@ const ERR_SLOTS := "TRAIN_ERR_SLOTS"
 const ERR_REQUIREMENT := "TH_ERR_REQUIREMENT"
 const ERR_MAX := "TH_ERR_MAX"
 const ERR_BUSY := "TH_ERR_BUSY"
-const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools", "clay", "bricks", "pots", "boards", "frames", "flax", "linen", "paper", "books"]
+const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools", "clay", "bricks", "pots", "boards", "frames", "flax", "linen", "paper", "books", "copper", "tin", "bronze"]
 
 var planet  # PlanetState (untyped to avoid a cyclic preload)
 var defs: Dictionary = {}
@@ -45,6 +45,12 @@ var settings: Dictionary = {}
 
 var stocks: Dictionary = {}
 var recipe_choices: Dictionary = {}
+## Negative before study, zero when complete, otherwise remaining village days.
+var bronze_study := -1.0
+var first_ingot := 0.0
+var bronze_equipment := {}
+const STUDY_COST := {"books": 12}
+const EQUIPMENT_COST := {"bronze": 1}
 var population := 0
 var village_center := -1
 ## Village well-being, 0..100.
@@ -142,7 +148,7 @@ func housing() -> int:
 
 
 func jobs() -> int:
-	var total := 0
+	var total := profession_jobs("scholar")
 	for cell in _building_cells:
 		if is_active(cell):
 			total += int(def_of(cell).get("workers", 0))
@@ -150,7 +156,7 @@ func jobs() -> int:
 
 
 func employed() -> int:
-	var total := 0
+	var total := 1 if bronze_study > 0.0 and study_blocker() == "" else 0
 	for cell in _building_cells:
 		total += workers_at(cell)
 	return total
@@ -174,6 +180,8 @@ func max_level() -> int:
 ## Max number of `id` allowed at the current level (0 = locked).
 ## Without progression data (old tests, tools), everything is allowed.
 func building_limit(id: String) -> int:
+	if defs.get(id, {}).get("bronze_research", false) and bronze_study != 0.0:
+		return 0
 	if townhall_levels.is_empty():
 		return 999
 	return int(level_def().get("buildings", {}).get(id, 0))
@@ -240,12 +248,16 @@ func idle_villagers() -> int:
 
 
 func is_profession_unlocked(profession: String) -> bool:
+	if professions.get(profession, {}).get("bronze_research", false) and bronze_study != 0.0:
+		return false
 	if townhall_levels.is_empty():
 		return true
 	return profession in level_def().get("professions", [])
 
 
 func profession_jobs(profession: String) -> int:
+	if profession == "scholar":
+		return 1 if bronze_study != 0.0 and open_library() else 0
 	var total := 0
 	for cell in _building_cells:
 		if is_active(cell) and str(def_of(cell).get("profession", "")) == profession:
@@ -584,15 +596,60 @@ func found_village(start: Dictionary) -> void:
 
 # --- Time --------------------------------------------------------------------
 
+func open_library() -> bool:
+	if townhall_level < 10:
+		return false
+	for cell in _building_cells:
+		if planet.buildings[cell] == "library" and is_active(cell):
+			return true
+	return false
+
+
+func study_blocker() -> String:
+	if not open_library():
+		return "ANT_LIBRARY"
+	if trained_count("scholar") == 0:
+		return "ANT_SCHOLAR"
+	if bronze_study < 0.0 and not can_afford(STUDY_COST):
+		return "ANT_BOOKS"
+	return ""
+
+
+func start_bronze_study() -> bool:
+	if bronze_study >= 0.0 or study_blocker() != "":
+		return false
+	_pay(STUDY_COST)
+	bronze_study = 2.0
+	return true
+
+
+func equip_bronze(sector: String) -> bool:
+	if first_ingot < 1.0 or sector not in ["field", "quarry"] or bronze_equipment.has(sector) or not can_afford(EQUIPMENT_COST):
+		return false
+	_pay(EQUIPMENT_COST)
+	bronze_equipment[sector] = true
+	return true
+
+
 ## Continuous production and consumption over `dt_days` (can be a fraction).
 func update(dt_days: float) -> void:
 	if dt_days <= 0.0:
 		return
 	_advance_timers(dt_days)
+	if bronze_study > 0.0 and study_blocker() == "":
+		bronze_study = maxf(0.0, bronze_study - dt_days)
+		if bronze_study <= 0.0000001:
+			bronze_study = 0.0
+			alert.emit("ANT_UNLOCK")
 	_start_plans()
 	_compute_staffing()
 	var flow := _flow(dt_days, stocks, _staffing, true)
 	rates = flow.net
+	if bronze_study == 0.0 and first_ingot < 1.0:
+		first_ingot += float(rates.get("bronze", 0.0)) * dt_days
+		if first_ingot >= 0.99999999:
+			first_ingot = 1.0
+			alert.emit("ANT_ARRIVAL")
 	_building_rates = flow.outputs
 	_building_inputs = flow.inputs
 	_waiting = flow.waiting
@@ -630,6 +687,8 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 		var mult: float = float(staffing.get(cell, 0.0)) * village_productivity
 		if mult <= 0.0:
 			continue
+		if bronze_equipment.has(planet.buildings[cell]):
+			mult *= 1.25
 		if def.get("fertility_bonus", false):
 			mult *= 0.4 + planet.fertility[cell]
 		if def.has("water_bonus") and near_water(cell):
@@ -733,11 +792,20 @@ func to_dict() -> Dictionary:
 		"construction": _construction_to_save(),
 		"preferred_cell": preferred_cell,
 		"recipes": recipe_choices.duplicate(),
+		"bronze_study": bronze_study,
+		"first_ingot": first_ingot,
+		"bronze_equipment": bronze_equipment.duplicate(),
 		"plans": plans.duplicate(true),
 	}
 
 
 func from_dict(data: Dictionary) -> void:
+	bronze_study = clampf(float(data.get("bronze_study", -1.0)), -1.0, 2.0)
+	first_ingot = clampf(float(data.get("first_ingot", 0.0)), 0.0, 1.0)
+	bronze_equipment.clear()
+	for sector in ["field", "quarry"]:
+		if data.get("bronze_equipment", {}).get(sector, false):
+			bronze_equipment[sector] = true
 	stocks = {}
 	for res in BASE_RESOURCES:
 		stocks[res] = 0.0

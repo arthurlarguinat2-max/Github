@@ -129,6 +129,32 @@
 				"food": 13
 			},
 			"days": 0.72
+		},
+		"scholar": {
+			"name_key": "PROF_SCHOLAR",
+			"icon": "library",
+			"cost": {
+				"food": 10
+			},
+			"days": 0.6
+		},
+		"miner": {
+			"name_key": "PROF_MINER",
+			"icon": "metal_mine",
+			"cost": {
+				"food": 10
+			},
+			"days": 0.6,
+			"bronze_research": true
+		},
+		"founder": {
+			"name_key": "PROF_FOUNDER",
+			"icon": "foundry",
+			"cost": {
+				"food": 10
+			},
+			"days": 0.6,
+			"bronze_research": true
 		}
 	}
 }
