@@ -1,0 +1,36 @@
+# Keeps the "POUR_CHATGPT" hand-off folder up to date: rebuilds the code
+# bundles after every change and publishes all files on the "chatgpt"
+# pre-release (stable download links, never marked as latest).
+name: Dossier ChatGPT
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chatgpt-bundle
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build code bundles
+        run: python3 ci/make_chatgpt_bundle.py
+
+      - name: Publish on the "chatgpt" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view chatgpt >/dev/null 2>&1 || \
+            gh release create chatgpt --prerelease --latest=false \
+              --title "Dossier ChatGPT (toujours à jour)" \
+              --notes "Guides et code complet du jeu, régénérés automatiquement. Commence par 00_LISEZ_MOI.md."
+          gh release upload chatgpt POUR_CHATGPT/*.md --clobber

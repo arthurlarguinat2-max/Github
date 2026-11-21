@@ -1,5 +1,9 @@
 # Mini Planète 🌍
 
+> **Reprendre le projet avec ChatGPT ou une autre IA :** tout est dans le dossier
+> [`POUR_CHATGPT/`](POUR_CHATGPT/00_LISEZ_MOI.md) (guides + code complet, aussi téléchargeable
+> à jour sur la release [`chatgpt`](https://github.com/arthurlarguinat2-max/Github/releases/tag/chatgpt)).
+
 Jeu de gestion calme et créatif pour iPhone : fais tourner une petite planète
 du bout du doigt et guide sa civilisation de l'âge de pierre jusqu'au futur.
 
