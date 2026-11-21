@@ -10,7 +10,6 @@ const DEFAULTS := {
 	"haptics": true,
 	"language": "",     # "" = follow the device language
 	"clouds": true,
-	"outlines": true,
 	"sky": "soft",
 	"last_version": "",  # Used to greet the player after an update.
 }

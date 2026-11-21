@@ -68,7 +68,7 @@ func _build_demo_village() -> void:
 	eco.population = 12
 	eco.townhall_level = 3
 	eco._rebuild_caches()
-	for id in ["hut", "well", "gatherer", "woodcutter", "field", "bakery", "hut", "campfire"]:
+	for id in ["orchard", "apiary", "bathhouse", "hut", "well", "field", "bakery", "campfire"]:
 		for i in GameState.sim.planet.cell_count():
 			var reason: String = eco.can_build(i, id)
 			if reason == "" or reason == "BUILD_ERR_BUILDERS":

@@ -13,7 +13,8 @@
 				"gatherer": 2,
 				"woodcutter": 2,
 				"well": 2,
-				"quarry": 1
+				"quarry": 1,
+				"orchard": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -44,7 +45,10 @@
 				"woodcutter": 3,
 				"well": 3,
 				"quarry": 2,
-				"field": 2
+				"field": 2,
+				"orchard": 1,
+				"apiary": 1,
+				"bathhouse": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -88,7 +92,10 @@
 				"mill": 1,
 				"bakery": 1,
 				"workshop": 1,
-				"outpost": 2
+				"outpost": 2,
+				"orchard": 2,
+				"apiary": 1,
+				"bathhouse": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -137,7 +144,10 @@
 				"workshop": 2,
 				"outpost": 3,
 				"healer": 2,
-				"stone_circle": 1
+				"stone_circle": 1,
+				"orchard": 2,
+				"apiary": 2,
+				"bathhouse": 2
 			},
 			"professions": [
 				"water_carrier",
@@ -195,7 +205,10 @@
 				"workshop": 3,
 				"outpost": 4,
 				"healer": 3,
-				"stone_circle": 2
+				"stone_circle": 2,
+				"orchard": 3,
+				"apiary": 2,
+				"bathhouse": 2
 			},
 			"professions": [
 				"water_carrier",
@@ -246,7 +259,10 @@
 				"workshop": 4,
 				"outpost": 6,
 				"healer": 4,
-				"stone_circle": 3
+				"stone_circle": 3,
+				"orchard": 3,
+				"apiary": 3,
+				"bathhouse": 3
 			},
 			"professions": [
 				"water_carrier",

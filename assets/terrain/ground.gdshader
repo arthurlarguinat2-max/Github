@@ -21,5 +21,11 @@ void fragment() {
 	if (!OUTPUT_IS_SRGB) { soil = pow(soil, vec3(2.2)); }
 	ALBEDO = soil * (0.68 + 0.45 * patches + 0.26 * grit)
 		* mix(vec3(1.0), vec3(0.66, 0.61, 0.57) + 0.48 * strata, cliff);
-	ROUGHNESS = 0.94;
+	// A damp band and fine sand ridges follow elevation around each shoreline.
+	float elevation = length(pos) - 1.0;
+	float beach = (1.0 - smoothstep(0.002, 0.011, elevation)) * (1.0 - cliff);
+	float damp = 1.0 - smoothstep(0.0005, 0.004 + patches * 0.0015, elevation);
+	float sand = sin(elevation * 2800.0 + patches * 4.0) * 0.025;
+	ALBEDO *= 1.0 + beach * (sand - 0.18 * damp);
+	ROUGHNESS = mix(0.94, 0.56, beach * damp);
 }

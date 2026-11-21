@@ -48,7 +48,7 @@ func _ready() -> void:
 	planet = PlanetView.new()
 	planet.economy = sim.economy
 	add_child(planet)
-	apply_appearance(false)  # Palette/outlines must be known before the first build.
+	apply_appearance(false)  # Palette must be known before the first build.
 	planet.setup(sim.planet, sim.terrain_defs, cam, sim.world_seed)
 	apply_appearance(false)
 	planet.focus_cell(sim.economy.village_center)
@@ -86,13 +86,12 @@ func _maybe_start_screenshots() -> void:
 
 
 ## Applies the planet customization (palette, village color) and the device
-## preferences (sky, clouds, outlines). `rebuild` regenerates the ground mesh.
+## preferences (sky and clouds). `rebuild` regenerates the ground mesh.
 func apply_appearance(rebuild: bool) -> void:
 	var custom: Dictionary = GameState.sim.custom
 	var options: Dictionary = GameState.config.get("customization", {})
 	var palettes: Dictionary = options.get("palettes", {})
 	planet.palette = palettes.get(custom.get("palette", "classic"), {}).get("colors", {})
-	planet.outlines = bool(UserSettings.get_value("outlines"))
 	if rebuild:
 		planet.rebuild_surface()
 	planet.set_clouds_visible(bool(UserSettings.get_value("clouds")))

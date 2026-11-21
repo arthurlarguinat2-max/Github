@@ -331,5 +331,14 @@
 	"TUTO_TOWNHALL": "This is your town hall, the heart of the village. Tap the Village button (bottom) to explore it.",
 	"TUTO_TRAIN_WATER": "A well needs a water carrier. Open Village, People tab, and train a water carrier.",
 	"TUTO_TRAIN_GATHERER": "Train 2 gatherers in Village, People tab.",
-	"TUTO_UPGRADE": "Once you have 6 people and enough wood and stone, upgrade the town hall to unlock new buildings and skills."
+	"TUTO_UPGRADE": "Once you have 6 people and enough wood and stone, upgrade the town hall to unlock new buildings and skills.",
+	"BLD_ORCHARD": "Orchard",
+	"BLD_ORCHARD_SHORT": "Fruit",
+	"BLD_ORCHARD_DESC": "A gatherer harvests fruit. Fertile land improves the harvest.",
+	"BLD_APIARY": "Apiary",
+	"BLD_APIARY_SHORT": "Honey",
+	"BLD_APIARY_DESC": "A farmer gathers honey from the hives and improves village happiness.",
+	"BLD_BATHHOUSE": "Village baths",
+	"BLD_BATHHOUSE_SHORT": "Baths",
+	"BLD_BATHHOUSE_DESC": "A sheltered stone pool where villagers look after their health."
 }

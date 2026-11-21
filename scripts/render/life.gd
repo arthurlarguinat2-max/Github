@@ -15,6 +15,8 @@ var view   # PlanetView (terrain sampler, planet, economy)
 var _walkers: Array = []
 var _bodies: MultiMesh
 var _heads: MultiMesh
+var _bees: MultiMesh
+var _hive_frames: Array[Transform3D] = []
 var _birds: MultiMesh
 var _bird_paths: Array = []
 var _smoke_root: Node3D
@@ -27,6 +29,15 @@ func setup(p_view) -> void:
 	_rng.seed = view._world_seed + 5
 	_bodies = _make_multimesh(_body_mesh(), MAX_WALKERS, true)
 	_heads = _make_multimesh(_head_mesh(), MAX_WALKERS, false)
+	var bee := SphereMesh.new()
+	bee.radius = 0.0013
+	bee.height = 0.0026
+	bee.radial_segments = 8
+	bee.rings = 3
+	var wax := StandardMaterial3D.new()
+	wax.albedo_color = Color("f7bb4f")
+	bee.material = wax
+	_bees = _make_multimesh(bee, 0, false)
 	_birds = _make_multimesh(_bird_mesh(), BIRD_COUNT, false)
 	# A shared orbit per flock keeps the silhouettes together through a turn.
 	for flock in 3:
@@ -52,6 +63,7 @@ func _process(delta: float) -> void:
 	_time += delta * maxf(speed, 0.0)
 	_update_walkers(delta * speed)
 	_update_birds()
+	_update_bees()
 
 
 # --- Villagers -------------------------------------------------------------------
@@ -146,6 +158,19 @@ func _update_birds() -> void:
 		_birds.set_instance_transform(i, Transform3D(basis, dir * (float(p.radius) + 0.008 * sin(angle * 5.0 + i * 0.2))))
 
 
+## Curved foraging flights in the tangent plane of each occupied hive.
+func _update_bees() -> void:
+	var size: float = view._object_scale
+	for hive in _hive_frames.size():
+		var frame := _hive_frames[hive]
+		for bee in 5:
+			var phase := _time * (1.3 + 0.12 * bee) + bee * 2.4 + hive
+			var flight := Vector3(cos(phase) * 0.024, 0.020 + sin(phase * 2.1) * 0.005,
+				sin(phase * 1.7) * 0.018)
+			var pose := Transform3D(Basis.from_scale(Vector3(1.4, 0.8, 1) * size), flight * size)
+			_bees.set_instance_transform(hive * 5 + bee, frame * pose)
+
+
 # --- Smoke -----------------------------------------------------------------------
 
 func refresh_smoke() -> void:
@@ -154,8 +179,12 @@ func refresh_smoke() -> void:
 	var eco = view.economy
 	if eco == null:
 		return
+	_hive_frames.clear()
 	for cell in eco.building_cells():
 		var id: String = view.planet.buildings[cell]
+		if id == "apiary" and eco.is_active(cell):
+			var up: Vector3 = view.planet.grid.centers[cell]
+			_hive_frames.append(Transform3D(Basis(Quaternion(Vector3.UP, up)), up * view._heights[cell]))
 		if not SMOKY.has(id) or not eco.is_active(cell):
 			continue
 		var dir: Vector3 = view.planet.grid.centers[cell]
@@ -164,6 +193,11 @@ func refresh_smoke() -> void:
 		var smoke := _make_smoke(s)
 		smoke.transform = Transform3D(Basis(Quaternion(Vector3.UP, dir)), dir * (view._heights[cell] + height * s))
 		_smoke_root.add_child(smoke)
+	var bee_count := _hive_frames.size() * 5
+	if _bees.instance_count != bee_count:
+		_bees.instance_count = bee_count
+		_bees.visible_instance_count = bee_count
+		_update_bees()
 
 
 func _make_smoke(s: float) -> CPUParticles3D:

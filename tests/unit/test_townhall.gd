@@ -289,3 +289,28 @@ func test_professions_have_texts_and_buildings() -> void:
 	for level in _json("res://data/townhall.json").levels:
 		for perk in level.get("perks", []):
 			assert_true(fr.has(perk.name_key), perk.name_key)
+
+
+func test_orchard_hives_and_baths_survive_reload() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	_rich(sim)
+	assert_eq(eco.unlock_level("orchard"), 1)
+	assert_eq(eco.unlock_level("apiary"), 2)
+	assert_eq(eco.unlock_level("bathhouse"), 2)
+	eco.townhall_level = 2
+	eco._rebuild_caches()
+	var placed := {}
+	for id in ["orchard", "apiary", "bathhouse"]:
+		var cell := _spot(sim, id)
+		assert_true(cell >= 0, str(id))
+		if cell < 0:
+			return
+		assert_true(eco.build(cell, id))
+		eco.complete_construction()
+		placed[id] = cell
+	var restored := _sim()
+	restored.from_dict(sim.to_dict())
+	for id in placed:
+		assert_eq(restored.planet.buildings[placed[id]], id)
+		assert_true(restored.economy.is_active(placed[id]))

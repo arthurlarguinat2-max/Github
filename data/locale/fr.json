@@ -331,5 +331,14 @@
 	"TUTO_TOWNHALL": "Voici ton Hôtel de ville, le cœur du village. Touche le bouton Village (en bas) pour le découvrir.",
 	"TUTO_TRAIN_WATER": "Un puits a besoin d'un porteur d'eau. Ouvre Village, onglet Habitants, et forme un porteur d'eau.",
 	"TUTO_TRAIN_GATHERER": "Forme 2 cueilleurs dans Village, onglet Habitants.",
-	"TUTO_UPGRADE": "Quand tu auras 6 habitants et assez de bois et de pierre, améliore l'Hôtel de ville pour débloquer de nouveaux bâtiments et compétences."
+	"TUTO_UPGRADE": "Quand tu auras 6 habitants et assez de bois et de pierre, améliore l'Hôtel de ville pour débloquer de nouveaux bâtiments et compétences.",
+	"BLD_ORCHARD": "Verger",
+	"BLD_ORCHARD_SHORT": "Fruits",
+	"BLD_ORCHARD_DESC": "Un cueilleur récolte les fruits. Les terres fertiles améliorent la récolte.",
+	"BLD_APIARY": "Rucher",
+	"BLD_APIARY_SHORT": "Miel",
+	"BLD_APIARY_DESC": "Un agriculteur récolte le miel des ruches et contribue au bonheur du village.",
+	"BLD_BATHHOUSE": "Bains du village",
+	"BLD_BATHHOUSE_SHORT": "Bains",
+	"BLD_BATHHOUSE_DESC": "Un bassin de pierre abrité où les habitants prennent soin de leur santé."
 }

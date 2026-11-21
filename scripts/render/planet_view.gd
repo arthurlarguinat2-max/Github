@@ -56,8 +56,6 @@ var _life: Node3D
 
 ## Terrain id -> hex color overriding terrains.json (player palette).
 var palette: Dictionary = {}
-## Draws a darker border around each land cell (easier to tell cells apart).
-var outlines := true
 
 
 func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed: int) -> void:
@@ -229,7 +227,7 @@ func refresh_buildings() -> void:
 		_highlight.mesh = _build_highlight_mesh(selected)
 
 
-## Rebuilds the ground (after a palette or outline change).
+## Rebuilds the ground (after a palette change).
 func rebuild_surface() -> void:
 	for node in _surface_nodes:
 		node.queue_free()
@@ -253,15 +251,7 @@ func set_placement(cells: Array) -> void:
 	var buffer := MeshBuffer.new()
 	var green := Color(0.36, 0.86, 0.74)  # Soft turquoise (design system TEAL).
 	for cell in cells:
-		var center: Vector3 = planet.grid.centers[cell]
-		var cs: PackedVector3Array = planet.grid.corners[cell]
-		var h := _heights[cell] + 0.006
-		for k in cs.size():
-			var da := center.lerp(cs[k], 0.82).normalized()
-			var db := center.lerp(cs[(k + 1) % cs.size()], 0.82).normalized()
-			var a := da * (maxf(terrain.surface_radius(da, cell), 1.0) + 0.006)
-			var b := db * (maxf(terrain.surface_radius(db, cell), 1.0) + 0.006)
-			buffer.add_tri(center * h, a, b, green, green, green, center)
+		_add_marker(buffer, cell, 0.19, green, 16)
 	_placement.mesh = buffer.to_mesh(null)
 	_placement.visible = not cells.is_empty()
 
@@ -322,7 +312,7 @@ func _compute_heights() -> void:
 		_heights[i] = terrain.cell_top(i)
 
 
-## Smooth land + animated sea + optional thin cell outlines.
+## Smooth land + animated sea.
 func _build_surface(_seed: int) -> void:
 	var subdivisions := 5 if planet.grid.frequency <= 12 else 6
 	var land := terrain.build_land_mesh(subdivisions)
@@ -340,8 +330,6 @@ func _build_surface(_seed: int) -> void:
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(sea)
 	_surface_nodes.append(sea)
-	if outlines:
-		_add_mesh(terrain.build_outline_mesh())
 
 
 func _add_mesh(mesh: Mesh) -> void:
@@ -449,7 +437,7 @@ func _build_trees(world_seed: int) -> void:
 	trunk.top_radius = 0.0018
 	trunk.bottom_radius = 0.003
 	trunk.height = 0.014
-	trunk.radial_segments = 6
+	trunk.radial_segments = 12
 	trunk.rings = 1
 	_add_multimesh(trunk, trunks, no_colors, Color("9a6a45"))
 	var puff := SphereMesh.new()
@@ -458,17 +446,31 @@ func _build_trees(world_seed: int) -> void:
 	puff.radial_segments = 10
 	puff.rings = 6
 	_add_multimesh(puff, puffs, puff_colors, Color.WHITE, true)
-	var pine := CylinderMesh.new()
-	pine.top_radius = 0.0
-	pine.bottom_radius = 0.01
-	pine.height = 0.016
-	pine.radial_segments = 8
-	pine.rings = 1
+	# Overlapping tapered crowns give the conifers a soft silhouette from any angle.
+	var profile := Curve.new()
+	profile.add_point(Vector2(0.0, 0.02))
+	profile.add_point(Vector2(0.18, 0.90))
+	profile.add_point(Vector2(0.36, 0.98))
+	profile.add_point(Vector2(0.70, 0.48))
+	profile.add_point(Vector2(1.0, 0.02))
+	var pine_surface := SurfaceTool.new()
+	pine_surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var sides := 12
+	for level in 6:
+		for side in sides:
+			for corner: Vector2i in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 0), Vector2i(1, 1), Vector2i(0, 1)]:
+				var t := float(level + corner.y) / 6.0
+				var angle := TAU * (side + corner.x) / sides
+				var radial := Vector3(cos(angle), 0, sin(angle))
+				var slope := (profile.sample_baked(minf(t + 0.02, 1.0)) - profile.sample_baked(maxf(t - 0.02, 0.0))) / 0.04
+				pine_surface.set_normal((radial - Vector3.UP * slope * 0.625).normalized())
+				pine_surface.add_vertex(radial * profile.sample_baked(t) * 0.010 + Vector3.UP * (t - 0.5) * 0.016)
+	var pine := pine_surface.commit()
 	_add_multimesh(pine, pines, pine_colors, Color.WHITE, true)
 	var rock := SphereMesh.new()
 	rock.radius = 0.006
 	rock.height = 0.012
-	rock.radial_segments = 7
+	rock.radial_segments = 12
 	rock.rings = 4
 	_add_multimesh(rock, rocks, rock_colors, Color.WHITE)
 	_add_multimesh(_grass_tuft(), grasses, grass_colors, Color.WHITE, true)
@@ -573,24 +575,39 @@ func _build_clouds() -> Node3D:
 	return deck
 
 
-## Bright ring along the border of the selected cell, following the terrain.
+## Circular terrain-following markers leave the underlying landscape unobstructed.
 func _build_highlight_mesh(cell: int) -> ArrayMesh:
 	var buffer := MeshBuffer.new()
-	var center: Vector3 = planet.grid.centers[cell]
-	var cs: PackedVector3Array = planet.grid.corners[cell]
-	var white := Color.WHITE
-	for k in cs.size():
-		var da: Vector3 = cs[k]
-		var db: Vector3 = cs[(k + 1) % cs.size()]
-		var ia := center.lerp(da, 0.8).normalized()
-		var ib := center.lerp(db, 0.8).normalized()
-		var a := da * (maxf(terrain.surface_radius(da, cell), 1.0) + 0.005)
-		var b := db * (maxf(terrain.surface_radius(db, cell), 1.0) + 0.005)
-		var a_in := ia * (maxf(terrain.surface_radius(ia, cell), 1.0) + 0.005)
-		var b_in := ib * (maxf(terrain.surface_radius(ib, cell), 1.0) + 0.005)
-		buffer.add_tri(a, b, b_in, white, white, white, center)
-		buffer.add_tri(a, b_in, a_in, white, white, white, center)
+	_add_marker(buffer, cell, 0.43, Color.WHITE, 40)
 	return buffer.to_mesh(null)
+
+
+func _add_marker(buffer: MeshBuffer, cell: int, size: float, color: Color, segments: int) -> void:
+	var center: Vector3 = planet.grid.centers[cell]
+	var frame := Basis(Quaternion(Vector3.UP, center))
+	var radius: float = terrain.spacing * size
+	var first_outer := Vector3.ZERO
+	var first_inner := Vector3.ZERO
+	var prev_outer := Vector3.ZERO
+	var prev_inner := Vector3.ZERO
+	for step in range(segments + 1):
+		var outer := first_outer
+		var inner := first_inner
+		if step < segments:
+			var angle := TAU * step / segments
+			var rim := frame * Vector3(cos(angle), 0, sin(angle)) * radius
+			var a := (center + rim).normalized()
+			var b := (center + rim * 0.86).normalized()
+			outer = a * (maxf(terrain.surface_radius(a, cell), 1.0) + 0.005)
+			inner = b * (maxf(terrain.surface_radius(b, cell), 1.0) + 0.005)
+		if step == 0:
+			first_outer = outer
+			first_inner = inner
+		else:
+			buffer.add_tri(prev_outer, outer, inner, color, color, color, center)
+			buffer.add_tri(prev_outer, inner, prev_inner, color, color, color, center)
+		prev_outer = outer
+		prev_inner = inner
 
 
 func _placement_material() -> StandardMaterial3D:

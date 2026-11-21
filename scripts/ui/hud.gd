@@ -949,7 +949,6 @@ func _refresh_settings_sheet() -> void:
 				appearance_changed.emit()
 				Haptics.light()))
 			box.add_child(_toggle(tr("CLOUDS"), "clouds", true))
-			box.add_child(_toggle(tr("OUTLINES"), "outlines", true))
 		"game":
 			box.add_child(_toggle(tr("HAPTICS"), "haptics", false))
 			box.add_child(_caption(tr("LANGUAGE")))

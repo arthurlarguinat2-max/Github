@@ -4,7 +4,7 @@
 ## the neighbouring cells (soft hills, natural coastlines, color gradients),
 ## adds rounded mountain peaks and a little noise. Water cells sit below sea
 ## level so a separate animated sea sphere draws the coast automatically.
-## The hex grid stays visible as thin outlines (gameplay readability).
+## Rendering samples a gently warped sphere independently of the simulation grid.
 extends RefCounted
 
 const SEA_LEVEL := 1.0
@@ -90,7 +90,10 @@ func cell_of(dir: Vector3, hint: int = -1) -> int:
 ## Surface radius and color at direction `dir` (unit vector).
 func sample(dir: Vector3, hint: int = -1) -> Array:
 	var grid = planet.grid
-	var c := cell_of(dir, hint)
+	# Domain warp bends the shoreline between sample points and keeps it continuous at the poles.
+	var shift := Vector3(_noise.get_noise_3dv(dir * 3.1), _noise.get_noise_3dv(dir * 3.1 + Vector3(7, 3, 5)), _noise.get_noise_3dv(dir * 3.1 + Vector3(4, 11, 2)))
+	var sample_dir := (dir + shift * spacing * 0.32).normalized()
+	var c := cell_of(sample_dir, hint)
 	var reach := spacing * 1.15
 	var total := 0.0
 	var h := 0.0
@@ -100,7 +103,7 @@ func sample(dir: Vector3, hint: int = -1) -> Array:
 	var cells: Array = [c]
 	cells.append_array(Array(grid.neighbors[c]))
 	for k in cells:
-		var w := maxf(0.0, 1.0 - dir.angle_to(grid.centers[k]) / reach)
+		var w := maxf(0.0, 1.0 - sample_dir.angle_to(grid.centers[k]) / reach)
 		w = w * w * (3.0 - 2.0 * w)  # Smoothstep: soft, rounded blends.
 		if k == c:
 			w = maxf(w, 0.05)
@@ -114,7 +117,7 @@ func sample(dir: Vector3, hint: int = -1) -> Array:
 	var color := Color(r / total, g / total, b / total)
 	var weathering := _noise.get_noise_3dv(dir * 6.0)
 	if _peaks[c] > 0.0:
-		var d := clampf(1.0 - dir.angle_to(grid.centers[c]) / (spacing * 0.68), 0.0, 1.0)
+		var d := clampf(1.0 - sample_dir.angle_to(grid.centers[c]) / (spacing * 0.68), 0.0, 1.0)
 		var ridge := 1.0 - absf(_noise.get_noise_3dv(dir * 12.0))
 		var summit := d * d * (2.0 - d) * (0.68 + 0.72 * ridge)
 		h += _peaks[c] * summit
@@ -177,40 +180,6 @@ func build_land_mesh(subdivisions: int) -> ArrayMesh:
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://assets/terrain/ground.gdshader")
 	mat.set_shader_parameter("grain", preload("res://assets/terrain/surface_noise.tres"))
-	mesh.surface_set_material(0, mat)
-	return mesh
-
-
-## Thin, soft lines along the cell borders, following the terrain.
-func build_outline_mesh() -> ArrayMesh:
-	var grid = planet.grid
-	var positions := PackedVector3Array()
-	for i in planet.cell_count():
-		var cs: PackedVector3Array = grid.corners[i]
-		var count := cs.size()
-		var lifted := PackedVector3Array()
-		lifted.resize(count)
-		for k in count:
-			var d: Vector3 = cs[k]
-			lifted[k] = d * (maxf(surface_radius(d, i), SEA_LEVEL) + 0.0025)
-		var center: Vector3 = grid.centers[i]
-		for k in count:
-			var a := lifted[k]
-			var b := lifted[(k + 1) % count]
-			var a_in := a.lerp(center * a.length(), 0.025)
-			var b_in := b.lerp(center * b.length(), 0.025)
-			positions.append_array(PackedVector3Array([a, b, b_in, a, b_in, a_in]))
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = positions
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 0.98, 0.92, 0.10)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.no_depth_test = false
 	mesh.surface_set_material(0, mat)
 	return mesh
 

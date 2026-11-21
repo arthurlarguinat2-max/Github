@@ -402,6 +402,80 @@
 				"desert",
 				"hills"
 			]
+		},
+		"orchard": {
+			"name_key": "BLD_ORCHARD",
+			"short_key": "BLD_ORCHARD_SHORT",
+			"desc_key": "BLD_ORCHARD_DESC",
+			"age": "stone",
+			"category": "food",
+			"order": 45,
+			"priority": 3,
+			"cost": {
+				"wood": 12,
+				"stone": 3
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"hills"
+			],
+			"build_days": 0.5,
+			"produces": {
+				"food": 5
+			},
+			"profession": "gatherer",
+			"workers": 1,
+			"fertility_bonus": true
+		},
+		"apiary": {
+			"name_key": "BLD_APIARY",
+			"short_key": "BLD_APIARY_SHORT",
+			"desc_key": "BLD_APIARY_DESC",
+			"age": "stone",
+			"category": "food",
+			"order": 46,
+			"priority": 3,
+			"cost": {
+				"wood": 18,
+				"stone": 5
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"hills"
+			],
+			"build_days": 0.5,
+			"produces": {
+				"food": 3
+			},
+			"profession": "farmer",
+			"workers": 1,
+			"happiness": 3
+		},
+		"bathhouse": {
+			"name_key": "BLD_BATHHOUSE",
+			"short_key": "BLD_BATHHOUSE_SHORT",
+			"desc_key": "BLD_BATHHOUSE_DESC",
+			"age": "stone",
+			"category": "services",
+			"order": 47,
+			"priority": 3,
+			"cost": {
+				"stone": 18,
+				"wood": 12
+			},
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"hills"
+			],
+			"build_days": 0.5,
+			"workers": 0,
+			"health": 4
 		}
 	},
 	"start": {

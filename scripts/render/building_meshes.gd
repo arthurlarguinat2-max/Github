@@ -113,6 +113,35 @@ static func create(id: String, level: int = 1) -> Node3D:
 				var a := TAU * k / 7.0
 				_add(root, _capsule(0.0032, 0.022), "stone", Vector3(cos(a) * 0.02, 0.01, sin(a) * 0.02), Vector3(0.12 * sin(a * 3.0), -a, 0.1), Vector3(1, 1, 0.7))
 			_add(root, _sphere(0.004, 8), "fire", Vector3(0, 0.005, 0), Vector3.ZERO, Vector3(1, 1.6, 1))
+		"orchard":
+			for tree in 3:
+				var angle := tree * TAU / 3.0
+				var base := Vector3(cos(angle), 0, sin(angle)) * 0.021
+				_add(root, _capsule(0.0028, 0.027), "bark", base + Vector3.UP * 0.012)
+				for limb in 3:
+					var turn := limb * TAU / 3.0 + angle
+					var branch := Vector3(cos(turn), 0.0, sin(turn))
+					var crown := base + branch * 0.006 + Vector3.UP * (0.023 + 0.003 * limb)
+					_add(root, _sphere(0.011, 12), "bush", crown)
+					_add(root, _sphere(0.0024, 8), "berry", crown + branch * 0.010)
+			_add(root, _cylinder(0.006, 0.0045, 0.007, 14), "straw", Vector3(0, 0.003, 0))
+			_add(root, _torus(0.004, 0.006), "log", Vector3(0, 0.007, 0))
+		"apiary":
+			for hive in 3:
+				var base := Vector3((hive - 1) * 0.020, 0, 0.009 if hive == 1 else -0.010)
+				_add(root, _cylinder(0.011, 0.012, 0.005, 16), "stone", base + Vector3.UP * 0.0025)
+				_add(root, _dome(0.010, 0.019), "straw", base + Vector3.UP * 0.005)
+				for coil in 3:
+					var radius := 0.010 - 0.0009 * coil
+					_add(root, _torus(radius - 0.0016, radius), "grain", base + Vector3.UP * (0.008 + 0.003 * coil))
+				_add(root, _sphere(0.002, 8), "door", base + Vector3(0, 0.008, 0.010))
+		"bathhouse":
+			_round_house(root, 0.014, 0.016, "clay", false, Vector3(-0.012, 0, -0.009))
+			var pool := Vector3(0.010, 0.004, 0.012)
+			_add(root, _torus(0.012, 0.017), "rock", pool, Vector3.ZERO, Vector3(1.25, 0.75, 0.9))
+			_add(root, _cylinder(0.014, 0.014, 0.002, 24), "water", pool, Vector3.ZERO, Vector3(1.25, 1, 0.9))
+			for step in 3:
+				_boulder(root, Vector3(-0.013 + step * 0.004, 0.001, 0.009), Vector3(0.006, 0.003, 0.005), "stone", step * 0.6)
 		"outpost":
 			_add(root, _capsule(0.0015, 0.064), "log", Vector3(0, 0.032, 0))
 			_add(root, _sphere(0.009, 8), "accent", Vector3(0.008, 0.055, 0), Vector3.ZERO, Vector3(1.1, 0.6, 0.15))
