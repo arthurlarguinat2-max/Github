@@ -91,7 +91,7 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 	terrain_defs = p_terrain_defs
 	camera = p_camera
 	_world_seed = world_seed
-	_object_scale = clampf(6.0 / float(planet.grid.frequency), 0.3, 1.2)
+	_object_scale = clampf(7.5 / float(planet.grid.frequency), 0.35, 1.2)
 	# Smaller cells: let the camera come closer.
 	_zoom_min = 1.2 + 3.2 / float(planet.grid.frequency)
 	_compute_heights()
@@ -202,12 +202,21 @@ func _set_zoom(value: float) -> void:
 	zoomed.emit()
 
 
+## Far away: the whole planet, a bit low on screen. Close up: the camera
+## comes down and tilts (like a strategy game) to see the village from the
+## side, with the planet's horizon at the top of the screen.
 func _update_camera() -> void:
 	if camera == null:
 		return
-	# Far away the planet sits a bit low (room for the title); close up, centered.
 	var t := clampf((_zoom - _zoom_min) / (ZOOM_MAX - _zoom_min), 0.0, 1.0)
-	camera.position = Vector3(0.0, 0.25 * t, _zoom)
+	var close := pow(1.0 - t, 1.5)
+	var target := Vector3(0.0, 0.25 * t, 0.0).lerp(Vector3(0.0, 0.0, 1.0), 1.0 - t)
+	var tilt := deg_to_rad(55.0) * close
+	var distance := lerpf(_zoom - 1.0, _zoom, t)
+	camera.position = target + Vector3(0.0, -sin(tilt), cos(tilt)) * distance
+	camera.look_at(target, Vector3.UP)
+	if _clouds:
+		_clouds.visible = _clouds_enabled and t > 0.25
 
 
 ## Turns the planet so that `cell` faces the camera.
@@ -255,9 +264,14 @@ func rebuild_surface() -> void:
 	_build_surface(_world_seed)
 
 
+var _clouds_enabled := true
+
+
 func set_clouds_visible(value: bool) -> void:
+	_clouds_enabled = value
 	if _clouds:
 		_clouds.visible = value
+	_update_camera()
 
 
 ## Lights up the cells where the chosen building can go.
