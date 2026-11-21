@@ -30,10 +30,18 @@ const GLOW := {
 }
 
 
-static func create(id: String) -> Node3D:
+## `level` only matters for the town hall, which grows with each level.
+static func create(id: String, level: int = 1) -> Node3D:
 	var root := Node3D.new()
 	root.name = id
 	match id:
+		"townhall":
+			_townhall(root, level)
+		"outpost":
+			_add(root, _cylinder(0.0015, 0.0015, 0.06, 5), "log", Vector3(0, 0.03, 0))
+			_add(root, _box(Vector3(0.018, 0.011, 0.002)), "accent", Vector3(0.009, 0.053, 0))
+			_add(root, _cylinder(0.0, 0.016, 0.018, 6), "straw", Vector3(-0.012, 0.009, 0.01))
+			_add(root, _box(Vector3(0.006, 0.006, 0.002)), "window", Vector3(-0.012, 0.004, 0.022))
 		"hut":
 			_add(root, _cylinder(0.022, 0.024, 0.022, 7), "wall", Vector3(0, 0.011, 0))
 			_add(root, _cylinder(0.0, 0.033, 0.028, 7), "accent", Vector3(0, 0.036, 0))
@@ -104,6 +112,45 @@ static func create(id: String) -> Node3D:
 			_add(root, _cylinder(0.0, 0.005, 0.012, 6), "fire", Vector3(0, 0.007, 0))
 		_:
 			_add(root, _box(Vector3(0.02, 0.02, 0.02)), "berry", Vector3(0, 0.01, 0))
+	return root
+
+
+## Town hall: a big round hall; stone base from level 2, upper floor from
+## level 3, a tower from level 4, and it gets bigger every level.
+static func _townhall(root: Node3D, level: int) -> void:
+	var s := 1.0 + 0.09 * float(level - 1)
+	var base_h := 0.0
+	if level >= 2:
+		_add(root, _cylinder(0.04 * s, 0.043 * s, 0.01, 10), "stone", Vector3(0, 0.005, 0))
+		base_h = 0.01
+	_add(root, _cylinder(0.032 * s, 0.034 * s, 0.026 * s, 10), "wall", Vector3(0, base_h + 0.013 * s, 0))
+	var roof_y := base_h + 0.026 * s
+	_add(root, _cylinder(0.0, 0.044 * s, 0.03 * s, 10), "accent", Vector3(0, roof_y + 0.015 * s, 0))
+	for k in 3:
+		var a := TAU * k / 3.0 + 0.4
+		_add(root, _box(Vector3(0.008, 0.011, 0.003)), "window", Vector3(cos(a) * 0.033 * s, base_h + 0.012 * s, sin(a) * 0.033 * s), Vector3(0, -a + PI / 2, 0))
+	if level >= 3:
+		_add(root, _cylinder(0.016 * s, 0.018 * s, 0.016 * s, 8), "plaster", Vector3(0, roof_y + 0.03 * s, 0))
+		_add(root, _cylinder(0.0, 0.024 * s, 0.02 * s, 8), "accent", Vector3(0, roof_y + 0.048 * s, 0))
+	if level >= 4:
+		_add(root, _box(Vector3(0.016, 0.06 * s, 0.016)), "stone", Vector3(0.04 * s, 0.03 * s, -0.02 * s))
+		_add(root, _prism(Vector3(0.02, 0.016, 0.02)), "accent", Vector3(0.04 * s, 0.068 * s, -0.02 * s))
+	var top := roof_y + (0.06 if level >= 3 else 0.03) * s
+	_add(root, _cylinder(0.0012, 0.0012, 0.03, 4), "log", Vector3(0, top + 0.012, 0))
+	_add(root, _box(Vector3(0.014, 0.008, 0.002)), "accent", Vector3(0.007, top + 0.022, 0))
+
+
+## Construction site: wooden scaffold around a stack of planks.
+static func scaffold() -> Node3D:
+	var root := Node3D.new()
+	root.name = "scaffold"
+	_add(root, _box(Vector3(0.04, 0.004, 0.04)), "soil", Vector3(0, 0.002, 0))
+	for x in [-0.018, 0.018]:
+		for z in [-0.018, 0.018]:
+			_add(root, _box(Vector3(0.003, 0.03, 0.003)), "log", Vector3(x, 0.015, z))
+	_add(root, _box(Vector3(0.04, 0.003, 0.003)), "log", Vector3(0, 0.028, 0.018))
+	_add(root, _box(Vector3(0.04, 0.003, 0.003)), "log", Vector3(0, 0.028, -0.018))
+	_add(root, _box(Vector3(0.024, 0.008, 0.016)), "straw", Vector3(0, 0.008, 0))
 	return root
 
 

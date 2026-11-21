@@ -45,6 +45,8 @@ var objective_defs: Array = []
 var event_defs: Array = []
 var event_settings: Dictionary = {}
 var event_rng := RandomNumberGenerator.new()
+var townhall_levels: Array = []
+var profession_defs: Dictionary = {}
 var name_syllables: Array = []
 
 
@@ -60,6 +62,8 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	economy_settings = config.get("economy", {})
 	name_syllables = config.get("customization", {}).get("name_syllables", [])
 	objective_defs = config.get("objectives", [])
+	townhall_levels = config.get("townhall", [])
+	profession_defs = config.get("professions", {})
 	event_defs = config.get("events", [])
 	event_settings = config.get("event_settings", {})
 	event_rng.seed = p_seed + 4242
@@ -67,6 +71,8 @@ func _init(p_seed: int = 0, config: Dictionary = {}) -> void:
 	planet = PlanetState.new(int(planet_settings.get("frequency", 6)))
 	planet.generate(world_seed, terrain_defs, planet_settings)
 	economy.territory_scale = _territory_scale()
+	economy.townhall_levels = townhall_levels
+	economy.professions = profession_defs
 	economy.setup(planet, building_defs, terrain_defs, economy_settings)
 	economy.found_village(start_settings)
 
@@ -215,6 +221,8 @@ func from_dict(data: Dictionary) -> void:
 		planet.generate(world_seed, terrain_defs, planet_settings)
 	economy = Economy.new()
 	economy.territory_scale = _territory_scale()
+	economy.townhall_levels = townhall_levels
+	economy.professions = profession_defs
 	economy.setup(planet, building_defs, terrain_defs, economy_settings)
 	if typeof(data.get("economy")) == TYPE_DICTIONARY:
 		economy.from_dict(data["economy"])

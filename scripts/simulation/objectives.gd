@@ -11,6 +11,10 @@ static func progress(sim, obj: Dictionary) -> Array:
 	match str(obj.get("type", "")):
 		"population":
 			current = eco.population
+		"townhall":
+			current = eco.townhall_level
+		"trained":
+			current = eco.trained_total()
 		"building":
 			current = sim.planet.buildings.count(str(obj.get("target", "")))
 		"buildings_total":

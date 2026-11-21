@@ -1,5 +1,5 @@
 {
-	"_comment": "Goals shown in the Goals screen. type: population | building (id) | buildings_total | happiness | health | day | stock (res). reward: resources given once.",
+	"_comment": "Goals shown in the Goals screen. type: townhall | trained | population | building (id) | buildings_total | happiness | health | day | stock (res). reward: resources given once.",
 	"objectives": [
 		{
 			"id": "first_well",
@@ -22,6 +22,15 @@
 			}
 		},
 		{
+			"id": "train_3",
+			"title_key": "OBJ_TRAINED",
+			"type": "trained",
+			"value": 3,
+			"reward": {
+				"food": 15
+			}
+		},
+		{
 			"id": "pop_10",
 			"title_key": "OBJ_POP",
 			"type": "population",
@@ -29,6 +38,16 @@
 			"reward": {
 				"wood": 20,
 				"stone": 10
+			}
+		},
+		{
+			"id": "townhall_2",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 2,
+			"reward": {
+				"wood": 30,
+				"stone": 15
 			}
 		},
 		{
@@ -59,6 +78,16 @@
 			"value": 5,
 			"reward": {
 				"stone": 20
+			}
+		},
+		{
+			"id": "townhall_3",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 3,
+			"reward": {
+				"wood": 50,
+				"stone": 40
 			}
 		},
 		{
@@ -117,6 +146,26 @@
 			"reward": {
 				"wood": 80,
 				"stone": 60
+			}
+		},
+		{
+			"id": "townhall_4",
+			"title_key": "OBJ_TOWNHALL",
+			"type": "townhall",
+			"value": 4,
+			"reward": {
+				"tools": 15,
+				"food": 60
+			}
+		},
+		{
+			"id": "outpost",
+			"title_key": "OBJ_OUTPOST",
+			"type": "building",
+			"target": "outpost",
+			"value": 1,
+			"reward": {
+				"wood": 40
 			}
 		}
 	]

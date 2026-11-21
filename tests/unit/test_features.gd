@@ -104,9 +104,14 @@ func test_pending_event_survives_save() -> void:
 func test_hut_upgrades_to_longhouse() -> void:
 	var sim := _sim()
 	var eco := sim.economy
-	var hut := sim.planet.buildings.find("hut")
-	eco.stocks["wood"] = 100.0
+	eco.stocks["wood"] = 110.0
 	eco.stocks["stone"] = 100.0
+	var hut := -1
+	for i in sim.planet.cell_count():
+		if eco.can_build(i, "hut") == "":
+			hut = i
+			break
+	assert_true(eco.build(hut, "hut"))
 	var housing := eco.housing()
 	assert_eq(eco.can_upgrade(hut), "")
 	assert_true(eco.upgrade(hut))
@@ -154,12 +159,15 @@ func test_seed_text_is_stable() -> void:
 func test_tutorial_steps_are_valid() -> void:
 	var fr := _json("res://data/locale/fr.json")
 	var buildings: Dictionary = _json("res://data/buildings.json").buildings
-	var known := ["next", "rotate", "zoom", "select", "needs", "speed", "goals"]
+	var known := ["next", "rotate", "zoom", "select", "needs", "speed", "goals", "village"]
+	var professions: Dictionary = _json("res://data/professions.json").professions
 	for step in _json("res://data/tutorial.json").steps:
 		assert_true(fr.has(step.text_key), step.text_key)
 		var condition := str(step.condition)
 		if condition.begins_with("building:"):
 			assert_true(buildings.has(condition.split(":")[1]), condition)
+		elif condition.begins_with("trained:"):
+			assert_true(professions.has(condition.split(":")[1]), condition)
 		else:
 			assert_true(condition in known, condition)
 

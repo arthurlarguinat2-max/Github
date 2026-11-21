@@ -1,5 +1,5 @@
 {
-	"_comment": "Tutorial steps. condition: next (button) | rotate | zoom | select | building:<id>:<count> | needs | speed | goals. highlight: UI element to pulse (build, needs, speed, goals).",
+	"_comment": "Tutorial steps. condition: next | rotate | zoom | select | building:<id>:<count> | trained:<profession>:<count> | village | speed. highlight: build, village, speed, needs.",
 	"steps": [
 		{
 			"id": "welcome",
@@ -17,9 +17,10 @@
 			"condition": "zoom"
 		},
 		{
-			"id": "select",
-			"text_key": "TUTO_SELECT",
-			"condition": "select"
+			"id": "townhall",
+			"text_key": "TUTO_TOWNHALL",
+			"condition": "village",
+			"highlight": "village"
 		},
 		{
 			"id": "well",
@@ -28,34 +29,39 @@
 			"highlight": "build"
 		},
 		{
+			"id": "train_water",
+			"text_key": "TUTO_TRAIN_WATER",
+			"condition": "trained:water_carrier:1",
+			"highlight": "village"
+		},
+		{
 			"id": "gatherer",
 			"text_key": "TUTO_GATHERER",
 			"condition": "building:gatherer:1",
 			"highlight": "build"
 		},
 		{
+			"id": "train_gatherer",
+			"text_key": "TUTO_TRAIN_GATHERER",
+			"condition": "trained:gatherer:2",
+			"highlight": "village"
+		},
+		{
 			"id": "hut",
 			"text_key": "TUTO_HUT",
-			"condition": "building:hut:2",
+			"condition": "building:hut:1",
 			"highlight": "build"
 		},
 		{
-			"id": "needs",
-			"text_key": "TUTO_NEEDS",
-			"condition": "needs",
-			"highlight": "needs"
+			"id": "upgrade",
+			"text_key": "TUTO_UPGRADE",
+			"condition": "next"
 		},
 		{
 			"id": "speed",
 			"text_key": "TUTO_SPEED",
 			"condition": "speed",
 			"highlight": "speed"
-		},
-		{
-			"id": "goals",
-			"text_key": "TUTO_GOALS",
-			"condition": "goals",
-			"highlight": "goals"
 		},
 		{
 			"id": "done",

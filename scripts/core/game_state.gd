@@ -36,6 +36,8 @@ func _ready() -> void:
 	config["objectives"] = Config.load_json("res://data/objectives.json").get("objectives", [])
 	config["events"] = Config.load_json("res://data/events.json").get("events", [])
 	config["tutorial"] = Config.load_json("res://data/tutorial.json")
+	config["townhall"] = Config.load_json("res://data/townhall.json").get("levels", [])
+	config["professions"] = Config.load_json("res://data/professions.json").get("professions", {})
 	stepper = FixedStepper.new(float(config.get("tick_rate_hz", 10)), int(config.get("max_ticks_per_frame", 40)))
 	_load_or_create()
 

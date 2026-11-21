@@ -18,6 +18,8 @@ func _sim(world_seed: int = 7) -> Simulation:
 	sim.economy.stocks["wood"] = 500.0
 	sim.economy.stocks["stone"] = 500.0
 	sim.economy.population = 30  # Enough workers for every test.
+	for p in ["water_carrier", "gatherer", "woodcutter", "stonecutter", "farmer", "miller", "baker", "artisan", "healer"]:
+		sim.economy.trained[p] = 3
 	return sim
 
 

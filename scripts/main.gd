@@ -46,6 +46,7 @@ func _ready() -> void:
 
 	var sim = GameState.sim
 	planet = PlanetView.new()
+	planet.economy = sim.economy
 	add_child(planet)
 	apply_appearance(false)  # Palette/outlines must be known before the first build.
 	planet.setup(sim.planet, sim.terrain_defs, cam, sim.world_seed)

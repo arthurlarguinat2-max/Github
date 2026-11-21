@@ -45,6 +45,7 @@ void fragment() {
 """
 
 var planet          # PlanetState
+var economy         # Economy: construction sites and town hall level
 var terrain_defs: Dictionary = {}
 var camera: Camera3D
 ## Returns true when a screen point is covered by the UI (set by main.gd).
@@ -214,7 +215,11 @@ func refresh_buildings() -> void:
 		var id: String = planet.buildings[cell]
 		if id == "":
 			continue
-		var node := BuildingMeshes.create(id)
+		var node: Node3D
+		if economy != null and not economy.is_active(cell):
+			node = BuildingMeshes.scaffold()
+		else:
+			node = BuildingMeshes.create(id, economy.townhall_level if economy != null else 1)
 		var dir: Vector3 = planet.grid.centers[cell]
 		var top := _heights[cell] + float(_def(cell).get("peak", 0.0))
 		var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis.from_scale(Vector3.ONE * _object_scale)

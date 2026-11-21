@@ -10,6 +10,8 @@ func _config() -> Dictionary:
 	var buildings: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/buildings.json"))
 	config["buildings"] = buildings.buildings
 	config["start"] = buildings.start
+	config["townhall"] = JSON.parse_string(FileAccess.get_file_as_string("res://data/townhall.json")).levels
+	config["professions"] = JSON.parse_string(FileAccess.get_file_as_string("res://data/professions.json")).professions
 	return config
 
 
@@ -32,8 +34,8 @@ func test_new_game_founds_a_village() -> void:
 		var sim := _sim(s)
 		var eco := sim.economy
 		assert_true(eco.village_center >= 0, "seed %d has no village" % s)
-		assert_eq(sim.planet.buildings[eco.village_center], "campfire")
-		assert_eq(eco.building_cells().size(), 2, "campfire + hut for seed %d" % s)
+		assert_eq(sim.planet.buildings[eco.village_center], "townhall")
+		assert_eq(eco.building_cells().size(), 1, "only the town hall for seed %d" % s)
 		assert_eq(eco.population, 4)
 		assert_eq(eco.housing(), 4)
 
@@ -46,6 +48,8 @@ func test_build_costs_resources() -> void:
 	var wood_before := eco.stock("wood")
 	assert_true(eco.build(cell, "hut"))
 	assert_almost_eq(eco.stock("wood"), wood_before - 10.0)
+	assert_eq(eco.housing(), 4, "still a construction site")
+	eco.complete_construction()
 	assert_eq(eco.housing(), 8)
 	assert_false(eco.build(cell, "hut"), "cell already occupied")
 
@@ -92,6 +96,8 @@ func test_gatherer_produces_food() -> void:
 	eco.stocks["wood"] = 100.0
 	var cell := _spot(sim, "gatherer")
 	assert_true(eco.build(cell, "gatherer"))
+	eco.complete_construction()
+	eco.trained["gatherer"] = 2
 	eco.update(1.0)
 	var rate: Dictionary = eco.building_rate(cell)
 	assert_true(float(rate.get("food", 0.0)) > 2.0, "gatherer output %s" % str(rate))
@@ -117,6 +123,8 @@ func test_extraction_depletes_deposits() -> void:
 	eco.stocks["wood"] = 100.0
 	var cell := _spot(sim, "woodcutter")
 	assert_true(eco.build(cell, "woodcutter"))
+	eco.complete_construction()
+	eco.trained["woodcutter"] = 2
 	var total_before := _wood_around(sim, cell)
 	eco.update(2.0)
 	var gained: float = eco.building_rate(cell).get("wood", 0.0) * 2.0

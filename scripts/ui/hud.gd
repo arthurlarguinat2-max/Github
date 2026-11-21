@@ -90,6 +90,8 @@ var _event_choices: VBoxContainer
 var _upgrade_button: Button
 var _start_menu: Control
 var _settings_tab := "planet"
+var _village_tab := "townhall"
+var _village_signature := ""
 
 
 func _ready() -> void:
@@ -165,6 +167,9 @@ func _ready() -> void:
 	GameState.ticked.connect(_refresh_title)
 	GameState.sim.economy.alert.connect(_on_alert)
 	GameState.sim.objective_completed.connect(_on_objective_completed)
+	GameState.sim.economy.construction_done.connect(_on_construction_done)
+	GameState.sim.economy.level_up.connect(_show_level_up)
+	GameState.sim.economy.training_done.connect(_on_training_done)
 	GameState.sim.event_started.connect(_show_event)
 	var steps_file: Dictionary = GameState.config.get("tutorial", {})
 	_tutorial_steps = steps_file.get("steps", [])
@@ -342,7 +347,7 @@ func _build_bottom_bar() -> PanelContainer:
 	_build_button.add_theme_constant_override("h_separation", 4)
 	_build_button.pressed.connect(_on_build_pressed)
 	bar.add_child(_build_button)
-	_goals_button = _icon_button("goals", "", Vector2(48, 54))
+	_goals_button = _icon_button("townhall", "", Vector2(48, 54))
 	_goals_button.pressed.connect(_on_goals_pressed)
 	bar.add_child(_goals_button)
 	_settings_button = _icon_button("settings", "", Vector2(48, 54))
@@ -486,6 +491,9 @@ func _open_build_sheet(cell: int) -> void:
 	_end_placement()
 	_target_cell = cell
 	_build_sheet_title.text = tr("BUILD_HERE") if cell >= 0 else tr("BUILD_WHAT")
+	var eco_b = GameState.sim.economy
+	if not eco_b.townhall_levels.is_empty():
+		_build_sheet_title.text += "\n" + tr("BUILDERS_FREE") % [eco_b.free_builders(), eco_b.builders()]
 	for child in _build_list.get_children():
 		_build_list.remove_child(child)
 		child.queue_free()
@@ -516,21 +524,44 @@ func _build_card(id: String) -> Button:
 	card.expand_icon = false
 	card.add_theme_constant_override("icon_max_width", 40)
 	card.add_theme_constant_override("h_separation", 12)
-	card.text = "%s  ·  %s\n%s" % [tr(str(bdef.get("name_key", id))), _cost_text(bdef.get("cost", {})), tr(str(bdef.get("short_key", "")))]
+	card.text = _card_text(id, "")
 	card.pressed.connect(_on_build_card_pressed.bind(id))
 	return card
+
+
+## Name and cost, then either the effect or why it can't be built yet.
+func _card_text(id: String, reason: String) -> String:
+	var eco = GameState.sim.economy
+	var bdef: Dictionary = eco.defs[id]
+	var second := tr(str(bdef.get("short_key", "")))
+	if reason == Economy.ERR_LOCKED:
+		second = tr("LOCKED_AT") % eco.unlock_level(id)
+	elif reason == Economy.ERR_LIMIT:
+		second = tr("LIMIT_REACHED") % [eco.building_count(id), eco.building_limit(id)]
+	elif reason == Economy.ERR_BUILDERS:
+		second = tr("BUILD_ERR_BUILDERS")
+	elif not eco.townhall_levels.is_empty():
+		second += "  (%d/%d)" % [eco.building_count(id), eco.building_limit(id)]
+	return "%s  ·  %s\n%s" % [tr(str(bdef.get("name_key", id))), _cost_text(bdef.get("cost", {})), second]
 
 
 func _update_build_cards() -> void:
 	var eco = GameState.sim.economy
 	for card in _build_list.get_children():
 		var id := str(card.name)
-		var ok: bool
-		if _target_cell >= 0:
-			ok = eco.can_build(_target_cell, id) == ""
-		else:
-			ok = eco.can_afford(eco.defs[id].get("cost", {}))
-		(card as Button).disabled = not ok
+		var reason := ""
+		if eco.building_limit(id) <= 0:
+			reason = Economy.ERR_LOCKED
+		elif eco.building_count(id) >= eco.building_limit(id):
+			reason = Economy.ERR_LIMIT
+		elif float(eco.defs[id].get("build_days", 0.0)) > 0.0 and not eco.townhall_levels.is_empty() and eco.free_builders() <= 0:
+			reason = Economy.ERR_BUILDERS
+		elif _target_cell >= 0:
+			reason = eco.can_build(_target_cell, id)
+		elif not eco.can_afford(eco.defs[id].get("cost", {})):
+			reason = Economy.ERR_COST
+		(card as Button).disabled = reason != ""
+		(card as Button).text = _card_text(id, reason)
 
 
 func _on_build_card_pressed(id: String) -> void:
@@ -638,7 +669,12 @@ func _build_cell_card() -> PanelContainer:
 	box.add_child(actions)
 	_cell_build_button = _icon_button("build", tr("BUILD_HERE"), Vector2(0, 50))
 	_cell_build_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_cell_build_button.pressed.connect(func(): _open_build_sheet(_cell))
+	_cell_build_button.pressed.connect(func():
+		if _cell == GameState.sim.economy.village_center:
+			_village_tab = "townhall"
+			_on_goals_pressed()
+		else:
+			_open_build_sheet(_cell))
 	actions.add_child(_cell_build_button)
 	_upgrade_button = _icon_button("build", "", Vector2(0, 50))
 	_upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -680,7 +716,8 @@ func _update_cell_card() -> void:
 	if building_id == "" and not tdef.get("water", false) and not eco.in_territory(_cell):
 		lines.append(tr("BUILD_ERR_TERRITORY"))
 	_cell_text.text = "\n".join(lines)
-	_cell_build_button.visible = can_build_here
+	_cell_build_button.visible = can_build_here or _cell == eco.village_center
+	_cell_build_button.text = tr("OPEN_TOWNHALL") if _cell == eco.village_center else tr("BUILD_HERE")
 	_demolish_button.visible = building_id != "" and _cell != eco.village_center
 	var upgrade_id: String = eco.upgrade_target(_cell) if building_id != "" else ""
 	_upgrade_button.visible = upgrade_id != ""
@@ -693,13 +730,20 @@ func _update_cell_card() -> void:
 ## One clear line about what a building is doing right now.
 func _building_status(cell: int, bdef: Dictionary) -> String:
 	var eco = GameState.sim.economy
+	if not eco.is_active(cell):
+		return tr("BLD_UNDER_CONSTRUCTION") % [roundi(eco.construction_progress(cell) * 100.0), _format_days(eco.construction_left(cell))]
 	if cell == eco.village_center:
-		return tr("BLD_VILLAGE_CENTER")
+		if eco.townhall_upgrade_left >= 0.0:
+			return tr("TH_UPGRADING") % [eco.townhall_level + 1, _format_days(eco.townhall_upgrade_days_left())]
+		return tr("BLD_TOWNHALL_STATUS") % [eco.townhall_level, eco.housing()]
 	var housing := int(bdef.get("housing", 0))
 	if housing > 0:
 		return tr("BLD_HOUSING") % housing
 	var need := int(bdef.get("workers", 0))
 	if need > 0 and eco.workers_at(cell) == 0:
+		var profession := str(bdef.get("profession", ""))
+		if profession != "" and not eco.townhall_levels.is_empty():
+			return tr("BLD_NEEDS_TRAINED") % tr(str(eco.professions.get(profession, {}).get("name_key", profession)))
 		return tr("BLD_IDLE")
 	if bdef.has("happiness") and not bdef.has("produces"):
 		return tr("BLD_GIVES_HAPPINESS") % int(bdef.happiness)
@@ -1071,7 +1115,7 @@ func _refresh_tutorial() -> void:
 			_start_pulse(_needs_row)
 		"speed":
 			_start_pulse(_speed_button)
-		"goals":
+		"goals", "village":
 			_start_pulse(_goals_button)
 
 
@@ -1092,6 +1136,9 @@ func _check_tutorial() -> void:
 	if condition.begins_with("building:"):
 		var parts := condition.split(":")
 		done = GameState.sim.planet.buildings.count(parts[1]) >= int(parts[2])
+	elif condition.begins_with("trained:"):
+		var parts := condition.split(":")
+		done = GameState.sim.economy.trained_count(parts[1]) >= int(parts[2])
 	elif condition != "next":
 		done = _tutorial_flags.get(condition, false)
 	if done:
@@ -1120,10 +1167,12 @@ func _stop_pulse() -> void:
 
 func _on_goals_pressed() -> void:
 	_tutorial_flags["goals"] = true
+	_tutorial_flags["village"] = true
 	if _goals_sheet.visible:
 		_close_sheets()
 		return
 	_end_placement()
+	_village_signature = ""
 	_update_goals_sheet()
 	_show_sheet(_goals_sheet)
 	close_requested.emit()
@@ -1131,9 +1180,18 @@ func _on_goals_pressed() -> void:
 
 
 func _build_goals_sheet() -> PanelContainer:
-	var parts := _sheet(_label(tr("GOALS_TITLE"), 20, TEXT))
+	var parts := _sheet(_label(tr("VILLAGE_TITLE"), 20, TEXT))
+	var tabs := {"townhall": {"name_key": "TAB_TOWNHALL", "order": 0}, "people": {"name_key": "TAB_PEOPLE", "order": 1}, "goals": {"name_key": "TAB_GOALS", "order": 2}}
+	var tab_holder := VBoxContainer.new()
+	tab_holder.name = "Tabs"
+	parts[1].add_child(tab_holder)
+	tab_holder.add_child(UiKit.choice_grid(tabs, _village_tab, func(id: String):
+		_village_tab = id
+		_village_signature = ""
+		_update_goals_sheet()
+		Haptics.light()))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 280)
+	scroll.custom_minimum_size = Vector2(0, 300)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	parts[1].add_child(scroll)
 	_goals_list = VBoxContainer.new()
@@ -1143,10 +1201,28 @@ func _build_goals_sheet() -> PanelContainer:
 	return parts[0]
 
 
+## Rebuilt only when something visible changed (so buttons stay pressable).
 func _update_goals_sheet() -> void:
+	var eco = GameState.sim.economy
+	var signature := str([_village_tab, eco.townhall_level, snappedf(eco.townhall_upgrade_left, 0.02), eco.trained,
+		eco.training.size(), eco.population, floori(eco.stock("food")), floori(eco.stock("wood")), floori(eco.stock("stone")),
+		GameState.sim.completed_objectives.size(), eco.free_builders()])
+	if signature == _village_signature:
+		return
+	_village_signature = signature
 	for child in _goals_list.get_children():
 		_goals_list.remove_child(child)
 		child.queue_free()
+	match _village_tab:
+		"townhall":
+			_fill_townhall_tab()
+		"people":
+			_fill_people_tab()
+		_:
+			_fill_goals_tab()
+
+
+func _fill_goals_tab() -> void:
 	var sim = GameState.sim
 	var shown := 0
 	var done_count := 0
@@ -1164,6 +1240,214 @@ func _update_goals_sheet() -> void:
 			if not done:
 				shown += 1
 			_goals_list.add_child(_goal_row(obj, done))
+
+
+## Town hall: level, skills, next level (unlocks, conditions, cost), upgrade.
+func _fill_townhall_tab() -> void:
+	var eco = GameState.sim.economy
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	head.add_child(_icon("townhall", 48))
+	var head_text := VBoxContainer.new()
+	head_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(head_text)
+	var title := _label(tr("TH_LEVEL") % [eco.townhall_level, eco.max_level()], 18, TEXT)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.add_theme_font_override("font", Design.title_font())
+	head_text.add_child(title)
+	head_text.add_child(_caption(tr("TH_STATS") % [eco.housing(), eco.free_builders(), eco.builders(), eco.training_slots()]))
+	_goals_list.add_child(head)
+
+	var perk_names := PackedStringArray()
+	for perk in eco.perks():
+		perk_names.append(tr(str(perk.name_key)))
+	if not perk_names.is_empty():
+		_goals_list.add_child(_info_card(tr("TH_SKILLS"), " · ".join(perk_names), Design.TEAL_SOFT))
+
+	if eco.townhall_upgrade_left >= 0.0:
+		var card := _info_card(tr("TH_UPGRADING_TITLE") % (eco.townhall_level + 1), tr("TH_TIME_LEFT") % _format_days(eco.townhall_upgrade_days_left()), Design.SKY_SOFT)
+		var bar := ProgressBar.new()
+		var total := float(eco.level_def(eco.townhall_level + 1).get("days", 1.0))
+		bar.max_value = 1.0
+		bar.value = 1.0 - eco.townhall_upgrade_left / maxf(total, 0.01)
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 12)
+		card.get_child(0).add_child(bar)
+		_goals_list.add_child(card)
+		return
+	if eco.townhall_level >= eco.max_level():
+		_goals_list.add_child(_info_card(tr("TH_MAX"), tr("TH_MAX_TEXT"), Design.CREAM_DEEP))
+		return
+
+	var next: Dictionary = eco.level_def(eco.townhall_level + 1)
+	var unlocks := PackedStringArray()
+	var current: Dictionary = eco.level_def().get("buildings", {})
+	for id in next.get("buildings", {}):
+		if int(current.get(id, 0)) <= 0:
+			unlocks.append(tr(str(eco.defs.get(id, {}).get("name_key", id))))
+	for p in next.get("professions", []):
+		if not (p in eco.level_def().get("professions", [])):
+			unlocks.append(tr(str(eco.professions.get(p, {}).get("name_key", p))))
+	for perk in next.get("perks", []):
+		unlocks.append(tr(str(perk.name_key)))
+	var lines := PackedStringArray()
+	if not unlocks.is_empty():
+		lines.append(tr("TH_UNLOCKS") % ", ".join(unlocks))
+	lines.append(tr("TH_MORE") % [int(next.get("housing", 0)), int(next.get("builders", 1))])
+	var need_pop := int(next.get("requires", {}).get("population", 0))
+	lines.append(tr("TH_NEEDS_POP") % [need_pop, eco.population])
+	lines.append(tr("TH_COST") % [_cost_text(next.get("cost", {})), _format_days(float(next.get("days", 1.0)))])
+	_goals_list.add_child(_info_card(tr("TH_NEXT") % (eco.townhall_level + 1), "\n".join(lines), Design.CARD))
+	var button := _icon_button("townhall", tr("TH_UPGRADE"), Vector2(0, 56))
+	Design.make_primary(button, 18)
+	var reason: String = eco.can_upgrade_townhall()
+	button.disabled = reason != ""
+	if reason != "":
+		button.text = tr(reason)
+	button.pressed.connect(func():
+		if GameState.sim.economy.upgrade_townhall():
+			Haptics.medium()
+			_show_toast(tr("TH_STARTED"))
+			_village_signature = ""
+			_update_goals_sheet())
+	_goals_list.add_child(button)
+
+
+## Villagers: idle count, trainings in progress, one row per profession.
+func _fill_people_tab() -> void:
+	var eco = GameState.sim.economy
+	_goals_list.add_child(_caption(tr("PEOPLE_SUMMARY") % [eco.idle_villagers(), eco.population, eco.training.size(), eco.training_slots()]))
+	for t in eco.training:
+		var pdef: Dictionary = eco.professions.get(t.profession, {})
+		var days := float(pdef.get("days", 0.25))
+		var card := _info_card(tr("TRAINING_ROW") % tr(str(pdef.get("name_key", t.profession))), "", Design.SKY_SOFT)
+		var bar := ProgressBar.new()
+		bar.max_value = 1.0
+		bar.value = 1.0 - float(t.left) / maxf(days, 0.01)
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 10)
+		card.get_child(0).add_child(bar)
+		_goals_list.add_child(card)
+	var ids: Array = eco.professions.keys()
+	for id in ids:
+		var pdef: Dictionary = eco.professions[id]
+		var row := PanelContainer.new()
+		row.add_theme_stylebox_override("panel", Design.panel(Design.CARD, 16, 8, eco.is_profession_unlocked(id)))
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation", 8)
+		row.add_child(line)
+		line.add_child(_icon(str(pdef.get("icon", "people")), 32))
+		var texts := VBoxContainer.new()
+		texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(texts)
+		var pname := _label(tr(str(pdef.get("name_key", id))), 15, TEXT)
+		pname.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		texts.add_child(pname)
+		if not eco.is_profession_unlocked(id):
+			texts.add_child(_caption(tr("LOCKED_AT") % _profession_unlock_level(id)))
+			row.modulate = Color(1, 1, 1, 0.55)
+			_goals_list.add_child(row)
+			continue
+		texts.add_child(_caption(tr("PROF_STATUS") % [eco.trained_count(id), eco.profession_jobs(id)]))
+		var minus := Button.new()
+		minus.text = "-"
+		minus.custom_minimum_size = Vector2(40, 44)
+		minus.disabled = eco.trained_count(id) <= 0
+		minus.pressed.connect(func():
+			GameState.sim.economy.untrain(id)
+			_village_signature = ""
+			_update_goals_sheet())
+		line.add_child(minus)
+		var train := Button.new()
+		var reason: String = eco.can_train(id)
+		train.text = tr("TRAIN") % _cost_text(pdef.get("cost", {})) if reason == "" or reason == Economy.ERR_COST else tr(reason)
+		train.custom_minimum_size = Vector2(118, 44)
+		train.clip_text = true
+		train.disabled = reason != ""
+		if reason == "":
+			Design.make_primary(train, 14)
+		train.pressed.connect(func():
+			if GameState.sim.economy.train(id):
+				Haptics.light()
+			_village_signature = ""
+			_update_goals_sheet())
+		line.add_child(train)
+		_goals_list.add_child(row)
+
+
+func _profession_unlock_level(profession: String) -> int:
+	for def in GameState.sim.economy.townhall_levels:
+		if profession in def.get("professions", []):
+			return int(def.level)
+	return 0
+
+
+func _info_card(title: String, text: String, color: Color) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", Design.panel(color, 16, 10, false))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	card.add_child(box)
+	var t := _label(title, 15, TEXT)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.add_theme_font_override("font", Design.title_font())
+	box.add_child(t)
+	if text != "":
+		var body := _label(text, 13, MUTED)
+		body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(body)
+	return card
+
+
+## Game days shown as real time at normal speed (1 day = 60 s at x1).
+func _format_days(days: float) -> String:
+	var sim = GameState.sim
+	var seconds := days * float(sim.ticks_per_day) / float(GameState.config.get("tick_rate_hz", 10))
+	if seconds < 60.0:
+		return tr("TIME_SECONDS") % maxi(1, ceili(seconds))
+	return tr("TIME_MINUTES") % maxi(1, roundi(seconds / 60.0))
+
+
+func _on_construction_done(cell: int) -> void:
+	var id: String = GameState.sim.planet.buildings[cell]
+	_show_toast(tr("CONSTRUCTION_DONE") % tr(str(GameState.sim.economy.defs.get(id, {}).get("name_key", id))))
+	Haptics.light()
+	GameState.sim.check_objectives()
+
+
+func _on_training_done(profession: String) -> void:
+	var name_key := str(GameState.sim.economy.professions.get(profession, {}).get("name_key", profession))
+	_show_toast(tr("TRAINING_DONE") % tr(name_key))
+	GameState.sim.check_objectives()
+
+
+## Big celebration card when the town hall reaches a new level.
+func _show_level_up(level: int) -> void:
+	var eco = GameState.sim.economy
+	_end_placement()
+	_event_title.text = tr("LEVEL_UP_TITLE") % level
+	var unlocks := PackedStringArray()
+	var previous: Dictionary = eco.level_def(level - 1).get("buildings", {})
+	for id in eco.level_def(level).get("buildings", {}):
+		if int(previous.get(id, 0)) <= 0:
+			unlocks.append(tr(str(eco.defs.get(id, {}).get("name_key", id))))
+	for perk in eco.level_def(level).get("perks", []):
+		unlocks.append(tr(str(perk.name_key)))
+	_event_text.text = tr("LEVEL_UP_TEXT") % (", ".join(unlocks) if not unlocks.is_empty() else tr("LEVEL_UP_MORE"))
+	for child in _event_choices.get_children():
+		_event_choices.remove_child(child)
+		child.queue_free()
+	var ok := Button.new()
+	ok.text = tr("LEVEL_UP_OK")
+	ok.custom_minimum_size = Vector2(0, 54)
+	Design.make_primary(ok, 18)
+	ok.pressed.connect(func(): _close_sheets())
+	_event_choices.add_child(ok)
+	_show_sheet(_event_sheet)
+	GameState.sim.check_objectives()
+	Haptics.medium()
 
 
 func _goal_row(obj: Dictionary, done: bool) -> PanelContainer:
