@@ -49,6 +49,18 @@ var recipe_choices: Dictionary = {}
 var bronze_study := -1.0
 var first_ingot := 0.0
 var bronze_equipment := {}
+const TRADE_OFFERS := [
+	{"sell": "pots", "amount": 8, "buy": "tin", "receive": 4},
+	{"sell": "linen", "amount": 6, "buy": "copper", "receive": 9},
+	{"sell": "books", "amount": 4, "buy": "tools", "receive": 6},
+	{"sell": "bronze", "amount": 3, "buy": "frames", "receive": 5},
+]
+var market_cell := -1
+var market_days := 0
+var last_trade := -1
+var trade_reserves := {}
+var trade_auto := {}
+
 const STUDY_COST := {"books": 12}
 const EQUIPMENT_COST := {"bronze": 1}
 var population := 0
@@ -180,6 +192,8 @@ func max_level() -> int:
 ## Max number of `id` allowed at the current level (0 = locked).
 ## Without progression data (old tests, tools), everything is allowed.
 func building_limit(id: String) -> int:
+	if defs.get(id, {}).get("requires_antiquity", false) and first_ingot < 1.0:
+		return 0
 	if defs.get(id, {}).get("bronze_research", false) and bronze_study != 0.0:
 		return 0
 	if townhall_levels.is_empty():
@@ -248,6 +262,8 @@ func idle_villagers() -> int:
 
 
 func is_profession_unlocked(profession: String) -> bool:
+	if professions.get(profession, {}).get("requires_antiquity", false) and first_ingot < 1.0:
+		return false
 	if professions.get(profession, {}).get("bronze_research", false) and bronze_study != 0.0:
 		return false
 	if townhall_levels.is_empty():
@@ -631,6 +647,50 @@ func equip_bronze(sector: String) -> bool:
 	return true
 
 
+func caravan_present() -> bool:
+	return market_cell >= 0 and is_active(market_cell) and market_days % 3 == 0
+
+
+func caravan_visit() -> int:
+	return floori(market_days / 3.0)
+
+
+func caravan_offer(visit: int) -> Dictionary:
+	return TRADE_OFFERS[visit % TRADE_OFFERS.size()]
+
+
+func planned_material(res: String) -> int:
+	var total := 0
+	for project in plans:
+		total += int(defs[project.id].cost.get(res, 0))
+	return total
+
+
+func trade_blocker(visit: int, automatic: bool = false) -> String:
+	if not caravan_present() or visit != caravan_visit() or visit == last_trade:
+		return "TRADE_USED"
+	if trained_count("merchant") == 0 or workers_at(market_cell) == 0:
+		return "TRADE_NEED"
+	var offer := caravan_offer(visit)
+	var left := stock(offer.sell) - float(offer.amount)
+	if left < 0:
+		return "TRADE_LOW"
+	var keep := int(trade_reserves.get(offer.sell, 0))
+	if automatic:
+		keep += planned_material(offer.sell)
+	return "TRADE_FLOOR" if left < keep else ""
+
+
+func trade(visit: int, automatic: bool = false) -> bool:
+	if trade_blocker(visit, automatic) != "":
+		return false
+	var offer := caravan_offer(visit)
+	last_trade = visit
+	stocks[offer.sell] = stock(offer.sell) - float(offer.amount)
+	stocks[offer.buy] = stock(offer.buy) + float(offer.receive)
+	return true
+
+
 ## Continuous production and consumption over `dt_days` (can be a fraction).
 func update(dt_days: float) -> void:
 	if dt_days <= 0.0:
@@ -657,6 +717,10 @@ func update(dt_days: float) -> void:
 	unmet_needs = flow.unmet
 	_short_food = _short_food or unmet_needs.has("food")
 	_short_water = _short_water or unmet_needs.has("water")
+	if caravan_present() and last_trade != caravan_visit():
+		var visit := caravan_visit()
+		if trade_auto.get(caravan_offer(visit).sell, false):
+			trade(visit, true)
 
 
 ## A preview spends a scratch inventory and shadows only deposits it touches.
@@ -744,6 +808,8 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 
 ## Once per in-game day: nature regrows, well-being evolves, population changes.
 func daily_update() -> void:
+	if market_cell >= 0 and is_active(market_cell):
+		market_days += 1
 	_regrow()
 	var wb := _wb()
 	happiness += (target_of(happiness_factors()) - happiness) * float(wb.get("happiness_speed", 0.25))
@@ -795,11 +861,20 @@ func to_dict() -> Dictionary:
 		"bronze_study": bronze_study,
 		"first_ingot": first_ingot,
 		"bronze_equipment": bronze_equipment.duplicate(),
+		"market_days": market_days, "last_trade": last_trade,
+		"trade_reserves": trade_reserves.duplicate(), "trade_auto": trade_auto.duplicate(),
 		"plans": plans.duplicate(true),
 	}
 
 
 func from_dict(data: Dictionary) -> void:
+	market_days = maxi(0, int(data.get("market_days", 0)))
+	last_trade = clampi(int(data.get("last_trade", -1)), -1, caravan_visit())
+	trade_reserves.clear()
+	trade_auto.clear()
+	for offer in TRADE_OFFERS:
+		trade_reserves[offer.sell] = maxi(0, int(data.get("trade_reserves", {}).get(offer.sell, 0)))
+		trade_auto[offer.sell] = bool(data.get("trade_auto", {}).get(offer.sell, false))
 	bronze_study = clampf(float(data.get("bronze_study", -1.0)), -1.0, 2.0)
 	first_ingot = clampf(float(data.get("first_ingot", 0.0)), 0.0, 1.0)
 	bronze_equipment.clear()
@@ -996,11 +1071,14 @@ func _place(cell: int, id: String) -> void:
 
 func _rebuild_caches() -> void:
 	_building_cells.clear()
+	market_cell = -1
 	if planet == null:
 		return
 	for i in planet.cell_count():
 		if planet.buildings[i] != "":
 			_building_cells.append(i)
+			if planet.buildings[i] == "market":
+				market_cell = i
 	_building_cells.sort_custom(func(a, b):
 		var pa := int(def_of(a).get("priority", 9))
 		var pb := int(def_of(b).get("priority", 9))

@@ -559,6 +559,8 @@ func _card_text(id: String, reason: String) -> String:
 	var second := tr(str(bdef.get("short_key", "")))
 	if reason == Economy.ERR_LOCKED:
 		second = tr("ANT_GATE") if bdef.get("bronze_research", false) and eco.townhall_level >= 10 else tr("LOCKED_AT") % eco.unlock_level(id)
+		if bdef.get("requires_antiquity", false) and eco.townhall_level >= 10:
+			second = tr("TRADE_GATE")
 	elif reason == Economy.ERR_LIMIT:
 		second = tr("LIMIT_REACHED") % [eco.building_count(id), eco.building_limit(id)]
 	elif reason == Economy.ERR_BUILDERS:
@@ -706,6 +708,8 @@ func _build_cell_card() -> PanelContainer:
 		if _cell == GameState.sim.economy.village_center:
 			_village_tab = "townhall"
 			_on_goals_pressed()
+		elif GameState.sim.planet.buildings[_cell] == "market":
+			_management.open("market")
 		elif GameState.sim.planet.buildings[_cell] == "library":
 			_management.open("bronze")
 		elif GameState.sim.economy.def_of(_cell).has("consumes"):
@@ -754,9 +758,11 @@ func _update_cell_card() -> void:
 		lines.append(tr("BUILD_ERR_TERRITORY"))
 	_cell_text.text = "\n".join(lines)
 	var crafts: bool = building_id != "" and eco.is_active(_cell) and eco.def_of(_cell).has("consumes")
-	_cell_build_button.visible = can_build_here or _cell == eco.village_center or crafts or (building_id == "library" and eco.is_active(_cell))
+	_cell_build_button.visible = can_build_here or _cell == eco.village_center or crafts or (building_id in ["library","market"] and eco.is_active(_cell))
 	_cell_build_button.text = tr("OPEN_TOWNHALL") if _cell == eco.village_center else (tr("CRAFT_RECIPES") if crafts else tr("BUILD_HERE"))
-	if building_id == "library":
+	if building_id == "market":
+		_cell_build_button.text = tr("MARKET")
+	elif building_id == "library":
 		_cell_build_button.text = tr("ANT_PAGE")
 	_demolish_button.visible = building_id != "" and _cell != eco.village_center
 	var upgrade_id: String = eco.upgrade_target(_cell) if building_id != "" else ""
@@ -1257,7 +1263,7 @@ func _update_goals_sheet() -> void:
 	var eco = GameState.sim.economy
 	var signature := str([_village_tab, eco.townhall_level, snappedf(eco.townhall_upgrade_left, 0.02), eco.trained,
 		eco.training.size(), eco.population, floori(eco.stock("food")), floori(eco.stock("wood")), floori(eco.stock("stone")),
-		GameState.sim.completed_objectives.size(), eco.free_builders(), eco.can_upgrade_townhall(), eco.bronze_study == 0.0])
+		GameState.sim.completed_objectives.size(), eco.free_builders(), eco.can_upgrade_townhall(), eco.bronze_study == 0.0, eco.first_ingot >= 1.0])
 	if signature == _village_signature:
 		return
 	_village_signature = signature
@@ -1405,7 +1411,10 @@ func _fill_people_tab() -> void:
 		pname.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		texts.add_child(pname)
 		if not eco.is_profession_unlocked(id):
-			texts.add_child(_caption(tr("ANT_GATE") if pdef.get("bronze_research", false) and eco.townhall_level >= 10 else tr("LOCKED_AT") % _profession_unlock_level(id)))
+			if pdef.get("requires_antiquity", false) and eco.townhall_level >= 10:
+				texts.add_child(_caption(tr("TRADE_GATE")))
+			else:
+				texts.add_child(_caption(tr("ANT_GATE") if pdef.get("bronze_research", false) and eco.townhall_level >= 10 else tr("LOCKED_AT") % _profession_unlock_level(id)))
 			row.modulate = Color(1, 1, 1, 0.55)
 			_goals_list.add_child(row)
 			continue

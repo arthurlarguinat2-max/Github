@@ -579,3 +579,56 @@ func test_bronze_study_and_first_ingot_survive_reload() -> void:
 	sim.from_dict(JSON.parse_string(JSON.stringify(loaded.to_dict())))
 	assert_eq(sim.economy.first_ingot, 1.0)
 	assert_true(sim.economy.bronze_equipment.has("field"))
+
+
+func test_market_guards_reserves_and_trades_once_per_visit() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 10
+	eco._rebuild_caches()
+	assert_eq(eco.building_limit("market"), 0)
+	assert_false(eco.is_profession_unlocked("merchant"))
+	eco.first_ingot = 1.0
+	eco.bronze_study = 0.0
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 100
+	var cell := _spot(sim, "market")
+	assert_true(eco.build(cell, "market"))
+	assert_false(eco.caravan_present())
+	eco.complete_construction()
+	assert_eq(eco.trade_blocker(0), "TRADE_NEED")
+	assert_true(eco.train("merchant"))
+	eco.update(1.0)
+	eco.trade_reserves.pots = 10
+	eco.stocks.pots = 17
+	assert_false(eco.trade(0))
+	eco.trade_auto.pots = true
+	eco.stocks.pots = 18
+	eco.plans.append({"id":"cistern","cell":cell})
+	assert_eq(eco.planned_material("pots"), 6)
+	assert_false(eco.trade(0, true))
+	eco.plans.clear()
+	var tin_before := eco.stock("tin")
+	eco.update(0.01)
+	assert_eq(eco.stock("pots"), 10.0)
+	assert_eq(eco.stock("tin"), tin_before + 4)
+	assert_false(eco.trade(0))
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	assert_eq(eco.last_trade, 0)
+	assert_eq(int(eco.trade_reserves.pots), 10)
+	assert_true(eco.trade_auto.pots)
+	assert_false(eco.trade(0))
+	eco.trade_auto.linen = true
+	eco.stocks.water = 1000
+	eco.stocks.food = 1000
+	var linen_before := eco.stock("linen")
+	# Isolate the trade from unrelated one-time stock rewards.
+	loaded.objective_defs = []
+	loaded.advance_offline(200,10,3600,1.0)
+	assert_eq(eco.last_trade, 1)
+	assert_eq(eco.stock("linen"), linen_before - 6)
+	assert_false(eco.trade(0))
+	assert_true(eco.demolish(cell))
+	assert_false(eco.caravan_present())

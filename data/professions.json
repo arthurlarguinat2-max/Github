@@ -155,6 +155,16 @@
 			},
 			"days": 0.6,
 			"bronze_research": true
+		},
+		"merchant": {
+			"name_key": "MERCHANT",
+			"icon": "market",
+			"cost": {
+				"food": 10,
+				"books": 2
+			},
+			"days": 0.6,
+			"requires_antiquity": true
 		}
 	}
 }

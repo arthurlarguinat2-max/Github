@@ -45,6 +45,7 @@ var _tap_start_time := 0.0
 var _clouds: Node3D
 var _highlight: MeshInstance3D
 var _trees: Node3D
+var _caravan: Node3D
 var _buildings_root: Node3D
 var _world_seed := 0
 var _surface_nodes: Array[Node] = []
@@ -90,6 +91,8 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 
 
 func _process(delta: float) -> void:
+	if _caravan != null:
+		_caravan.visible = economy.caravan_present()
 	if _touches.is_empty() and _angular_velocity.length_squared() > 1e-6:
 		_apply_rotation(_angular_velocity * delta)
 		_angular_velocity *= exp(-INERTIA_DAMPING * delta)
@@ -203,6 +206,7 @@ func focus_cell(cell: int) -> void:
 
 ## Rebuilds building models (and trees, which make room for buildings).
 func refresh_buildings() -> void:
+	_caravan = null
 	for child in _buildings_root.get_children():
 		child.queue_free()
 	for cell in planet.cell_count():
@@ -214,6 +218,10 @@ func refresh_buildings() -> void:
 			node = BuildingMeshes.scaffold()
 		else:
 			node = BuildingMeshes.create(id, economy.townhall_level if economy != null else 1)
+		if id == "market" and economy != null and economy.is_active(cell):
+			_caravan = BuildingMeshes.caravan()
+			_caravan.visible = economy.caravan_present()
+			node.add_child(_caravan)
 		var dir: Vector3 = planet.grid.centers[cell]
 		var top := _heights[cell]
 		var yaw := float(posmod(hash(cell * 31 + _world_seed), 628)) / 100.0

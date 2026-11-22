@@ -149,6 +149,12 @@ static func create(id: String, level: int = 1) -> Node3D:
 			_add(root, _torus(0.016, 0.022), "stone", Vector3.UP * 0.005)
 			for j in 3:
 				_add(root, _sphere(0.005, 10), "clay", Vector3(-0.014 + j * 0.011, 0.006, 0.019), Vector3.ZERO, Vector3(1, 1.35, 1))
+		"market":
+			_pebble_ring(root, 0.023, 12, 0.003)
+			for side in [-1, 1]:
+				_add(root, _capsule(0.0018, 0.023), "bark", Vector3(side*0.014, 0.0115, 0))
+			_add(root, _sphere(0.017, 12), "cloth", Vector3.UP*0.023, Vector3.ZERO, Vector3(1.25,0.32,0.72))
+			_add(root, _capsule(0.004, 0.028), "log", Vector3(0,0.006,0.006), Vector3(0,0,PI/2))
 		"metal_mine":
 			_add(root, _dome(0.024, 0.024), "rock", Vector3.ZERO)
 			_add(root, _sphere(0.008, 10), "door", Vector3(0, 0.006, 0.018))
@@ -192,6 +198,26 @@ static func create(id: String, level: int = 1) -> Node3D:
 		_:
 			_add(root, _sphere(0.012, 8), "berry", Vector3(0, 0.012, 0))
 	return root
+
+
+## Visiting pack animals and the goods laid out on market day.
+static func caravan() -> Node3D:
+	var visitors := Node3D.new()
+	for n in 2:
+		var animal := Node3D.new()
+		visitors.add_child(animal)
+		animal.position = Vector3(-0.018 + n*0.023, 0, 0.018 + n*0.003)
+		animal.rotation.y = 0.3 - n * 0.8
+		_add(animal, _sphere(0.006, 10), "wall", Vector3.UP*0.009, Vector3.ZERO, Vector3(0.7,0.8,1.4))
+		_add(animal, _sphere(0.0035, 8), "wall", Vector3(0,0.014,0.007))
+		for side in [-1,1]:
+			_add(animal, _capsule(0.001,0.005), "bark", Vector3(side*0.0015,0.018,0.006))
+			_add(animal, _sphere(0.003,8), "clay", Vector3(side*0.004,0.010,0))
+			for end in [-1,1]:
+				_add(animal, _capsule(0.0011,0.009), "bark", Vector3(side*0.0027,0.0045,end*0.0045))
+	for i in 4:
+		_add(visitors, _sphere(0.0025,8), "berry" if i < 2 else "grain", Vector3(-0.009+i*0.005,0.011,0.006))
+	return visitors
 
 
 ## Round wattle house with a domed thatch roof (and a little top knob).

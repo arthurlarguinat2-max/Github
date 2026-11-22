@@ -543,7 +543,8 @@
 				"cistern": 4,
 				"library": 1,
 				"metal_mine": 3,
-				"foundry": 2
+				"foundry": 2,
+				"market": 1
 			},
 			"professions": [
 				"water_carrier",
@@ -564,7 +565,8 @@
 				"binder",
 				"scholar",
 				"miner",
-				"founder"
+				"founder",
+				"merchant"
 			],
 			"perks": []
 		}

@@ -858,6 +858,32 @@
 			],
 			"profession": "founder",
 			"build_days": 1.2
+		},
+		"market": {
+			"name_key": "MARKET",
+			"desc_key": "MARKET_DESC",
+			"short_key": "MARKET_SHORT",
+			"age": "antiquity",
+			"requires_antiquity": true,
+			"category": "services",
+			"order": 83,
+			"priority": 6,
+			"cost": {
+				"boards": 12,
+				"linen": 6,
+				"bricks": 8
+			},
+			"workers": 1,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"profession": "merchant",
+			"build_days": 1
 		}
 	},
 	"start": {

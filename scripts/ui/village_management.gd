@@ -70,6 +70,8 @@ func refresh() -> void:
 		"reserve": _reserve(eco)
 		"recipes": _recipes(eco)
 		"bronze": _bronze(eco)
+		"market": _market(eco)
+		"trade_rules": _trade_rules(eco)
 		"priority": _priority(eco)
 		"plans": _plans(eco)
 		"voice": _voice(eco)
@@ -200,6 +202,70 @@ func _apply_priority(cell: int) -> void:
 	eco.preferred_cell = cell
 	eco._compute_staffing()
 	open("reserve", resource)
+
+
+func _offer_text(offer: Dictionary) -> String:
+	return tr("TRADE_OFFER") % [offer.amount, _res(offer.sell), offer.receive, _res(offer.buy)]
+
+
+func _market(eco) -> void:
+	title.text = tr("MARKET")
+	var lines := PackedStringArray()
+	if eco.caravan_present():
+		var visit: int = eco.caravan_visit()
+		var offer: Dictionary = eco.caravan_offer(visit)
+		lines.append(tr("TRADE_HERE"))
+		if eco.last_trade == visit:
+			lines.append(tr("TRADE_USED"))
+		else:
+			lines.append(_offer_text(offer))
+			lines.append(tr("TRADE_LEFT") % [_res(offer.sell), eco.stock(offer.sell), eco.stock(offer.sell)-offer.amount])
+			var needed: int = eco.planned_material(offer.sell)
+			if needed > 0:
+				lines.append(tr("TRADE_PLAN") % [needed, _res(offer.sell)])
+			var why: String = eco.trade_blocker(visit)
+			if why == "":
+				action("trade%d" % visit, tr("TRADE_ACCEPT"), _accept_trade.bind(visit))
+			else:
+				lines.append(tr(why))
+				if why == "TRADE_NEED":
+					action("merchant",tr("TAB_PEOPLE"),hud.show_people)
+	else:
+		lines.append(tr("TRADE_AWAY") % (3 - eco.market_days % 3))
+	if eco.last_trade >= 0:
+		lines.append(tr("TRADE_LAST") % _offer_text(eco.caravan_offer(eco.last_trade)))
+	detail.text = "\n".join(lines)
+	action("rules", tr("TRADE_RULES"), open.bind("trade_rules", "pots"))
+
+
+func _accept_trade(visit: int) -> void:
+	GameState.sim.economy.trade(visit)
+	refresh()
+
+
+func _trade_rules(eco) -> void:
+	title.text = tr("TRADE_RULES")
+	var enabled: bool = eco.trade_auto.get(resource,false)
+	detail.text = tr("TRADE_HINT") + "\n" + tr("TRADE_RULE") % [_res(resource), eco.trade_reserves.get(resource,0)] + "\n" + tr("TRADE_AUTO_ON" if enabled else "TRADE_AUTO_OFF")
+	for offer in eco.TRADE_OFFERS:
+		action("good"+offer.sell, _res(offer.sell), open.bind("trade_rules", offer.sell))
+	action("less",tr("TRADE_LESS"),_reserve_change.bind(-5))
+	_buttons.less.disabled = int(eco.trade_reserves.get(resource,0)) == 0
+	action("more",tr("TRADE_MORE"),_reserve_change.bind(5))
+	action("automate",tr("TRADE_AUTO"),_toggle_trade)
+	action("market",tr("MARKET"),open.bind("market"))
+
+
+func _reserve_change(amount: int) -> void:
+	var eco = GameState.sim.economy
+	eco.trade_reserves[resource] = maxi(0,int(eco.trade_reserves.get(resource,0))+amount)
+	refresh()
+
+
+func _toggle_trade() -> void:
+	var eco = GameState.sim.economy
+	eco.trade_auto[resource] = not eco.trade_auto.get(resource,false)
+	refresh()
 
 
 func _bronze(eco) -> void:
