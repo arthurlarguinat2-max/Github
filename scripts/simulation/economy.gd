@@ -45,6 +45,15 @@ var settings: Dictionary = {}
 
 var stocks: Dictionary = {}
 var recipe_choices: Dictionary = {}
+const SEASONS := ["S_SPRING", "S_SUMMER", "S_FALL", "S_WINTER"]
+const SEASON_DAYS := 6
+var elapsed_days := 0
+var sowing := {}
+
+
+func season_index() -> int:
+	return floori(elapsed_days / float(SEASON_DAYS)) % SEASONS.size()
+
 ## Negative before study, zero when complete, otherwise remaining village days.
 var bronze_study := -1.0
 var first_ingot := 0.0
@@ -140,6 +149,8 @@ func select_recipe(cell: int, recipe: String) -> bool:
 	var base: Dictionary = defs.get(planet.buildings[cell], {})
 	if not base.get("recipes", {}).has(recipe):
 		return false
+	if planet.buildings[cell] == "field" and recipe_choices.get(cell, "grain") != recipe:
+		sowing[cell] = 0.5
 	if base.produces.has(recipe):
 		recipe_choices.erase(cell)
 	else:
@@ -571,6 +582,7 @@ func demolish(cell: int) -> bool:
 	if preferred_cell == cell:
 		preferred_cell = -1
 	recipe_choices.erase(cell)
+	sowing.erase(cell)
 	planet.buildings[cell] = ""
 	construction.erase(cell)
 	_rebuild_caches()
@@ -724,14 +736,14 @@ func update(dt_days: float) -> void:
 
 
 ## A preview spends a scratch inventory and shadows only deposits it touches.
-func forecast(cell: int, dt_days: float) -> Dictionary:
+func forecast(cell: int, dt_days: float, season: int = -1) -> Dictionary:
 	var staffing := _allocation(cell)
-	var result := _flow(dt_days, stocks.duplicate(), staffing, false)
+	var result := _flow(dt_days, stocks.duplicate(), staffing, false, season)
 	result.staffing = staffing
 	return result
 
 
-func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: bool) -> Dictionary:
+func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: bool, season: int = -1) -> Dictionary:
 	var wb := _wb()
 	var consumed := {}
 	var produced := {}
@@ -742,6 +754,8 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 	var new_rates := {}
 	for res in BASE_RESOURCES:
 		new_rates[res] = 0.0
+	if season < 0:
+		season = season_index()
 	var village_productivity := productivity()
 	for cell in _building_cells:
 		var def := def_of(cell)
@@ -751,6 +765,18 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 		var mult: float = float(staffing.get(cell, 0.0)) * village_productivity
 		if mult <= 0.0:
 			continue
+		if sowing.has(cell):
+			var work := float(staffing[cell]) * dt_days
+			var used := minf(float(sowing[cell]), work)
+			mult *= maxf(0.0, 1.0 - used / work)
+			if apply:
+				sowing[cell] = float(sowing[cell]) - used
+				if sowing[cell] < 0.0000001:
+					sowing.erase(cell)
+			if mult <= 0.0:
+				continue
+		if def.has("seasons"):
+			mult *= float(def.seasons[season])
 		if bronze_equipment.has(planet.buildings[cell]):
 			mult *= 1.25
 		if def.get("fertility_bonus", false):
@@ -808,6 +834,7 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 
 ## Once per in-game day: nature regrows, well-being evolves, population changes.
 func daily_update() -> void:
+	elapsed_days += 1
 	if market_cell >= 0 and is_active(market_cell):
 		market_days += 1
 	_regrow()
@@ -858,6 +885,7 @@ func to_dict() -> Dictionary:
 		"construction": _construction_to_save(),
 		"preferred_cell": preferred_cell,
 		"recipes": recipe_choices.duplicate(),
+		"sowing": sowing.duplicate(),
 		"bronze_study": bronze_study,
 		"first_ingot": first_ingot,
 		"bronze_equipment": bronze_equipment.duplicate(),
@@ -913,6 +941,14 @@ func from_dict(data: Dictionary) -> void:
 	for key in saved_recipes:
 		if str(key).is_valid_int():
 			select_recipe(int(key), str(saved_recipes[key]))
+	sowing.clear()
+	var saved_sowing: Dictionary = data.get("sowing", {})
+	for key in saved_sowing:
+		var cell := int(key)
+		if cell >= 0 and cell < planet.cell_count() and planet.buildings[cell] == "field":
+			var left := clampf(float(saved_sowing[key]), 0.0, 0.5)
+			if left > 0.0:
+				sowing[cell] = left
 	preferred_cell = int(data.get("preferred_cell", -1))
 	if preferred_cell < 0 or preferred_cell >= planet.cell_count() or planet.buildings[preferred_cell] == "":
 		preferred_cell = -1
@@ -1064,6 +1100,7 @@ func _migrate_to_townhall() -> void:
 
 func _place(cell: int, id: String) -> void:
 	recipe_choices.erase(cell)
+	sowing.erase(cell)
 	planet.buildings[cell] = id
 	_rebuild_caches()
 	changed.emit()

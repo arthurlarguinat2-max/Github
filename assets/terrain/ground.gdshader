@@ -1,6 +1,7 @@
 shader_type spatial;
 render_mode specular_disabled;
 uniform sampler2D grain : repeat_enable, filter_linear_mipmap;
+uniform int season = 0;
 varying vec3 pos;
 varying float slope;
 
@@ -27,5 +28,9 @@ void fragment() {
 	float damp = 1.0 - smoothstep(0.0005, 0.004 + patches * 0.0015, elevation);
 	float sand = sin(elevation * 2800.0 + patches * 4.0) * 0.025;
 	ALBEDO *= 1.0 + beach * (sand - 0.18 * damp);
+	float cover = smoothstep(0.002, 0.018, elevation) * (1.0 - cliff);
+	if (season == 1) ALBEDO *= mix(vec3(1.0), vec3(1.08, 1.03, 0.90), cover);
+	if (season == 2) ALBEDO *= mix(vec3(1.0), vec3(1.32, 0.87, 0.68), cover);
+	if (season == 3) ALBEDO = mix(ALBEDO, vec3(0.76, 0.84, 0.90), cover * smoothstep(0.22, 0.77, patches) * 0.7);
 	ROUGHNESS = mix(0.94, 0.56, beach * damp);
 }

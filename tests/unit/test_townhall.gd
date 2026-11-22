@@ -632,3 +632,45 @@ func test_market_guards_reserves_and_trades_once_per_visit() -> void:
 	assert_false(eco.trade(0))
 	assert_true(eco.demolish(cell))
 	assert_false(eco.caravan_present())
+
+
+func test_seasons_crops_and_mid_sowing_resume() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 2
+	_rich(sim)
+	var field := _spot(sim, "field")
+	assert_true(eco.build(field,"field"))
+	eco.complete_construction()
+	eco.trained.farmer = 2
+	eco.stocks.tools = 0
+	var wheat := eco.forecast(-1,0.01).outputs[field].grain as float
+	assert_true(wheat > 0)
+	assert_true(is_equal_approx(eco.forecast(-1,0.01,3).outputs[field].grain, 0.45*wheat))
+	assert_true(eco.select_recipe(field,"greens"))
+	eco.trained.farmer = 0
+	eco.update(0.25)
+	assert_eq(eco.sowing[field],0.5)
+	eco.trained.farmer = 2
+	eco.update(0.25)
+	var preview := eco.forecast(-1,0.01)
+	assert_false(preview.outputs.has(field))
+	assert_eq(eco.sowing[field],0.25)
+	sim.tick = 6*sim.ticks_per_day-1
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	assert_eq(eco.season_index(),0)
+	assert_eq(eco.sowing[field],0.25)
+	loaded.advance_offline(20,10,3600,1)
+	assert_eq(eco.season_index(),1)
+	assert_false(eco.sowing.has(field))
+	assert_true(eco.building_rate(field).get("food",0)>0)
+	assert_eq(eco.stock("grain"),0.0)
+	var winter_greens: float = eco.forecast(-1,0.01,3).outputs[field].food
+	assert_true(eco.select_recipe(field,"roots"))
+	eco.update(0.5)
+	assert_true(eco.forecast(-1,0.01,3).outputs[field].food > winter_greens)
+	eco.elapsed_days = 23
+	eco.daily_update()
+	assert_eq(eco.season_index(),0)

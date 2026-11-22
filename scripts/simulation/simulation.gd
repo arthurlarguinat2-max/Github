@@ -163,7 +163,7 @@ func advance_offline(seconds: float, tick_rate_hz: float, cap_seconds: float, ef
 	var chunk := maxi(1, ticks_per_day / 20)
 	var remaining := ticks
 	while remaining > 0:
-		var n := mini(chunk, remaining)
+		var n := mini(mini(chunk, remaining), ticks_per_day - tick % ticks_per_day)
 		var previous_day := day()
 		tick += n
 		economy.update(float(n) / float(ticks_per_day))
@@ -229,3 +229,4 @@ func from_dict(data: Dictionary) -> void:
 	else:
 		# Saves made before Phase 2: found the village now.
 		economy.found_village(start_settings)
+	economy.elapsed_days = day() - 1

@@ -156,7 +156,48 @@
 				"beach"
 			],
 			"profession": "farmer",
-			"build_days": 0.3
+			"build_days": 0.3,
+			"recipes": {
+				"grain": {
+					"produces": {
+						"grain": 10
+					},
+					"seasons": [
+						1,
+						1.3,
+						1.25,
+						0.45
+					]
+				},
+				"greens": {
+					"produces": {
+						"food": 9
+					},
+					"seasons": [
+						1.25,
+						1.5,
+						0.8,
+						0.35
+					]
+				},
+				"roots": {
+					"produces": {
+						"food": 7
+					},
+					"seasons": [
+						0.85,
+						1,
+						1.4,
+						1.15
+					]
+				}
+			},
+			"seasons": [
+				1,
+				1.3,
+				1.25,
+				0.45
+			]
 		},
 		"mill": {
 			"name_key": "BLD_MILL",
@@ -427,7 +468,13 @@
 			},
 			"profession": "gatherer",
 			"workers": 1,
-			"fertility_bonus": true
+			"fertility_bonus": true,
+			"seasons": [
+				0.9,
+				1.15,
+				1.45,
+				0.5
+			]
 		},
 		"apiary": {
 			"name_key": "BLD_APIARY",

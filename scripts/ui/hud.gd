@@ -312,7 +312,9 @@ func _set_gauge(chip: Dictionary, value: float, target: float) -> void:
 
 func _refresh_title() -> void:
 	_title.text = "%s · %s" % [GameState.sim.custom.get("planet_name", ""), tr("DAY_N") % GameState.sim.day()]
-	if GameState.sim.economy.first_ingot >= 1.0:
+	var eco = GameState.sim.economy
+	_title.text += " · " + tr(eco.SEASONS[eco.season_index()])
+	if eco.first_ingot >= 1.0:
 		_title.text += " · " + tr("ANT_AGE")
 
 
@@ -708,6 +710,8 @@ func _build_cell_card() -> PanelContainer:
 		if _cell == GameState.sim.economy.village_center:
 			_village_tab = "townhall"
 			_on_goals_pressed()
+		elif GameState.sim.planet.buildings[_cell] == "field":
+			_management.open("farm", "food", _cell)
 		elif GameState.sim.planet.buildings[_cell] == "market":
 			_management.open("market")
 		elif GameState.sim.planet.buildings[_cell] == "library":
@@ -758,9 +762,11 @@ func _update_cell_card() -> void:
 		lines.append(tr("BUILD_ERR_TERRITORY"))
 	_cell_text.text = "\n".join(lines)
 	var crafts: bool = building_id != "" and eco.is_active(_cell) and eco.def_of(_cell).has("consumes")
-	_cell_build_button.visible = can_build_here or _cell == eco.village_center or crafts or (building_id in ["library","market"] and eco.is_active(_cell))
+	_cell_build_button.visible = can_build_here or _cell == eco.village_center or crafts or (building_id in ["library","market","field"] and eco.is_active(_cell))
 	_cell_build_button.text = tr("OPEN_TOWNHALL") if _cell == eco.village_center else (tr("CRAFT_RECIPES") if crafts else tr("BUILD_HERE"))
-	if building_id == "market":
+	if building_id == "field":
+		_cell_build_button.text = tr("S_FARM")
+	elif building_id == "market":
 		_cell_build_button.text = tr("MARKET")
 	elif building_id == "library":
 		_cell_build_button.text = tr("ANT_PAGE")

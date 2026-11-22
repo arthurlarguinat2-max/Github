@@ -45,6 +45,8 @@ var _tap_start_time := 0.0
 var _clouds: Node3D
 var _highlight: MeshInstance3D
 var _trees: Node3D
+var _season_ground: ShaderMaterial
+var _shown_season := -1
 var _caravan: Node3D
 var _buildings_root: Node3D
 var _world_seed := 0
@@ -91,6 +93,9 @@ func setup(p_planet, p_terrain_defs: Dictionary, p_camera: Camera3D, world_seed:
 
 
 func _process(delta: float) -> void:
+	if economy != null and _season_ground != null and economy.season_index() != _shown_season:
+		_shown_season = economy.season_index()
+		_season_ground.set_shader_parameter("season", _shown_season)
 	if _caravan != null:
 		_caravan.visible = economy.caravan_present()
 	if _touches.is_empty() and _angular_velocity.length_squared() > 1e-6:
@@ -217,7 +222,7 @@ func refresh_buildings() -> void:
 		if economy != null and not economy.is_active(cell):
 			node = BuildingMeshes.scaffold()
 		else:
-			node = BuildingMeshes.create(id, economy.townhall_level if economy != null else 1)
+			node = BuildingMeshes.create(id, economy.townhall_level if economy != null else 1, economy.recipe_choices.get(cell, "grain") if economy != null and id == "field" else "grain")
 		if id == "market" and economy != null and economy.is_active(cell):
 			_caravan = BuildingMeshes.caravan()
 			_caravan.visible = economy.caravan_present()
@@ -328,6 +333,8 @@ func _compute_heights() -> void:
 func _build_surface(_seed: int) -> void:
 	var subdivisions := 5 if planet.grid.frequency <= 12 else 6
 	var land := terrain.build_land_mesh(subdivisions)
+	_season_ground = land.surface_get_material(0)
+	_shown_season = -1
 	_add_mesh(land)
 	# Both surfaces use the same triangles, so depth and surf follow the coastline.
 	var sea := MeshInstance3D.new()

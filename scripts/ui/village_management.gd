@@ -68,6 +68,7 @@ func refresh() -> void:
 	_used.clear()
 	match mode:
 		"reserve": _reserve(eco)
+		"farm": _farm(eco)
 		"recipes": _recipes(eco)
 		"bronze": _bronze(eco)
 		"market": _market(eco)
@@ -101,6 +102,8 @@ func _reserve(eco) -> void:
 	var needs := float(flow.households.get(resource, 0))
 	var sources := PackedStringArray()
 	for cell in eco.building_cells():
+		if resource == "food" and eco.building_at(cell) == "field" and eco.is_active(cell):
+			action("farm%d" % cell, tr("S_FIELD_LINK") % (cell+1), open.bind("farm", "food", cell))
 		var output := float(flow.outputs.get(cell, {}).get(resource, 0))
 		var input := float(flow.inputs.get(cell, {}).get(resource, 0))
 		made += output
@@ -135,7 +138,46 @@ func _reserve(eco) -> void:
 	if sources.is_empty():
 		sources.append(tr("MG_NO_FLOW"))
 	detail.text = tr("MG_LEDGER") % [eco.stock(resource),made,needs,hud._format_signed(net)] + "\n" + trend + "\n" + "\n".join(sources)
+	if resource == "food":
+		var next: int = (eco.season_index()+1) % 4
+		var outlook: Dictionary = eco.forecast(eco.preferred_cell, 1.0/GameState.sim.ticks_per_day, next)
+		detail.text += "\n" + _calendar(eco) + "\n" + tr("S_FORECAST") % [tr(eco.SEASONS[next]), hud._format_signed(outlook.net.food - float(outlook.unmet.get("food", 0.0)))]
 	action("resources", tr("MG_ALL"), open.bind("priority", resource, -1))
+
+
+func _calendar(eco) -> String:
+	var season: int = eco.season_index()
+	return tr("S_CLOCK") % [tr(eco.SEASONS[season]), tr(eco.SEASONS[(season+1)%4]), eco.SEASON_DAYS - eco.elapsed_days % eco.SEASON_DAYS]
+
+
+func _farm(eco) -> void:
+	title.text = _site(eco, target)
+	var crop: String = eco.recipe_choices.get(target, "grain")
+	var def: Dictionary = eco.def_of(target)
+	var lines := PackedStringArray([_calendar(eco), tr("S_FIELD") % tr("S_"+crop.to_upper()), tr("S_HELP"), tr("S_BASE")])
+	var season: int = eco.season_index()
+	for id in def.recipes:
+		var recipe: Dictionary = def.recipes[id]
+		var out: String = recipe.produces.keys()[0]
+		var label := tr("S_" + str(id).to_upper())
+		var rate: float = recipe.produces[out] * recipe.seasons[season]
+		lines.append("%s · %.1f %s%s" % [label, rate, _res(out), tr("PER_DAY")])
+		if id != crop:
+			action("plant%d:%s" % [target,id], tr("S_PLANT") % label, _plant.bind(target,id))
+	if eco.sowing.has(target):
+		lines.append(tr("S_SOW") % float(eco.sowing[target]))
+	if eco.workers_at(target) == 0:
+		lines.append(tr("MG_UNSTAFFED"))
+	action("staff%d" % target, tr("MG_PRIORITY_FOR") % _site(eco,target), open.bind("priority","food",target))
+	action("food_balance",tr("MG_SEE") % _res("food"),open.bind("reserve","food"))
+	detail.text = "\n".join(lines)
+
+
+func _plant(cell: int, crop: String) -> void:
+	var eco = GameState.sim.economy
+	if eco.select_recipe(cell,crop):
+		eco.changed.emit()
+	refresh()
 
 
 func _priority(eco) -> void:

@@ -37,7 +37,7 @@ const GLOW := {
 
 
 ## `level` only matters for the town hall, which grows with each level.
-static func create(id: String, level: int = 1) -> Node3D:
+static func create(id: String, level: int = 1, crop: String = "grain") -> Node3D:
 	var root := Node3D.new()
 	root.name = id
 	match id:
@@ -80,6 +80,11 @@ static func create(id: String, level: int = 1) -> Node3D:
 			for k in 4:
 				var z := -0.018 + 0.012 * k
 				var half := sqrt(maxf(0.0, 0.028 * 0.028 - z * z))
+				if crop != "grain":
+					for x in 5:
+						var point := Vector3(lerpf(-half, half, (x+0.5)/5.0), 0.005, z*0.85)
+						_add(root, _sphere(0.0035, 8), "grass" if crop == "greens" else "clay", point, Vector3.ZERO, Vector3(1,0.7,1))
+					continue
 				_add(root, _capsule(0.0035, maxf(half * 2.0, 0.012)), "grain", Vector3(0, 0.005, z * 0.85), Vector3(0, 0, PI / 2), Vector3(1, 0.9, 1))
 		"mill":
 			_add(root, _cylinder(0.019, 0.021, 0.008, 18), "stone", Vector3(0, 0.004, 0))
