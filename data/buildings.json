@@ -871,6 +871,15 @@
 					"produces": {
 						"tin": 2
 					}
+				},
+				"iron_ore": {
+					"chapter": 2,
+					"consumes": {
+						"water": 2
+					},
+					"produces": {
+						"iron_ore": 4
+					}
 				}
 			}
 		},
@@ -904,7 +913,29 @@
 				"hills"
 			],
 			"profession": "founder",
-			"build_days": 1.2
+			"build_days": 1.2,
+			"recipes": {
+				"bronze": {
+					"consumes": {
+						"copper": 3,
+						"tin": 1,
+						"wood": 1
+					},
+					"produces": {
+						"bronze": 2
+					}
+				},
+				"iron": {
+					"chapter": 2,
+					"consumes": {
+						"iron_ore": 3,
+						"wood": 2
+					},
+					"produces": {
+						"iron": 2
+					}
+				}
+			}
 		},
 		"market": {
 			"name_key": "MARKET",
@@ -931,6 +962,32 @@
 			],
 			"profession": "merchant",
 			"build_days": 1
+		},
+		"forum": {
+			"name_key": "BLD_FORUM",
+			"short_key": "FORUM_SHORT",
+			"desc_key": "FORUM_DESC",
+			"age": "antiquity",
+			"chapter": 3,
+			"category": "services",
+			"order": 84,
+			"priority": 6,
+			"cost": {
+				"iron": 12,
+				"bricks": 20,
+				"frames": 6
+			},
+			"workers": 0,
+			"territory": 1,
+			"terrains": [
+				"plains",
+				"forest",
+				"beach",
+				"desert",
+				"hills"
+			],
+			"build_days": 2,
+			"happiness": 8
 		}
 	},
 	"start": {

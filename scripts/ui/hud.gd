@@ -315,7 +315,7 @@ func _refresh_title() -> void:
 	var eco = GameState.sim.economy
 	_title.text += " · " + tr(eco.SEASONS[eco.season_index()])
 	if eco.first_ingot >= 1.0:
-		_title.text += " · " + tr("ANT_AGE")
+		_title.text += " · " + tr("ANT_AGE") + " " + str(eco.antiquity_chapter())
 
 
 ## After an update, says which version is now installed (once).
@@ -561,7 +561,9 @@ func _card_text(id: String, reason: String) -> String:
 	var second := tr(str(bdef.get("short_key", "")))
 	if reason == Economy.ERR_LOCKED:
 		second = tr("ANT_GATE") if bdef.get("bronze_research", false) and eco.townhall_level >= 10 else tr("LOCKED_AT") % eco.unlock_level(id)
-		if bdef.get("requires_antiquity", false) and eco.townhall_level >= 10:
+		if int(bdef.get("chapter", 0)) > eco.antiquity_chapter() and eco.townhall_level >= 10:
+			second = tr("CH_LOCK") % tr("CH_%d" % int(bdef.chapter))
+		elif bdef.get("requires_antiquity", false) and eco.townhall_level >= 10:
 			second = tr("TRADE_GATE")
 	elif reason == Economy.ERR_LIMIT:
 		second = tr("LIMIT_REACHED") % [eco.building_count(id), eco.building_limit(id)]
@@ -1345,8 +1347,8 @@ func _fill_townhall_tab() -> void:
 		_goals_list.add_child(card)
 		return
 	if eco.townhall_level >= eco.max_level():
-		var bronze := _icon_button("library", tr("ANT_PAGE"), Vector2(0, 48))
-		bronze.pressed.connect(_management.open.bind("bronze"))
+		var bronze := _icon_button("library", tr("CH_PAGE"), Vector2(0, 48))
+		bronze.pressed.connect(_management.open.bind("chapters"))
 		_goals_list.add_child(bronze)
 		if eco.bronze_study < 0.0:
 			_goals_list.add_child(_info_card(tr("TH_MAX"), tr("TH_MAX_TEXT"), Design.CREAM_DEEP))

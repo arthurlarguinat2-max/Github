@@ -674,3 +674,52 @@ func test_seasons_crops_and_mid_sowing_resume() -> void:
 	eco.elapsed_days = 23
 	eco.daily_update()
 	assert_eq(eco.season_index(),0)
+
+
+func test_antiquity_chapters_unlock_iron_and_forum() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 10
+	assert_eq(eco.antiquity_chapter(),0)
+	assert_false(eco.enter_chapter(2))
+	eco.first_ingot = 1
+	eco.bronze_study = 0
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 100
+	var mine := _spot(sim,"metal_mine")
+	assert_true(eco.build(mine,"metal_mine"))
+	eco.complete_construction()
+	var foundry := _spot(sim,"foundry")
+	assert_true(eco.build(foundry,"foundry"))
+	eco.complete_construction()
+	var old := sim.to_dict()
+	old.economy.erase("advanced_chapter")
+	sim.from_dict(JSON.parse_string(JSON.stringify(old)))
+	eco = sim.economy
+	assert_eq(eco.antiquity_chapter(),1)
+	assert_false(eco.select_recipe(mine,"iron_ore"))
+	assert_false(eco.enter_chapter(2))
+	assert_true(eco.equip_bronze("field"))
+	assert_true(eco.enter_chapter(2))
+	assert_false(eco.enter_chapter(2))
+	assert_eq(eco.stock("books"),92.0)
+	assert_true(eco.select_recipe(mine,"iron_ore"))
+	assert_true(eco.select_recipe(foundry,"iron"))
+	eco.stocks.iron = 0
+	eco.stocks.iron_ore = 0
+	eco.trained.miner = 1
+	eco.trained.founder = 1
+	eco.update(1)
+	assert_true(eco.stock("iron") > 0)
+	assert_eq(eco.building_limit("forum"),0)
+	assert_false(eco.enter_chapter(3))
+	eco.last_trade = 0
+	assert_false(eco.enter_chapter(3))
+	eco.update(15)
+	assert_true(eco.enter_chapter(3))
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	assert_eq(loaded.economy.antiquity_chapter(),3)
+	assert_true(loaded.economy.def_of(foundry).produces.has("iron"))
+	assert_true(loaded.economy.build(_spot(loaded,"forum"),"forum"))
+	assert_false(loaded.economy.enter_chapter(3))

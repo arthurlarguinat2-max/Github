@@ -36,7 +36,7 @@ const ERR_SLOTS := "TRAIN_ERR_SLOTS"
 const ERR_REQUIREMENT := "TH_ERR_REQUIREMENT"
 const ERR_MAX := "TH_ERR_MAX"
 const ERR_BUSY := "TH_ERR_BUSY"
-const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools", "clay", "bricks", "pots", "boards", "frames", "flax", "linen", "paper", "books", "copper", "tin", "bronze"]
+const BASE_RESOURCES := ["food", "wood", "stone", "water", "grain", "flour", "tools", "clay", "bricks", "pots", "boards", "frames", "flax", "linen", "paper", "books", "copper", "tin", "bronze", "iron_ore", "iron"]
 
 var planet  # PlanetState (untyped to avoid a cyclic preload)
 var defs: Dictionary = {}
@@ -57,6 +57,25 @@ func season_index() -> int:
 ## Negative before study, zero when complete, otherwise remaining village days.
 var bronze_study := -1.0
 var first_ingot := 0.0
+var advanced_chapter := 0
+const CHAPTER_COSTS := {2: {"books": 8, "bronze": 6}, 3: {"iron": 10, "paper": 12, "bricks": 16}}
+
+
+func antiquity_chapter() -> int:
+	return maxi(1, advanced_chapter) if first_ingot >= 1.0 else 0
+
+
+func enter_chapter(next: int) -> bool:
+	if next != antiquity_chapter() + 1 or not CHAPTER_COSTS.has(next):
+		return false
+	if (next == 2 and bronze_equipment.is_empty()) or (next == 3 and last_trade < 0):
+		return false
+	if not can_afford(CHAPTER_COSTS[next]):
+		return false
+	_pay(CHAPTER_COSTS[next])
+	advanced_chapter = next
+	return true
+
 var bronze_equipment := {}
 const TRADE_OFFERS := [
 	{"sell": "pots", "amount": 8, "buy": "tin", "receive": 4},
@@ -149,6 +168,8 @@ func select_recipe(cell: int, recipe: String) -> bool:
 	var base: Dictionary = defs.get(planet.buildings[cell], {})
 	if not base.get("recipes", {}).has(recipe):
 		return false
+	if int(base.recipes[recipe].get("chapter", 0)) > antiquity_chapter():
+		return false
 	if planet.buildings[cell] == "field" and recipe_choices.get(cell, "grain") != recipe:
 		sowing[cell] = 0.5
 	if base.produces.has(recipe):
@@ -203,6 +224,8 @@ func max_level() -> int:
 ## Max number of `id` allowed at the current level (0 = locked).
 ## Without progression data (old tests, tools), everything is allowed.
 func building_limit(id: String) -> int:
+	if int(defs.get(id, {}).get("chapter", 0)) > antiquity_chapter():
+		return 0
 	if defs.get(id, {}).get("requires_antiquity", false) and first_ingot < 1.0:
 		return 0
 	if defs.get(id, {}).get("bronze_research", false) and bronze_study != 0.0:
@@ -888,6 +911,7 @@ func to_dict() -> Dictionary:
 		"sowing": sowing.duplicate(),
 		"bronze_study": bronze_study,
 		"first_ingot": first_ingot,
+		"advanced_chapter": advanced_chapter,
 		"bronze_equipment": bronze_equipment.duplicate(),
 		"market_days": market_days, "last_trade": last_trade,
 		"trade_reserves": trade_reserves.duplicate(), "trade_auto": trade_auto.duplicate(),
@@ -905,6 +929,7 @@ func from_dict(data: Dictionary) -> void:
 		trade_auto[offer.sell] = bool(data.get("trade_auto", {}).get(offer.sell, false))
 	bronze_study = clampf(float(data.get("bronze_study", -1.0)), -1.0, 2.0)
 	first_ingot = clampf(float(data.get("first_ingot", 0.0)), 0.0, 1.0)
+	advanced_chapter = clampi(int(data.get("advanced_chapter", 0)), 0, 3) if first_ingot >= 1.0 else 0
 	bronze_equipment.clear()
 	for sector in ["field", "quarry"]:
 		if data.get("bronze_equipment", {}).get(sector, false):

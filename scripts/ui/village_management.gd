@@ -71,6 +71,7 @@ func refresh() -> void:
 		"farm": _farm(eco)
 		"recipes": _recipes(eco)
 		"bronze": _bronze(eco)
+		"chapters": _chapters(eco)
 		"market": _market(eco)
 		"trade_rules": _trade_rules(eco)
 		"priority": _priority(eco)
@@ -310,7 +311,46 @@ func _toggle_trade() -> void:
 	refresh()
 
 
+func _chapters(eco) -> void:
+	title.text = tr("CH_PAGE")
+	var chapter: int = eco.antiquity_chapter()
+	var lines := PackedStringArray()
+	for index in range(1,4):
+		var mark := "✓ " if index < chapter else ("▸ " if index == chapter else "")
+		lines.append(mark + tr("CH_%d" % index))
+	if chapter == 0:
+		lines.append(tr("CH_STONE"))
+	elif chapter < 3:
+		var next := chapter + 1
+		var met: bool = not eco.bronze_equipment.is_empty() if next == 2 else eco.last_trade >= 0
+		lines.append(tr("CH_NEXT") % tr("CH_%d" % next))
+		lines.append(("✓ " if met else "○ ") + tr("CH_EQUIP" if next == 2 else "CH_DEAL"))
+		if chapter == 2:
+			lines.append(tr("CH_IRON_HINT"))
+		var costs: Dictionary = eco.CHAPTER_COSTS[next]
+		lines.append(tr("CH_COST") % hud._cost_text(costs))
+		for res in costs:
+			lines.append("%s · %d/%d" % [_res(res), floori(eco.stock(res)), costs[res]])
+		action("advance%d" % next,tr("CH_IRON" if next == 2 else "CH_CHARTER"), _enter_chapter.bind(next))
+		_buttons["advance%d" % next].disabled = not met or not eco.can_afford(costs)
+	else:
+		lines.append(tr("CH_CITIES_HINT"))
+		for cell in eco.building_cells():
+			if eco.building_at(cell) == "forum" and eco.is_active(cell):
+				lines.append(tr("CH_FINISHED"))
+				break
+	detail.text = "\n".join(lines)
+	action("work_bronze",tr("ANT_PAGE"),open.bind("bronze"))
+
+
+func _enter_chapter(next: int) -> void:
+	GameState.sim.economy.enter_chapter(next)
+	hud._refresh_title()
+	refresh()
+
+
 func _bronze(eco) -> void:
+	action("chapters",tr("CH_PAGE"),open.bind("chapters"))
 	title.text = tr("ANT_AGE") if eco.first_ingot >= 1.0 else tr("ANT_PAGE")
 	if eco.bronze_study != 0.0:
 		var block: String = eco.study_blocker()
@@ -359,7 +399,9 @@ func _recipes(eco) -> void:
 	for id in recipes:
 		var recipe: Dictionary = recipes[id]
 		var formula := "%s → %s" % [hud._cost_text(recipe.consumes), hud._cost_text(recipe.produces)]
-		if def.produces.has(id):
+		if int(recipe.get("chapter",0)) > eco.antiquity_chapter():
+			lines.append("%s · %s" % [formula, tr("CH_LOCK") % tr("CH_%d" % int(recipe.chapter))])
+		elif def.produces.has(id):
 			lines.append("%s · %s" % [tr("CRAFT_ACTIVE"), formula])
 			action("output" + id, tr("MG_SEE") % _res(id), open.bind("reserve", id))
 		else:

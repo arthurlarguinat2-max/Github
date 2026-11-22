@@ -154,6 +154,14 @@ static func create(id: String, level: int = 1, crop: String = "grain") -> Node3D
 			_add(root, _torus(0.016, 0.022), "stone", Vector3.UP * 0.005)
 			for j in 3:
 				_add(root, _sphere(0.005, 10), "clay", Vector3(-0.014 + j * 0.011, 0.006, 0.019), Vector3.ZERO, Vector3(1, 1.35, 1))
+		"forum":
+			_add(root, _cylinder(0.025,0.028,0.005,24), "stone", Vector3.UP*0.0025)
+			for i in 9:
+				var angle := float(i)*TAU/10.0
+				var at := Vector3(sin(angle)*0.021,0,cos(angle)*0.021)
+				_add(root,_cylinder(0.002,0.0025,0.021,10),"plaster",at+Vector3.UP*0.015)
+				_add(root,_cylinder(0.0035,0.0035,0.003,10),"stone",at+Vector3.UP*0.026)
+			_add(root,_torus(0.018,0.024),"clay",Vector3.UP*0.029)
 		"market":
 			_pebble_ring(root, 0.023, 12, 0.003)
 			for side in [-1, 1]:

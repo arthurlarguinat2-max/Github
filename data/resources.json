@@ -109,6 +109,16 @@
 			"name_key": "RES_BRONZE",
 			"hidden": false,
 			"stock": true
+		},
+		"iron_ore": {
+			"name_key": "RES_IRON_ORE",
+			"hidden": false,
+			"stock": true
+		},
+		"iron": {
+			"name_key": "RES_IRON",
+			"hidden": false,
+			"stock": true
 		}
 	}
 }

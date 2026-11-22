@@ -544,7 +544,8 @@
 				"library": 1,
 				"metal_mine": 3,
 				"foundry": 2,
-				"market": 1
+				"market": 1,
+				"forum": 1
 			},
 			"professions": [
 				"water_carrier",
