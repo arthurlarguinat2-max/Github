@@ -723,3 +723,54 @@ func test_antiquity_chapters_unlock_iron_and_forum() -> void:
 	assert_true(loaded.economy.def_of(foundry).produces.has("iron"))
 	assert_true(loaded.economy.build(_spot(loaded,"forum"),"forum"))
 	assert_false(loaded.economy.enter_chapter(3))
+
+
+func test_canal_preview_valve_water_shortage_and_reload() -> void:
+	var sim := _sim()
+	var eco := sim.economy
+	eco.townhall_level = 10
+	eco.first_ingot = 1
+	eco._rebuild_caches()
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 100
+	var field := _spot(sim,"field")
+	assert_true(eco.build(field,"field"))
+	eco.complete_construction()
+	var cistern := -1
+	for cell in sim.planet.grid.neighbors[field]:
+		if eco.can_build(cell,"cistern") == "":
+			cistern = cell
+			break
+	assert_true(cistern >= 0)
+	assert_true(eco.build(cistern,"cistern"))
+	assert_false(eco.connect_canal(field,cistern))
+	eco.complete_construction()
+	assert_false(eco.connect_canal(field,cistern))
+	eco.advanced_chapter = 2
+	var wood := eco.stock("wood")
+	assert_true(eco.connect_canal(field,cistern))
+	assert_false(eco.connect_canal(field,cistern))
+	assert_eq(eco.stock("wood"),wood-6)
+	eco.trained.farmer = 2
+	eco.elapsed_days = 6
+	sim.tick = sim.ticks_per_day*6
+	var dry := eco.forecast(-1,0.01)
+	var wet := eco.forecast(-1,0.01,-1,field,true)
+	assert_true(is_equal_approx(wet.outputs[field].grain, dry.outputs[field].grain*1.5))
+	assert_true(is_equal_approx(wet.net.water,dry.net.water-2))
+	assert_false(eco.canals[field].open)
+	assert_true(eco.set_valve(field,true))
+	eco.update(0.01)
+	assert_true(is_equal_approx(eco.building_rate(field).grain, wet.outputs[field].grain))
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	assert_true(eco.canals[field].open)
+	loaded.advance_offline(10,10,3600,1)
+	assert_true(eco.building_inputs(field).water > 0)
+	eco.stocks.water = 0.0
+	assert_eq(eco.forecast(-1,0.01).inputs[field].water,0.0)
+	assert_true(eco.set_valve(field,false))
+	assert_false(eco.forecast(-1,0.01).inputs[field].has("water"))
+	assert_true(eco.demolish(cistern))
+	assert_false(eco.canals.has(field))

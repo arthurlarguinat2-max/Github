@@ -69,6 +69,7 @@ func refresh() -> void:
 	match mode:
 		"reserve": _reserve(eco)
 		"farm": _farm(eco)
+		"canal": _canal(eco)
 		"recipes": _recipes(eco)
 		"bronze": _bronze(eco)
 		"chapters": _chapters(eco)
@@ -169,9 +170,55 @@ func _farm(eco) -> void:
 		lines.append(tr("S_SOW") % float(eco.sowing[target]))
 	if eco.workers_at(target) == 0:
 		lines.append(tr("MG_UNSTAFFED"))
+	action("canal%d" % target,tr("IR_TITLE"),open.bind("canal","food",target))
 	action("staff%d" % target, tr("MG_PRIORITY_FOR") % _site(eco,target), open.bind("priority","food",target))
 	action("food_balance",tr("MG_SEE") % _res("food"),open.bind("reserve","food"))
 	detail.text = "\n".join(lines)
+
+
+func _canal(eco) -> void:
+	title.text = tr("IR_TITLE")
+	var lines := PackedStringArray([_site(eco,target)])
+	if eco.antiquity_chapter() < 2:
+		lines.append(tr("CH_LOCK") % tr("CH_2"))
+	else:
+		var connected: bool = eco.canals.has(target)
+		var opened: bool = connected and eco.canals[target].open
+		var sources: Array = []
+		for cell in GameState.sim.planet.grid.neighbors[target]:
+			if eco.valid_canal(target,cell):
+				sources.append(cell)
+		if sources.is_empty():
+			lines.append(tr("IR_NEED"))
+		else:
+			var dt := 1.0 / GameState.sim.ticks_per_day
+			var before: Dictionary = eco.forecast(eco.preferred_cell,dt,-1,target,false)
+			var after: Dictionary = eco.forecast(eco.preferred_cell,dt,-1,target,true)
+			var product: String = eco.def_of(target).produces.keys()[0]
+			var extra := float(after.outputs.get(target,{}).get(product,0)) - float(before.outputs.get(target,{}).get(product,0))
+			lines.append(tr("IR_PREVIEW") % [float(after.inputs.get(target,{}).get("water",0)), _res(product), hud._format_signed(extra)])
+			lines.append(tr("IR_DRINK") % [hud._format_signed(after.net.water - float(after.unmet.get("water",0))),eco.stock("water")])
+			if connected:
+				lines.append(_site(eco,eco.canals[target].source) + " · " + tr("IR_OPEN" if opened else "IR_CLOSED"))
+				action("valve%d%s" % [target,str(opened)], tr("IR_CLOSE" if opened else "IR_START"), _valve.bind(target,not opened))
+			else:
+				lines.append(tr("IR_BUILD") % hud._cost_text(eco.CANAL_COST))
+				for cell in sources:
+					var key := "connect%d:%d" % [target,cell]
+					action(key,_site(eco,cell),_connect_canal.bind(target,cell))
+					_buttons[key].disabled = not eco.can_afford(eco.CANAL_COST)
+	detail.text = "\n".join(lines)
+	action("backfarm%d" % target,tr("S_FARM"),open.bind("farm","food",target))
+
+
+func _connect_canal(field: int, cell: int) -> void:
+	GameState.sim.economy.connect_canal(field,cell)
+	refresh()
+
+
+func _valve(field: int, opened: bool) -> void:
+	GameState.sim.economy.set_valve(field,opened)
+	refresh()
 
 
 func _plant(cell: int, crop: String) -> void:

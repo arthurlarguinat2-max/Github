@@ -517,5 +517,14 @@
 	"CH_LOCK": "Chapitre requis : %s",
 	"BLD_FORUM": "Forum",
 	"FORUM_SHORT": "Place civique · bonheur",
-	"FORUM_DESC": "Une place à colonnades où les habitants de la cité se réunissent."
+	"FORUM_DESC": "Une place à colonnades où les habitants de la cité se réunissent.",
+	"IR_TITLE": "Irrigation",
+	"IR_NEED": "Construis une citerne sur une case voisine du champ et termine les deux chantiers.",
+	"IR_BUILD": "Choisis la citerne à relier. Coût immédiat : %s. La vanne sera fermée.",
+	"IR_PREVIEW": "Vanne ouverte au rythme actuel : %.1f eau/j pour le champ. Gain de %s : %s/j.",
+	"IR_DRINK": "Bilan d’eau du village après les besoins des habitants : %s/j. Réserve actuelle : %.1f.",
+	"IR_START": "Ouvrir la vanne",
+	"IR_CLOSE": "Fermer la vanne",
+	"IR_OPEN": "Vanne ouverte",
+	"IR_CLOSED": "Vanne fermée"
 }

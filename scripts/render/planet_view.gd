@@ -47,6 +47,8 @@ var _highlight: MeshInstance3D
 var _trees: Node3D
 var _season_ground: ShaderMaterial
 var _shown_season := -1
+var _irrigation_visuals := {}
+const CANAL_SHADER := preload("res://assets/terrain/canal.gdshader")
 var _caravan: Node3D
 var _buildings_root: Node3D
 var _world_seed := 0
@@ -96,6 +98,13 @@ func _process(delta: float) -> void:
 	if economy != null and _season_ground != null and economy.season_index() != _shown_season:
 		_shown_season = economy.season_index()
 		_season_ground.set_shader_parameter("season", _shown_season)
+	for field in _irrigation_visuals:
+		var visual: Dictionary = _irrigation_visuals[field]
+		var wet: bool = economy.canals[field].open and float(economy.building_inputs(field).get("water",0)) > 0.0
+		if visual.wet != wet:
+			visual.wet = wet
+			visual.material.set_shader_parameter("flowing",wet)
+			visual.rows.visible = wet
 	if _caravan != null:
 		_caravan.visible = economy.caravan_present()
 	if _touches.is_empty() and _angular_velocity.length_squared() > 1e-6:
@@ -211,6 +220,7 @@ func focus_cell(cell: int) -> void:
 
 ## Rebuilds building models (and trees, which make room for buildings).
 func refresh_buildings() -> void:
+	_irrigation_visuals.clear()
 	_caravan = null
 	for child in _buildings_root.get_children():
 		child.queue_free()
@@ -233,12 +243,57 @@ func refresh_buildings() -> void:
 		var orient := Basis(Quaternion(Vector3.UP, dir)) * Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3.ONE * _object_scale)
 		node.transform = Transform3D(orient, dir * top)
 		_buildings_root.add_child(node)
+		if economy != null and economy.canals.has(cell):
+			_draw_canal(cell, economy.canals[cell].source, node)
 	if _trees:
 		_trees.queue_free()
 		_trees = null
 	_build_trees(_world_seed)
 	if selected >= 0:
 		_highlight.mesh = _build_highlight_mesh(selected)
+
+
+## Follow the spherical surface between adjacent sites; UV.y runs downstream.
+func _draw_canal(field: int, source: int, plot: Node3D) -> void:
+	var a: Vector3 = planet.grid.centers[source]
+	var b: Vector3 = planet.grid.centers[field]
+	var across := a.cross(b).normalized() * 0.0038 * _object_scale
+	var strip := SurfaceTool.new()
+	strip.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+	for j in range(17):
+		var t := j / 16.0
+		var dir := a.slerp(b,t).normalized()
+		for sign_value in [-1,1]:
+			var edge := (dir + across * float(sign_value)).normalized()
+			strip.set_uv(Vector2((sign_value+1)*0.5,t))
+			strip.set_normal(edge)
+			strip.add_vertex(edge * (maxf(terrain.surface_radius(edge), 1.0) + 0.0015*_object_scale))
+	var bed := MeshInstance3D.new()
+	bed.mesh = strip.commit()
+	var material := ShaderMaterial.new()
+	material.shader = CANAL_SHADER
+	bed.material_override = material
+	bed.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_buildings_root.add_child(bed)
+	var rows := Node3D.new()
+	plot.add_child(rows)
+	var leaves := StandardMaterial3D.new()
+	leaves.albedo_color = Color("619447")
+	for k in 3:
+		var ridge := MeshInstance3D.new()
+		var shape := SphereMesh.new()
+		shape.radius = 0.0025
+		shape.height = 0.003
+		shape.radial_segments = 8
+		shape.rings = 3
+		ridge.mesh = shape
+		ridge.scale.x = 8
+		ridge.position = Vector3(0,0.004,(k-1)*0.011)
+		ridge.material_override = leaves
+		ridge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		rows.add_child(ridge)
+	rows.visible = false
+	_irrigation_visuals[field] = {"rows": rows, "material": material, "wet": false}
 
 
 ## Rebuilds the ground (after a palette change).

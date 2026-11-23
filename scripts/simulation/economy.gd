@@ -49,6 +49,30 @@ const SEASONS := ["S_SPRING", "S_SUMMER", "S_FALL", "S_WINTER"]
 const SEASON_DAYS := 6
 var elapsed_days := 0
 var sowing := {}
+var canals := {}
+const CANAL_COST := {"wood": 6, "stone": 8}
+const IRRIGATION_BOOST := [0.25, 0.50, 0.25, 0.10]
+
+
+func valid_canal(field: int, source: int) -> bool:
+	return antiquity_chapter() >= 2 and field >= 0 and field < planet.cell_count() and source in planet.grid.neighbors[field] and building_at(field) == "field" and building_at(source) == "cistern" and is_active(field) and is_active(source)
+
+
+func connect_canal(field: int, source: int) -> bool:
+	if canals.has(field) or not valid_canal(field, source) or not can_afford(CANAL_COST):
+		return false
+	_pay(CANAL_COST)
+	canals[field] = {"source": source, "open": false}
+	changed.emit()
+	return true
+
+
+func set_valve(field: int, opened: bool) -> bool:
+	if not canals.has(field) or not valid_canal(field, canals[field].source):
+		return false
+	canals[field].open = opened
+	return true
+
 
 
 func season_index() -> int:
@@ -604,6 +628,9 @@ func demolish(cell: int) -> bool:
 		stocks[res] = stock(res) + float(cost[res]) * 0.5
 	if preferred_cell == cell:
 		preferred_cell = -1
+	for field in canals.keys():
+		if field == cell or canals[field].source == cell:
+			canals.erase(field)
 	recipe_choices.erase(cell)
 	sowing.erase(cell)
 	planet.buildings[cell] = ""
@@ -759,14 +786,14 @@ func update(dt_days: float) -> void:
 
 
 ## A preview spends a scratch inventory and shadows only deposits it touches.
-func forecast(cell: int, dt_days: float, season: int = -1) -> Dictionary:
+func forecast(cell: int, dt_days: float, season: int = -1, preview_field: int = -1, preview_open: bool = false) -> Dictionary:
 	var staffing := _allocation(cell)
-	var result := _flow(dt_days, stocks.duplicate(), staffing, false, season)
+	var result := _flow(dt_days, stocks.duplicate(), staffing, false, season, preview_field, preview_open)
 	result.staffing = staffing
 	return result
 
 
-func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: bool, season: int = -1) -> Dictionary:
+func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: bool, season: int = -1, preview_field: int = -1, preview_open: bool = false) -> Dictionary:
 	var wb := _wb()
 	var consumed := {}
 	var produced := {}
@@ -785,6 +812,7 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 		var produces: Dictionary = def.get("produces", {})
 		if produces.is_empty() or not is_active(cell):
 			continue
+		var staffed_time := float(staffing.get(cell, 0.0)) * dt_days
 		var mult: float = float(staffing.get(cell, 0.0)) * village_productivity
 		if mult <= 0.0:
 			continue
@@ -792,6 +820,7 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 			var work := float(staffing[cell]) * dt_days
 			var used := minf(float(sowing[cell]), work)
 			mult *= maxf(0.0, 1.0 - used / work)
+			staffed_time -= used
 			if apply:
 				sowing[cell] = float(sowing[cell]) - used
 				if sowing[cell] < 0.0000001:
@@ -807,6 +836,14 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 		if def.has("water_bonus") and near_water(cell):
 			mult *= float(def.water_bonus)
 		var inputs := {}
+		var opened: bool = preview_open if cell == preview_field else canals.has(cell) and canals[cell].open
+		if opened:
+			var requested := 2.0 * staffed_time
+			var diverted := minf(requested, float(inventory.get("water", 0.0)))
+			inventory.water = float(inventory.get("water", 0.0)) - diverted
+			inputs.water = diverted / dt_days
+			new_rates.water -= inputs.water
+			mult *= 1.0 + IRRIGATION_BOOST[season] * diverted / requested
 		if def.get("tool_bonus", false) and float(inventory.get("tools", 0.0)) > 0.0:
 			mult *= float(wb.get("tool_bonus", 1.25))
 			var worn := minf(float(inventory.get("tools", 0.0)), float(wb.get("tool_use_per_day", 0.05)) * dt_days)
@@ -909,6 +946,7 @@ func to_dict() -> Dictionary:
 		"preferred_cell": preferred_cell,
 		"recipes": recipe_choices.duplicate(),
 		"sowing": sowing.duplicate(),
+		"canals": canals.duplicate(true),
 		"bronze_study": bronze_study,
 		"first_ingot": first_ingot,
 		"advanced_chapter": advanced_chapter,
@@ -961,6 +999,12 @@ func from_dict(data: Dictionary) -> void:
 	for key in saved_sites:
 		var site: Dictionary = saved_sites[key]
 		construction[int(key)] = {"left": float(site.get("left", 0.0)), "total": float(site.get("total", 1.0))}
+	canals.clear()
+	var saved_canals: Dictionary = data.get("canals", {})
+	for key in saved_canals:
+		var entry = saved_canals[key]
+		if str(key).is_valid_int() and entry is Dictionary and valid_canal(int(key),int(entry.get("source",-1))):
+			canals[int(key)] = {"source": int(entry.source), "open": bool(entry.get("open",false))}
 	recipe_choices.clear()
 	var saved_recipes: Dictionary = data.get("recipes", {})
 	for key in saved_recipes:

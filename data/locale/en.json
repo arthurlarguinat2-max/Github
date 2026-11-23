@@ -517,5 +517,14 @@
 	"CH_LOCK": "Requires chapter: %s",
 	"BLD_FORUM": "Forum",
 	"FORUM_SHORT": "Civic square · happiness",
-	"FORUM_DESC": "A colonnaded square where the people of the city gather."
+	"FORUM_DESC": "A colonnaded square where the people of the city gather.",
+	"IR_TITLE": "Irrigation",
+	"IR_NEED": "Build a cistern on a cell beside the field and finish both buildings.",
+	"IR_BUILD": "Choose a cistern to connect. Pay now: %s. The valve starts closed.",
+	"IR_PREVIEW": "With the valve open at current rates: %.1f water/day for this field. Extra %s: %s/day.",
+	"IR_DRINK": "Village water balance after household demand: %s/day. Current reserve: %.1f.",
+	"IR_START": "Open valve",
+	"IR_CLOSE": "Close valve",
+	"IR_OPEN": "Valve open",
+	"IR_CLOSED": "Valve closed"
 }
