@@ -62,7 +62,7 @@
 			},
 			"workers": 2,
 			"produces": {
-				"food": 6
+				"food": 16
 			},
 			"fertility_bonus": true,
 			"territory": 1,
@@ -464,7 +464,7 @@
 			],
 			"build_days": 0.5,
 			"produces": {
-				"food": 5
+				"food": 8
 			},
 			"profession": "gatherer",
 			"workers": 1,

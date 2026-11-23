@@ -181,3 +181,11 @@ func test_offline_progress_runs_the_economy() -> void:
 	var food := sim.economy.stock("food")
 	sim.advance_offline(3600.0, 10.0, 8 * 3600.0, 0.5)  # 18000 ticks = 30 days
 	assert_true(sim.economy.stock("food") < food, "people ate while away")
+
+
+func test_food_gathering_matches_water_per_worker_before_modifiers() -> void:
+	var definitions: Dictionary = _config().buildings
+	var water_per_worker := float(definitions.well.produces.water) / int(definitions.well.workers)
+	for site in ["gatherer", "orchard"]:
+		var food_per_worker := float(definitions[site].produces.food) / int(definitions[site].workers)
+		assert_almost_eq(food_per_worker, water_per_worker)
