@@ -218,6 +218,25 @@ func focus_cell(cell: int) -> void:
 	_angular_velocity = Vector2.ZERO
 
 
+## Project the town hall roof into the HUD, hiding the pin beyond the horizon.
+func position_village_pin(pin: Control) -> void:
+	var cell: int = economy.village_center
+	if cell < 0:
+		pin.hide()
+		return
+	var normal: Vector3 = planet.grid.centers[cell]
+	var ground := to_global(normal * _heights[cell])
+	var outward := (ground - global_position).normalized()
+	if outward.dot(camera.global_position - ground) <= 0.0 or camera.is_position_behind(ground):
+		pin.hide()
+		return
+	var roof_scale := 1.0 + 0.09 * (int(economy.townhall_level) - 1)
+	var roof := ground + outward * _object_scale * (0.065 * roof_scale + 0.04)
+	var point := camera.unproject_position(roof)
+	pin.position = point - Vector2(pin.size.x * 0.5, pin.size.y)
+	pin.visible = camera.get_viewport().get_visible_rect().has_point(point)
+
+
 ## Rebuilds building models (and trees, which make room for buildings).
 func refresh_buildings() -> void:
 	_irrigation_visuals.clear()

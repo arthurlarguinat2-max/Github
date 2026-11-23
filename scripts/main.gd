@@ -52,6 +52,7 @@ func _ready() -> void:
 	planet.setup(sim.planet, sim.terrain_defs, cam, sim.world_seed)
 	apply_appearance(false)
 	planet.focus_cell(sim.economy.village_center)
+	hud.village_focus_requested.connect(func(): planet.focus_cell(sim.economy.village_center))
 	planet.ui_blocks_point = hud.blocks_point
 	planet.villager_tapped.connect(hud._management.open.bind("voice"))
 	planet.cell_selected.connect(hud.on_cell_tapped)
@@ -73,6 +74,7 @@ func _process(delta: float) -> void:
 	var t: float = sim.time_of_day() + GameState.stepper.interpolation_alpha() / float(sim.ticks_per_day)
 	sun_pivot.rotation.y = t * TAU
 	_moon_pivot.rotate_y(delta * 0.05)
+	planet.position_village_pin(hud.village_pin)
 
 
 ## CI only: "-- --screenshot-dir=<folder>" captures the main screens and quits.

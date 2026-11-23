@@ -5,6 +5,7 @@
 ## Building is 2 taps: pick a building, then a green cell on the planet.
 extends CanvasLayer
 
+signal village_focus_requested
 signal close_requested
 signal placement_started(cells: Array)
 signal placement_ended
@@ -30,6 +31,7 @@ const BAD := Design.BAD
 const PANEL_BG := Design.CREAM
 const SPEEDS := [1, 2, 4]
 
+var village_pin: TextureRect
 var _margin: MarginContainer
 var _title: Label
 var _chips := {}           # resource -> {"value": Label, "rate": Label}
@@ -103,6 +105,11 @@ func _ready() -> void:
 	root.theme = _make_theme()
 	add_child(root)
 
+	village_pin = _icon("village_pin", 28)
+	village_pin.size = Vector2(28, 28)
+	village_pin.hide()
+	root.add_child(village_pin)
+
 	_margin = MarginContainer.new()
 	_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -115,7 +122,17 @@ func _ready() -> void:
 
 	_title = _landscape_label("", 18)
 	_title.add_theme_font_override("font", Design.title_font())
-	column.add_child(_title)
+	var heading := HBoxContainer.new()
+	heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(heading)
+	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(_title)
+	var locate := _icon_button("village_pin", "", Vector2(44, 44))
+	locate.tooltip_text = tr("LOCATE_VILLAGE")
+	locate.accessibility_name = tr("LOCATE_VILLAGE")
+	locate.pressed.connect(func(): village_focus_requested.emit())
+	heading.add_child(locate)
+	_blocking.append(locate)
 	column.add_child(_build_chip_row(["food", "water", "wood", "stone"]))
 	_needs_row = _build_needs_row()
 	column.add_child(_needs_row)
