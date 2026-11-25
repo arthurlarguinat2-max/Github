@@ -10,6 +10,9 @@ var scroll := ScrollContainer.new()
 var mode := ""
 var resource := "food"
 var target := -1
+var quantity := 6
+var contract_good := "grain"
+var contract_lots := 1
 var _shown_transfer := {}
 var _buttons := {}
 var _used: Array = []
@@ -41,6 +44,7 @@ func setup(owner_hud) -> void:
 
 
 func open(page: String, res: String = "food", cell: int = -1) -> void:
+	quantity = 6
 	mode = page
 	resource = res
 	target = cell
@@ -69,6 +73,9 @@ func refresh() -> void:
 	match mode:
 		"reserve": _reserve(eco)
 		"farm": _farm(eco)
+		"policy": _policy(eco)
+		"order": _order(eco)
+		"contract": _contracts(eco)
 		"canal": _canal(eco)
 		"recipes": _recipes(eco)
 		"bronze": _bronze(eco)
@@ -121,11 +128,15 @@ func _reserve(eco) -> void:
 			reason = tr("MG_UNSTAFFED")
 		elif flow.waiting.has(cell):
 			reason = tr("MG_MISSING") % _res(flow.waiting[cell])
+			if flow.waiting[cell] == "grain" and eco.seed_target > 0 and eco.stock("grain") > 0:
+				reason = tr("POL_SEED_WAIT")
 		elif eco.def_of(cell).has("extracts") and not eco.has_deposit(cell, eco.def_of(cell).extracts):
 			reason = tr("BUILD_ERR_DEPOSIT")
 		if reason != "":
 			sources.append("%s · %s" % [_site(eco, cell), reason])
 		if eco.is_active(cell):
+			if eco.bronze_study == 0.0 and eco.def_of(cell).has("consumes"):
+				action("order%d" % cell, tr("POL_ORDER_AT") % _site(eco,cell), open.bind("order",resource,cell))
 			action("site%d:%s" % [cell, resource], tr("MG_PRIORITY_FOR") % _site(eco, cell), open.bind("priority", resource, cell))
 	if float(flow.households.get(resource, 0)) > 0:
 		sources.append("%s   %s%s" % [tr("TAB_PEOPLE"),hud._format_signed(-float(flow.households[resource])),tr("PER_DAY")])
@@ -140,6 +151,8 @@ func _reserve(eco) -> void:
 	if sources.is_empty():
 		sources.append(tr("MG_NO_FLOW"))
 	detail.text = tr("MG_LEDGER") % [eco.stock(resource),made,needs,hud._format_signed(net)] + "\n" + trend + "\n" + "\n".join(sources)
+	if resource in ["food", "grain"]:
+		action("policy"+resource, tr("POL_PANTRY" if resource == "food" else "POL_SEEDS"), open.bind("policy",resource))
 	if resource == "food":
 		var next: int = (eco.season_index()+1) % 4
 		var outlook: Dictionary = eco.forecast(eco.preferred_cell, 1.0/GameState.sim.ticks_per_day, next)
@@ -172,6 +185,9 @@ func _farm(eco) -> void:
 		lines.append(tr("MG_UNSTAFFED"))
 	action("canal%d" % target,tr("IR_TITLE"),open.bind("canal","food",target))
 	action("staff%d" % target, tr("MG_PRIORITY_FOR") % _site(eco,target), open.bind("priority","food",target))
+	action("seeds",tr("POL_SEEDS"),open.bind("policy","grain"))
+	if eco.extra_plots.has(target):
+		lines.append(tr("POL_PLANTED"))
 	action("food_balance",tr("MG_SEE") % _res("food"),open.bind("reserve","food"))
 	detail.text = "\n".join(lines)
 
@@ -270,6 +286,17 @@ func _priority(eco) -> void:
 					if absf(amount) > 0.00001:
 						lines.append("%s · %s   %s%s" % [_site(eco,cell), _res(res), hud._format_signed(amount), tr("PER_DAY")])
 			action("confirm%d:%s" % [target,resource],tr("MG_CONFIRM"), _apply_priority.bind(target))
+		if eco.bronze_study == 0.0 and profession != "":
+			var blocker: String = eco.apprentice_blocker(target)
+			lines.append(tr("POL_LEARN_HELP"))
+			if blocker == "":
+				action("mentor%d" % target, tr("POL_LEARN") % name_of_job, _mentor.bind(target))
+			elif eco.teaching(target):
+				for student in eco.training:
+					if int(student.get("mentor", -1)) == target:
+						lines.append(tr("POL_LEARNING") % float(student.left))
+			else:
+				lines.append(tr(blocker))
 		detail.text = "\n".join(lines)
 	if eco.preferred_cell >= 0:
 		detail.text += "\n" + tr("MG_FAVORED") % _site(eco,eco.preferred_cell)
@@ -325,6 +352,7 @@ func _market(eco) -> void:
 	if eco.last_trade >= 0:
 		lines.append(tr("TRADE_LAST") % _offer_text(eco.caravan_offer(eco.last_trade)))
 	detail.text = "\n".join(lines)
+	action("contracts",tr("POL_CONTRACT"),open.bind("contract"))
 	action("rules", tr("TRADE_RULES"), open.bind("trade_rules", "pots"))
 
 
@@ -440,6 +468,8 @@ func _recipes(eco) -> void:
 	var def: Dictionary = eco.def_of(target)
 	title.text = _site(eco, target)
 	var lines := PackedStringArray([tr("CRAFT_GUIDE")])
+	if eco.bronze_study == 0.0:
+		action("order%d" % target,tr("POL_ORDER"),open.bind("order",resource,target))
 	var recipes: Dictionary = def.get("recipes", {})
 	if recipes.is_empty() and def.has("produces"):
 		recipes = {def.produces.keys()[0]: def}
@@ -520,3 +550,141 @@ func _voice(eco) -> void:
 			return
 	detail.text = tr("MG_VOICE_WALK")
 	action("visit",tr("TAB_TOWNHALL"),hud.show_townhall)
+
+
+func _mentor(cell: int) -> void:
+	GameState.sim.economy.apprentice(cell)
+	refresh()
+
+
+func _policy(eco) -> void:
+	var food := resource == "food"
+	title.text = tr("POL_PANTRY" if food else "POL_SEEDS")
+	if food:
+		detail.text = tr("POL_FLOOR") % [eco.pantry_days, eco.protected_stock("food"), eco.stock("food")]
+		var next: int = (eco.season_index() + 1) % 4
+		var days: int = eco.SEASON_DAYS - eco.elapsed_days % eco.SEASON_DAYS
+		var flow := _forecast(eco, eco.preferred_cell)
+		var net := float(flow.net.food) - float(flow.unmet.get("food", 0))
+		detail.text += "\n" + tr("POL_OUTLOOK") % [tr(eco.SEASONS[next]), days, maxf(0, eco.stock("food") + days * net)]
+		var earliest := INF
+		var tick_days := 1.0 / float(GameState.sim.ticks_per_day)
+		for cell in eco.building_cells():
+			var staff := float(flow.staffing.get(cell, 0))
+			if eco.building_at(cell) == "field" and eco.def_of(cell).produces.has("food") and staff > 0:
+				earliest = minf(earliest, (floorf(float(eco.sowing.get(cell, 0)) / staff / tick_days) + 1.0) * tick_days)
+		if is_inf(earliest):
+			detail.text += "\n" + tr("POL_NO_HARVEST")
+		else:
+			detail.text += "\n" + tr("POL_HARVEST") % earliest
+			if net < 0 and eco.stock("food") / -net < earliest:
+				detail.text += "\n" + tr("POL_HARVEST_GAP") % (earliest - eco.stock("food") / -net)
+		if net < 0 and eco.stock("food") / -net < days:
+			detail.text += "\n" + tr("POL_GAP") % (days - eco.stock("food") / -net)
+	else:
+		detail.text = tr("POL_SEED_INFO") % [mini(eco.seed_target, floori(eco.stock("grain"))), eco.seed_target, eco.extra_plots.size()]
+	for change in [-1, 1]:
+		var step: int = change if food else change * eco.SEED_COST
+		action("adjust%s%d" % [resource,step], "%+d" % step, _policy_change.bind(step))
+	action("other"+resource,tr("POL_SEEDS" if food else "POL_PANTRY"),open.bind("policy","grain" if food else "food"))
+	action("ledger"+resource,tr("MG_SEE") % _res(resource),open.bind("reserve",resource))
+
+
+func _policy_change(step: int) -> void:
+	var eco = GameState.sim.economy
+	if resource == "food":
+		eco.pantry_days = clampi(eco.pantry_days + step, 0, 30)
+	else:
+		eco.seed_target = clampi(eco.seed_target + step, 0, 400)
+	refresh()
+
+
+func _order(eco) -> void:
+	title.text = tr("POL_ORDER_AT") % _site(eco,target)
+	var def: Dictionary = eco.def_of(target)
+	var output: String = def.produces.keys()[0]
+	var order: Dictionary = eco.orders.get(target, {})
+	detail.text = tr("POL_AUTO") if order.is_empty() else tr("POL_TARGET_STATE" if order.kind == "target" else "POL_BATCH_STATE") % [float(order.amount), _res(output)]
+	detail.text += "\n" + tr("POL_COST") % [quantity, _res(output), _input_cost(def, output, quantity, eco)]
+	action("smaller", "−1", _quantity.bind(-1))
+	action("larger", "+1", _quantity.bind(1))
+	action("target%d" % target,tr("POL_TARGET") % quantity,_set_order.bind("target"))
+	action("batch%d" % target,tr("POL_BATCH") % quantity,_set_order.bind("batch"))
+	action("reset%d" % target,tr("POL_AUTO"),_set_order.bind("auto"))
+	action("mentorpage%d" % target,tr("MG_WORK"),open.bind("priority",output,target))
+
+
+func _input_cost(def: Dictionary, output: String, amount: int, eco) -> String:
+	var parts := PackedStringArray()
+	for res in def.consumes:
+		var cost := amount * float(def.consumes[res]) / (float(def.produces[output]) * float(eco._perk_production(output)))
+		parts.append("%.1f %s" % [cost, _res(res)])
+	return ", ".join(parts)
+
+
+func _quantity(step: int) -> void:
+	quantity = clampi(quantity + step, 1, 100)
+	refresh()
+
+
+func _set_order(kind: String) -> void:
+	GameState.sim.economy.set_order(target, kind, quantity)
+	refresh()
+
+
+func _contracts(eco) -> void:
+	title.text = tr("POL_CONTRACT")
+	var pending: bool = not eco.contract.is_empty()
+	var good: String = eco.contract.res if pending else contract_good
+	var units: int = int(eco.contract.amount) if pending else int(eco.CONTRACT_UNITS[good]) * contract_lots
+	var reward: int = int(eco.contract.tools) if pending else 2 * contract_lots
+	var days: int = int(eco.contract.due) - eco.elapsed_days if pending else 3
+	var left: float = eco.stock(good) - units
+	detail.text = tr("POL_OFFER") % [units,_res(good),reward,days,maxf(left,0),_res(good),eco.protected_stock(good)]
+	var flow := _forecast(eco,eco.preferred_cell)
+	var production := 0.0
+	for output in flow.outputs.values():
+		production += float(output.get(good, 0))
+	if production > 0:
+		detail.text += "\n" + tr("POL_WORK") % (units / production)
+	else:
+		detail.text += "\n" + tr("POL_IDLE")
+	if good == "food" and eco.food_demand() > 0:
+		detail.text += "\n" + tr("POL_COVER") % (maxf(left,0) / eco.food_demand())
+	if pending:
+		var why: String = eco.delivery_blocker()
+		if why.is_empty():
+			action("deliver",tr("POL_DELIVER"),_deliver)
+		else:
+			detail.text += "\n" + tr(why)
+	elif eco.caravan_present() and eco.caravan_visit() != eco.contract_visit:
+		for id in eco.CONTRACT_UNITS:
+			action("offer"+id,_res(id),_choose_good.bind(id))
+		action("lots",tr("POL_LOTS") % (3 - contract_lots),_change_lots)
+		if eco.workers_at(eco.market_cell) > 0:
+			action("sign%d" % eco.caravan_visit(),tr("POL_SIGN"),_sign.bind(eco.caravan_visit()))
+		else:
+			detail.text += "\n" + tr("TRADE_NEED")
+	else:
+		detail.text += "\n" + tr("POL_NEXT")
+	action("backmarket",tr("MARKET"),open.bind("market"))
+
+
+func _choose_good(id: String) -> void:
+	contract_good = id
+	refresh()
+
+
+func _change_lots() -> void:
+	contract_lots = 3 - contract_lots
+	refresh()
+
+
+func _sign(visit: int) -> void:
+	GameState.sim.economy.sign_contract(visit,contract_good,contract_lots)
+	refresh()
+
+
+func _deliver() -> void:
+	GameState.sim.economy.deliver_contract()
+	refresh()

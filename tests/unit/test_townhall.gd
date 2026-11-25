@@ -774,3 +774,124 @@ func test_canal_preview_valve_water_shortage_and_reload() -> void:
 	assert_false(eco.forecast(-1,0.01).inputs[field].has("water"))
 	assert_true(eco.demolish(cistern))
 	assert_false(eco.canals.has(field))
+
+
+func _policy_village() -> Simulation:
+	var sim := _sim()
+	sim.objective_defs = []
+	var eco := sim.economy
+	eco.townhall_level = 10
+	eco.bronze_study = 0
+	eco.first_ingot = 1
+	for res in eco.BASE_RESOURCES:
+		eco.stocks[res] = 100
+	eco._rebuild_caches()
+	return sim
+
+
+func _policy_site(sim: Simulation, id: String) -> int:
+	var site := _spot(sim, id)
+	assert_true(site >= 0 and sim.economy.build(site, id))
+	sim.economy.complete_construction()
+	return site
+
+
+func test_seed_floor_and_spring_sowing_survive_reload() -> void:
+	var sim := _policy_village()
+	var eco := sim.economy
+	var field := _policy_site(sim, "field")
+	_policy_site(sim, "mill")
+	eco.trained.miller = 1
+	eco.stocks.grain = 5
+	eco.seed_target = 4
+	eco.update(1)
+	assert_almost_eq(eco.stock("grain"), 4)
+	sim.tick = sim.ticks_per_day * 24 - 1
+	eco.elapsed_days = 23
+	sim.step()
+	assert_almost_eq(eco.stock("grain"), 0)
+	assert_true(eco.extra_plots.has(field))
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	assert_true(loaded.economy.extra_plots.has(field))
+	loaded.advance_offline(10, 10, 3600, 1)
+	assert_eq(loaded.economy.seed_target, 4)
+	assert_almost_eq(loaded.economy.stock("grain"), 0)
+
+
+func test_production_order_caps_inputs_forecast_and_offline_batch() -> void:
+	var sim := _policy_village()
+	var eco := sim.economy
+	var mill := _policy_site(sim, "mill")
+	eco.trained.miller = 1
+	eco.stocks.flour = 0
+	assert_true(eco.set_order(mill,"target", 2))
+	var forecast := eco.forecast(-1, 1)
+	assert_almost_eq(forecast.outputs[mill].flour,2)
+	eco.update(1)
+	assert_almost_eq(eco.stock("grain"),98)
+	eco.update(1)
+	assert_almost_eq(eco.stock("flour"),2)
+	eco.stocks.flour = 1
+	eco.update(1)
+	assert_almost_eq(eco.stock("grain"),97)
+	assert_true(eco.set_order(mill,"batch",3))
+	eco.update(0.03)
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	loaded.objective_defs = []
+	loaded.advance_offline(100,10,3600,1)
+	assert_almost_eq(loaded.economy.stock("flour"),5,0.02)
+	assert_almost_eq(loaded.economy.orders[mill].amount,0)
+	assert_true(loaded.economy.set_order(mill,"auto",1))
+	loaded.economy.update(1)
+	assert_true(loaded.economy.stock("flour") > 5)
+
+
+func test_apprenticeship_requires_mentor_reduces_output_and_graduates() -> void:
+	var sim := _policy_village()
+	var eco := sim.economy
+	var mill := _policy_site(sim, "mill")
+	assert_false(eco.apprentice(mill))
+	eco.trained.miller = 1
+	var before := float(eco.forecast(-1,0.01).outputs[mill].flour)
+	assert_true(eco.apprentice(mill))
+	assert_false(eco.apprentice(mill))
+	assert_almost_eq(eco.forecast(-1,0.01).outputs[mill].flour, before * 0.5)
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	assert_true(eco.teaching(mill))
+	eco.update(2)
+	assert_eq(eco.trained_count("miller"),2)
+	assert_false(eco.teaching(mill))
+
+
+func test_contract_protects_pantry_and_only_pays_once() -> void:
+	var sim := _policy_village()
+	var eco := sim.economy
+	_policy_site(sim,"market")
+	eco.trained.merchant = 1
+	eco.update(0.01)
+	eco.pantry_days = 5
+	eco.stocks.food = eco.protected_stock("food") + 5
+	assert_true(eco.sign_contract(0,"food",1))
+	assert_eq(eco.delivery_blocker(),"TRADE_FLOOR")
+	assert_false(eco.deliver_contract())
+	var loaded := _sim()
+	loaded.from_dict(JSON.parse_string(JSON.stringify(sim.to_dict())))
+	eco = loaded.economy
+	eco.stocks.food += 1
+	var tools_before := eco.stock("tools")
+	assert_true(eco.deliver_contract())
+	assert_almost_eq(eco.stock("food"), eco.protected_stock("food"))
+	assert_almost_eq(eco.stock("tools"),tools_before+2)
+	assert_false(eco.deliver_contract())
+	assert_false(eco.sign_contract(0,"pots",1))
+	for i in 3:
+		eco.daily_update()
+	assert_true(eco.sign_contract(1,"pots",2))
+	for i in 4:
+		eco.daily_update()
+	assert_true(eco.contract.is_empty())
+	assert_almost_eq(eco.stock("tools"),tools_before+2)

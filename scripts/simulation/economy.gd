@@ -112,6 +112,116 @@ var market_days := 0
 var last_trade := -1
 var trade_reserves := {}
 var trade_auto := {}
+var pantry_days := 0
+var seed_target := 0
+var extra_plots := {}
+var orders := {}
+var contract := {}
+var contract_visit := -1
+const CONTRACT_UNITS := {"food": 6, "grain": 4, "pots": 2}
+const SEED_COST := 4
+
+
+func food_demand() -> float:
+	return population * float(settings.get("food_per_person_per_day", 1.0))
+
+
+func protected_stock(res: String) -> float:
+	var keep := float(trade_reserves.get(res, 0))
+	if res == "food":
+		keep = maxf(keep, pantry_days * food_demand())
+	if res == "grain":
+		keep = maxf(keep, seed_target)
+	return keep
+
+
+func sow_extra_plots() -> void:
+	extra_plots.clear()
+	var budget := minf(stock("grain"), seed_target)
+	for cell in _building_cells:
+		if budget < SEED_COST:
+			break
+		if building_at(cell) == "field" and is_active(cell):
+			budget -= SEED_COST
+			stocks.grain -= SEED_COST
+			extra_plots[cell] = true
+
+
+func set_order(cell: int, kind: String, quantity: int) -> bool:
+	if cell not in _building_cells or not is_active(cell) or bronze_study != 0.0:
+		return false
+	var def := def_of(cell)
+	if not def.has("consumes") or def.get("produces", {}).size() != 1:
+		return false
+	if kind == "auto":
+		orders.erase(cell)
+	elif kind in ["target", "batch"] and quantity > 0:
+		orders[cell] = {"kind": kind, "amount": float(quantity), "res": def.produces.keys()[0]}
+	else:
+		return false
+	return true
+
+
+func mentoring_days(cell: int) -> float:
+	for student in training:
+		if int(student.get("mentor", -1)) == cell:
+			return float(student.left) / _train_speed()
+	return 0.0
+
+
+func teaching(cell: int) -> bool:
+	return mentoring_days(cell) > 0.0
+
+
+func apprentice_blocker(cell: int) -> String:
+	if bronze_study != 0.0 or cell not in _building_cells or not is_active(cell):
+		return ERR_LOCKED
+	var profession := str(def_of(cell).get("profession", ""))
+	if teaching(cell) or float(_allocation(preferred_cell).get(cell, 0)) <= 0 or trained_count(profession) == 0:
+		return "POL_MENTOR_BUSY"
+	if idle_villagers() <= 0:
+		return ERR_NO_VILLAGER
+	if training.size() >= training_slots():
+		return ERR_SLOTS
+	return ""
+
+
+func apprentice(cell: int) -> bool:
+	if apprentice_blocker(cell) != "":
+		return false
+	training.append({"profession": def_of(cell).profession, "mentor": cell, "left": 1.0})
+	return true
+
+
+func sign_contract(visit: int, res: String, lots: int) -> bool:
+	if antiquity_chapter() == 0 or not caravan_present() or visit != caravan_visit() or visit == contract_visit or not contract.is_empty():
+		return false
+	if not CONTRACT_UNITS.has(res) or lots not in [1, 2] or workers_at(market_cell) <= 0:
+		return false
+	contract_visit = visit
+	contract = {"res": res, "amount": lots * int(CONTRACT_UNITS[res]), "tools": lots * 2, "due": elapsed_days + 3}
+	return true
+
+
+func delivery_blocker() -> String:
+	if contract.is_empty() or elapsed_days > int(contract.due) or not caravan_present():
+		return "POL_WAIT_CARAVAN"
+	if workers_at(market_cell) <= 0:
+		return "TRADE_NEED"
+	var left := stock(contract.res) - float(contract.amount)
+	if left < 0:
+		return "TRADE_LOW"
+	return "TRADE_FLOOR" if left < protected_stock(contract.res) else ""
+
+
+func deliver_contract() -> bool:
+	if delivery_blocker() != "":
+		return false
+	stocks[contract.res] -= float(contract.amount)
+	stocks.tools = stock("tools") + float(contract.tools)
+	contract.clear()
+	return true
+
 
 const STUDY_COST := {"books": 12}
 const EQUIPMENT_COST := {"bronze": 1}
@@ -196,6 +306,8 @@ func select_recipe(cell: int, recipe: String) -> bool:
 		return false
 	if planet.buildings[cell] == "field" and recipe_choices.get(cell, "grain") != recipe:
 		sowing[cell] = 0.5
+	if not def_of(cell).get("produces", {}).has(recipe):
+		orders.erase(cell)
 	if base.produces.has(recipe):
 		recipe_choices.erase(cell)
 	else:
@@ -631,6 +743,11 @@ func demolish(cell: int) -> bool:
 	for field in canals.keys():
 		if field == cell or canals[field].source == cell:
 			canals.erase(field)
+	orders.erase(cell)
+	extra_plots.erase(cell)
+	for i in range(training.size() - 1, -1, -1):
+		if int(training[i].get("mentor", -1)) == cell:
+			training.remove_at(i)
 	recipe_choices.erase(cell)
 	sowing.erase(cell)
 	planet.buildings[cell] = ""
@@ -737,7 +854,7 @@ func trade_blocker(visit: int, automatic: bool = false) -> String:
 	var left := stock(offer.sell) - float(offer.amount)
 	if left < 0:
 		return "TRADE_LOW"
-	var keep := int(trade_reserves.get(offer.sell, 0))
+	var keep := protected_stock(offer.sell)
 	if automatic:
 		keep += planned_material(offer.sell)
 	return "TRADE_FLOOR" if left < keep else ""
@@ -766,6 +883,7 @@ func update(dt_days: float) -> void:
 	_start_plans()
 	_compute_staffing()
 	var flow := _flow(dt_days, stocks, _staffing, true)
+	_advance_training(dt_days, true, _staffing)
 	rates = flow.net
 	if bronze_study == 0.0 and first_ingot < 1.0:
 		first_ingot += float(rates.get("bronze", 0.0)) * dt_days
@@ -827,6 +945,9 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 					sowing.erase(cell)
 			if mult <= 0.0:
 				continue
+		if extra_plots.has(cell):
+			mult *= 1.25
+		mult *= 1.0 - 0.5 * minf(1.0, mentoring_days(cell) / dt_days)
 		if def.has("seasons"):
 			mult *= float(def.seasons[season])
 		if bronze_equipment.has(planet.buildings[cell]):
@@ -835,6 +956,16 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 			mult *= 0.4 + planet.fertility[cell]
 		if def.has("water_bonus") and near_water(cell):
 			mult *= float(def.water_bonus)
+		var order: Dictionary = orders.get(cell, {})
+		if not order.is_empty():
+			var output := str(order.res)
+			var remaining := float(order.amount)
+			if order.kind == "target":
+				remaining -= float(inventory.get(output, 0.0))
+			var unit_output := float(produces[output]) * dt_days * _perk_production(output)
+			mult = minf(mult, maxf(0.0, remaining) / unit_output)
+			if mult <= 0.00000001:
+				continue
 		var inputs := {}
 		var opened: bool = preview_open if cell == preview_field else canals.has(cell) and canals[cell].open
 		if opened:
@@ -857,8 +988,11 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 		var limiting := ""
 		for res in consumes:
 			var need := float(consumes[res]) * mult * dt_days
-			if need > 0.0 and float(inventory.get(res, 0.0)) / need < supply:
-				supply = float(inventory.get(res, 0.0)) / need
+			var available := float(inventory.get(res, 0.0))
+			if res == "grain":
+				available = maxf(0.0, available - seed_target)
+			if need > 0.0 and available / need < supply:
+				supply = available / need
 				limiting = str(res)
 		if supply < 0.999 and not consumes.is_empty():
 			waiting[cell] = limiting
@@ -876,6 +1010,8 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 			if def.has("extracts"):
 				amount = _extract(cell, str(def.extracts), amount, apply, deposits)
 			inventory[res] = float(inventory.get(res, 0.0)) + amount
+			if apply and order.get("kind", "") == "batch":
+				order.amount = maxf(0.0, float(order.amount) - amount)
 			outputs[res] = amount / dt_days
 			new_rates[res] = float(new_rates.get(res, 0.0)) + outputs[res]
 		produced[cell] = outputs
@@ -895,6 +1031,10 @@ func _flow(dt_days: float, inventory: Dictionary, staffing: Dictionary, apply: b
 ## Once per in-game day: nature regrows, well-being evolves, population changes.
 func daily_update() -> void:
 	elapsed_days += 1
+	if elapsed_days % (SEASON_DAYS * SEASONS.size()) == 0:
+		sow_extra_plots()
+	if not contract.is_empty() and elapsed_days > int(contract.due):
+		contract.clear()
 	if market_cell >= 0 and is_active(market_cell):
 		market_days += 1
 	_regrow()
@@ -952,12 +1092,20 @@ func to_dict() -> Dictionary:
 		"advanced_chapter": advanced_chapter,
 		"bronze_equipment": bronze_equipment.duplicate(),
 		"market_days": market_days, "last_trade": last_trade,
+		"pantry_days": pantry_days, "seed_target": seed_target, "extra_plots": extra_plots.duplicate(),
+		"orders": orders.duplicate(true), "contract": contract.duplicate(), "contract_visit": contract_visit,
 		"trade_reserves": trade_reserves.duplicate(), "trade_auto": trade_auto.duplicate(),
 		"plans": plans.duplicate(true),
 	}
 
 
 func from_dict(data: Dictionary) -> void:
+	pantry_days = clampi(int(data.get("pantry_days", 0)), 0, 30)
+	seed_target = clampi(int(data.get("seed_target", 0)), 0, 400)
+	contract = data.get("contract", {}).duplicate()
+	contract_visit = int(data.get("contract_visit", -1))
+	orders.clear()
+	extra_plots.clear()
 	market_days = maxi(0, int(data.get("market_days", 0)))
 	last_trade = clampi(int(data.get("last_trade", -1)), -1, caravan_visit())
 	trade_reserves.clear()
@@ -993,7 +1141,10 @@ func from_dict(data: Dictionary) -> void:
 	training = []
 	for t in data.get("training", []):
 		if typeof(t) == TYPE_DICTIONARY:
-			training.append({"profession": str(t.get("profession", "")), "left": float(t.get("left", 0.0))})
+			var entry := {"profession": str(t.get("profession", "")), "left": float(t.get("left", 0.0))}
+			if t.has("mentor"):
+				entry["mentor"] = int(t.mentor)
+			training.append(entry)
 	construction = {}
 	var saved_sites: Dictionary = data.get("construction", {})
 	for key in saved_sites:
@@ -1033,6 +1184,16 @@ func from_dict(data: Dictionary) -> void:
 		_rebuild_caches()
 	else:
 		_migrate_to_townhall()
+
+	for key in data.get("orders", {}):
+		var cell := int(key)
+		var order: Dictionary = data.orders[key]
+		if cell in _building_cells and def_of(cell).get("produces", {}).has(order.get("res", "")) and order.get("kind", "") in ["target", "batch"]:
+			orders[cell] = order.duplicate()
+	for key in data.get("extra_plots", {}):
+		var cell := int(key)
+		if cell in _building_cells and building_at(cell) == "field":
+			extra_plots[cell] = true
 
 
 # --- Internals ---------------------------------------------------------------
@@ -1108,9 +1269,17 @@ func _advance_timers(dt_days: float) -> void:
 			_rebuild_caches()
 			level_up.emit(townhall_level)
 			changed.emit()
+	_advance_training(dt_days, false, {})
+
+
+func _advance_training(dt_days: float, apprentices: bool, staffing: Dictionary) -> void:
 	var train_step := dt_days * _train_speed()
 	var done: Array = []
 	for t in training:
+		if apprentices != t.has("mentor"):
+			continue
+		if apprentices and float(staffing.get(int(t.mentor), 0)) <= 0:
+			continue
 		t.left = float(t.left) - train_step
 		if float(t.left) <= 0.0:
 			done.append(t)
