@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel  # the runner this account's iOS build already uses
     timeout-minutes: 60
     steps:
       - name: Select latest stable Xcode
