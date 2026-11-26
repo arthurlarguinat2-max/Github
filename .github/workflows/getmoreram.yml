@@ -36,6 +36,21 @@ jobs:
           submodules: recursive
           path: gmr
 
+      - name: Checkout this repository (patches)
+        uses: actions/checkout@v5
+        with:
+          path: self
+          sparse-checkout: ci/getmoreram
+
+      # show-apple-errors.patch: show Apple's own error text (HTTP status, "errors"
+      # array or raw body) instead of "Bad server response" when an App ID edit fails.
+      - name: Apply patches
+        working-directory: gmr
+        run: |
+          for p in ../self/ci/getmoreram/*.patch; do
+            echo "applying $p"; git apply "$p"
+          done
+
       - name: Archive (unsigned)
         working-directory: gmr
         run: |

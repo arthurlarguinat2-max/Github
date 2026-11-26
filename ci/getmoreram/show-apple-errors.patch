@@ -1,0 +1,27 @@
+diff --git a/Packages/StosSign/Sources/StosSign_API/AppleAPI.swift b/Packages/StosSign/Sources/StosSign_API/AppleAPI.swift
+index 358d73c..65132b6 100755
+--- a/Packages/StosSign/Sources/StosSign_API/AppleAPI.swift
++++ b/Packages/StosSign/Sources/StosSign_API/AppleAPI.swift
+@@ -630,11 +630,19 @@ public final class AppleAPI: Sendable {
+             request.setValue(value, forHTTPHeaderField: key)
+         }
+         
+-        let (data, _) = try await self.session.data(for: request)
++        let (data, urlResponse) = try await self.session.data(for: request)
+         
+         if json {
+-            guard let responseDictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+-                throw AppleAPIError.badServerResponse
++            let status = (urlResponse as? HTTPURLResponse)?.statusCode ?? 0
++            let raw = String(data: data.prefix(600), encoding: .utf8) ?? "\(data.count) bytes"
++            guard let responseDictionary = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [String: Any] else {
++                throw AppleAPIError.customError(code: status, message: "HTTP \(status): \(raw)")
++            }
++            if responseDictionary["data"] == nil, let errors = responseDictionary["errors"] as? [[String: Any]] {
++                let text = errors.map { e in
++                    [e["status"], e["code"], e["title"], e["detail"]].compactMap { $0 as? String }.joined(separator: " | ")
++                }.joined(separator: "\n")
++                throw AppleAPIError.customError(code: status, message: "HTTP \(status): \(text.isEmpty ? raw : text)")
+             }
+             
+             return responseDictionary
