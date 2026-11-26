@@ -1,0 +1,75 @@
+# Builds GetMoreRam (hugeBlack/GetMoreRam) with the sign-in fix of its
+# pull request #48 (Apple's October 2026 sign-in change, error -80046),
+# as an unsigned IPA to install with SideStore or AltStore.
+# Runs when this file changes on a claude/** branch, or by hand from the Actions tab.
+name: GetMoreRam (correctif connexion, PR 48)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/getmoreram.yml"]
+
+env:
+  # Head of https://github.com/hugeBlack/GetMoreRam/pull/48, pinned.
+  GMR_REF: 6794cfca8b6fc61eab72961d5c67b7613523ac3e
+  SCHEME: GetMoreRam
+
+permissions:
+  contents: write  # attach the IPA to a release of this repository
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Checkout GetMoreRam (PR 48)
+        uses: actions/checkout@v5
+        with:
+          repository: hugeBlack/GetMoreRam
+          ref: ${{ env.GMR_REF }}
+          submodules: recursive
+          path: gmr
+
+      - name: Archive (unsigned)
+        working-directory: gmr
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project GetMoreRam.xcodeproj -scheme "$SCHEME" \
+            -sdk iphoneos -arch arm64 -configuration Release \
+            -archivePath "$RUNNER_TEMP/archive" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            | tail -n 200
+
+      - name: Fake-sign and package IPA
+        run: |
+          brew install ldid
+          APP="$RUNNER_TEMP/archive.xcarchive/Products/Applications/$SCHEME.app"
+          find "$APP" -type d -path '*/Frameworks/*.framework' -exec ldid -S {} \;
+          ldid -S "$APP"
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
+          cd "$RUNNER_TEMP/ipa"
+          zip -qry "$GITHUB_WORKSPACE/GetMoreRam.ipa" Payload -x "._*" -x ".DS_Store"
+          ls -lh "$GITHUB_WORKSPACE/GetMoreRam.ipa"
+
+      - name: Upload IPA (artifact)
+        uses: actions/upload-artifact@v5
+        with:
+          name: GetMoreRam.ipa
+          path: GetMoreRam.ipa
+
+      - name: Publish as pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "getmoreram-pr48-$GITHUB_RUN_NUMBER" GetMoreRam.ipa \
+            --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "GetMoreRam (correctif connexion, PR 48)" \
+            --notes "GetMoreRam compilé depuis hugeBlack/GetMoreRam, pull request #48 (commit $GMR_REF), non signé. À installer avec SideStore ou AltStore."
