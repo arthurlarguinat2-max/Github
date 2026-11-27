@@ -1,0 +1,12 @@
+diff --git a/src/d3d11/d3d11.cpp b/src/d3d11/d3d11.cpp
+index 85cbc03..950d523 100644
+--- a/src/d3d11/d3d11.cpp
++++ b/src/d3d11/d3d11.cpp
+@@ -15,6 +15,7 @@ D3D11CoreCreateDevice(IDXGIFactory *pFactory, IDXGIAdapter *pAdapter,
+                       UINT Flags, const D3D_FEATURE_LEVEL *pFeatureLevels,
+                       UINT FeatureLevels, ID3D11Device **ppDevice) {
+   InitReturnPtr(ppDevice);
++  ERR("[arthur] Bonjour depuis mon d3d11.dll !");
+ 
+   Com<IMTLDXGIAdapter> dxgi_adapter;
+ 

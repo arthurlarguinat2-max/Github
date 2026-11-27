@@ -1,0 +1,82 @@
+# Learning project: BCD (thebcd69/bcd-games, GPL-3.0) with one change of our
+# own in DXMT's Direct3D 11 (ci/bcd-arthur/*.patch, applied to the dxmt
+# submodule), rebuilt as d3d11-src.dll with BCD's own script and put into the
+# official BCD.ipa of the same build. Install the result with SideStore (it
+# re-signs it); the game uses it with env.MADEIRA_D3D11_SRC = 1 in its config.
+# Runs when this file or the patches change on a claude/** branch, or by hand.
+name: BCD modifié (d3d11-src.dll)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/bcd-arthur.yml", "ci/bcd-arthur/**"]
+
+env:
+  # BCD 0.1.721 (the build on the iPhone) and its release.
+  BCD_REF: 8c784fe01359ece82158567676948628f5f41099
+  BCD_TAG_BUILD: "721"
+  MINGW_URL: https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-ucrt-ubuntu-22.04-x86_64.tar.xz
+
+permissions:
+  contents: write  # attach the IPA to a pre-release of this repository
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout this repository (patches)
+        uses: actions/checkout@v5
+        with:
+          path: self
+          sparse-checkout: ci/bcd-arthur
+
+      - name: Checkout BCD 0.1.721 and its DXMT
+        run: |
+          git init -q bcd && cd bcd
+          git remote add origin https://github.com/thebcd69/bcd-games.git
+          git fetch -q --depth 1 origin "$BCD_REF"
+          git checkout -q FETCH_HEAD
+          git submodule update --init --depth 1 dxmt
+
+      - name: llvm-mingw
+        run: |
+          mkdir -p tc && curl -fsSL --retry 3 -o tc/m.tar.xz "$MINGW_URL"
+          tar -xJf tc/m.tar.xz -C tc && rm tc/m.tar.xz
+          echo "MINGW=$PWD/$(ls -d tc/llvm-mingw-*)/bin" >> "$GITHUB_ENV"
+
+      - name: Apply our patches to DXMT
+        working-directory: bcd/dxmt
+        run: |
+          for p in ../../self/ci/bcd-arthur/*.patch; do
+            echo "applying $p"; git apply "$p"
+          done
+          git diff --stat
+
+      - name: Build d3d11-src.dll (BCD's script)
+        working-directory: bcd
+        run: |
+          bash tools/build-d3d11-dll.sh 2>&1 | tail -n 40
+          test "$(grep -c 'Bonjour depuis mon' app/Madeira/arm64ec-windows/d3d11-src.dll)" -ge 1
+
+      - name: Put it into the official BCD.ipa
+        run: |
+          curl -fsSL --retry 3 -o BCD.ipa https://github.com/thebcd69/bcd-games/releases/latest/download/BCD.ipa
+          mkdir ipa && cd ipa && unzip -q ../BCD.ipa
+          ls Payload
+          grep -q "<string>$BCD_TAG_BUILD</string>" Payload/*.app/Info.plist \
+            || echo "::warning::the latest BCD.ipa is not build $BCD_TAG_BUILD: the DLL was built from 0.1.$BCD_TAG_BUILD"
+          cp ../bcd/app/Madeira/arm64ec-windows/d3d11-src.dll Payload/*.app/arm64ec-windows/d3d11-src.dll
+          zip -qry ../BCD-arthur.ipa .
+          cd .. && ls -lh BCD-arthur.ipa
+          unzip -p BCD-arthur.ipa "Payload/*.app/arm64ec-windows/d3d11-src.dll" | grep -c "Bonjour depuis mon"
+
+      - name: Publish as pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "bcd-arthur-$GITHUB_RUN_NUMBER" BCD-arthur.ipa \
+            --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "BCD modifié (projet d'apprentissage)" \
+            --notes "BCD 0.1.$BCD_TAG_BUILD (thebcd69/bcd-games, GPL-3.0; includes work from BCD by thebcd69) avec un d3d11-src.dll recompilé depuis ci/bcd-arthur/*.patch. À installer avec SideStore ; à activer par jeu avec env.MADEIRA_D3D11_SRC = 1."
