@@ -1,0 +1,106 @@
+[15:34:27.284] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[15:34:27.381] [INFO] [session] the last session of Cities: Skylines did not end cleanly (in front, last start-up phase wine-start 1 s after the start); not asking (turned off)
+[15:34:27.394] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (Cities.exe-2026-11-27_15-17-50.txt), scrubbed:
+[15:34:27.395] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2536 158040KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2536 imm=0 dyn=0 stg=0 | data y=2536 n=0 | cpu r=0 w=0 | bind srv=2536 rt=0 uav=0
+[15:34:27.395] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=47 2182KB max=512x256 mips=10 arr=1 cube=0 | use def=47 imm=0 dyn=0 stg=0 | data y=47 n=0 | cpu r=0 w=0 | bind srv=47 rt=0 uav=0
+[15:34:27.395] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=64 2494KB max=1024x1024 mips=9 arr=1 cube=0 | use def=64 imm=0 dyn=0 stg=0 | data y=64 n=0 | cpu r=0 w=0 | bind srv=64 rt=0 uav=0
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4201
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2535
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x47
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x64
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 217856KB
+[15:34:27.396] [INFO] [prev-tail] err:   [bc-census] ml653 periodic: 6912 BC resources, 43459 subresources
+[15:34:27.397] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM n=4242 55157KB max=512x512 mips=10 arr=1 cube=0 | use def=4242 imm=0 dyn=0 stg=0 | data y=4242 n=0 | cpu r=0 w=0 | bind srv=4242 rt=0 uav=0
+[15:34:27.397] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2559 158049KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2559 imm=0 dyn=0 stg=0 | data y=2559 n=0 | cpu r=0 w=0 | bind srv=2559 rt=0 uav=0
+[15:34:27.397] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=47 2182KB max=512x256 mips=10 arr=1 cube=0 | use def=47 imm=0 dyn=0 stg=0 | data y=47 n=0 | cpu r=0 w=0 | bind srv=47 rt=0 uav=0
+[15:34:27.397] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=64 2494KB max=1024x1024 mips=9 arr=1 cube=0 | use def=64 imm=0 dyn=0 stg=0 | data y=64 n=0 | cpu r=0 w=0 | bind srv=64 rt=0 uav=0
+[15:34:27.397] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4242
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2558
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x47
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x64
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 217882KB
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653 periodic: 6976 BC resources, 43793 subresources
+[15:34:27.398] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM n=4287 55181KB max=512x512 mips=10 arr=1 cube=0 | use def=4287 imm=0 dyn=0 stg=0 | data y=4287 n=0 | cpu r=0 w=0 | bind srv=4287 rt=0 uav=0
+[15:34:27.399] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2578 158057KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2578 imm=0 dyn=0 stg=0 | data y=2578 n=0 | cpu r=0 w=0 | bind srv=2578 rt=0 uav=0
+[15:34:27.399] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=47 2182KB max=512x256 mips=10 arr=1 cube=0 | use def=47 imm=0 dyn=0 stg=0 | data y=47 n=0 | cpu r=0 w=0 | bind srv=47 rt=0 uav=0
+[15:34:27.399] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=64 2494KB max=1024x1024 mips=9 arr=1 cube=0 | use def=64 imm=0 dyn=0 stg=0 | data y=64 n=0 | cpu r=0 w=0 | bind srv=64 rt=0 uav=0
+[15:34:27.399] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4286
+[15:34:27.399] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2578
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x47
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x64
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 217914KB
+[15:34:27.400] [INFO] [prev-tail] err:   [mip-clamp] ml675 #6912 logical 32x32 mips 6 -> physical 16x16 mips 5 arr=1
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653 periodic: 7040 BC resources, 44120 subresources
+[15:34:27.400] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM n=4328 55199KB max=512x512 mips=10 arr=1 cube=0 | use def=4328 imm=0 dyn=0 stg=0 | data y=4328 n=0 | cpu r=0 w=0 | bind srv=4328 rt=0 uav=0
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2601 158066KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2601 imm=0 dyn=0 stg=0 | data y=2601 n=0 | cpu r=0 w=0 | bind srv=2601 rt=0 uav=0
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=47 2182KB max=512x256 mips=10 arr=1 cube=0 | use def=47 imm=0 dyn=0 stg=0 | data y=47 n=0 | cpu r=0 w=0 | bind srv=47 rt=0 uav=0
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=64 2494KB max=1024x1024 mips=9 arr=1 cube=0 | use def=64 imm=0 dyn=0 stg=0 | data y=64 n=0 | cpu r=0 w=0 | bind srv=64 rt=0 uav=0
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4327
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2601
+[15:34:27.401] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x47
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x64
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 217941KB
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653 periodic: 7104 BC resources, 44443 subresources
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM n=4368 55215KB max=512x512 mips=10 arr=1 cube=0 | use def=4368 imm=0 dyn=0 stg=0 | data y=4368 n=0 | cpu r=0 w=0 | bind srv=4368 rt=0 uav=0
+[15:34:27.402] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2625 158075KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2625 imm=0 dyn=0 stg=0 | data y=2625 n=0 | cpu r=0 w=0 | bind srv=2625 rt=0 uav=0
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=47 2182KB max=512x256 mips=10 arr=1 cube=0 | use def=47 imm=0 dyn=0 stg=0 | data y=47 n=0 | cpu r=0 w=0 | bind srv=47 rt=0 uav=0
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=64 2494KB max=1024x1024 mips=9 arr=1 cube=0 | use def=64 imm=0 dyn=0 stg=0 | data y=64 n=0 | cpu r=0 w=0 | bind srv=64 rt=0 uav=0
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4368
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2624
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x47
+[15:34:27.403] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x64
+[15:34:27.404] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[15:34:27.404] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 217967KB
+[15:34:27.404] [INFO] [prev-tail] [xp-api-top] 15:19:37.182 4096 samples: kernelbase.dll+0x6d470=112326/s d3d11.dll+0x424f8=48703/s kernelbase.dll+0x6db54=47151/s ntdll.dll+0x23c0c=46435/s kernelbase.dll+0x6c248=44644/s ntdll.dll+0x67dcc=36288/s ntdll.dll+0x6784c=32110/s d3d11.dll+0x35e4c=27097/s kernel32.dll+0x26678=24948/s d3d11.dll+0x4804=14682/s d3d11.dll+0x48a4=11579/s ntdll.dll+0x71aac=10266/s ntdll.dll+0x67d10=8236/s ntdll.
+[15:34:27.405] [INFO] [prev-tail] [xp-api-qpc] 15:19:37.182 QPC 16810/s gaps <1us 32% <10us 59% <100us 5% <1ms 2% >=1ms 2%; top threads: 00a4=10545/s(<1us 8% <10us 86%) 00b8=2640/s(<1us 98% <10us 0%) 00b4=2151/s(<1us 69% <10us 23%) 00c8=613/s(<1us 31% <10us 9%)
+[15:34:27.405] [INFO] [prev-tail] [xp-api-cs] 15:19:37.182 21 sampled contended enters (process heap 0x70b2f60000): 0x70bcc9beb0=90%(spin 0 contention 0) 0x14e3e0940=10%(spin 0 contention 604 ntdll.dll+0xd0940 ../dlls/ntdll/threadpool.c: timerqueue.cs)
+[15:34:27.405] [INFO] [prev-tail] 81ac=2865/s d3d11.dll+0x6ac84=1671/s kernelbase.dll+0x23d88=1432/s kernelbase.dll+0x68ac8=1074/s d3d11.dll+0x6a1c8=955/s kernelbase.dll+0x1d8a8=955/s d3d11.dll+0x69cec=716/s d3d11.dll+0x6c28c=716/s d3d11.dll+0x6dc64=716/s kernelbase.dll+0x51d48=716/s d3d11.dll+0x69cd4=597/s d3d11.dll+0x69ce4=597/s kernelbase.dll+0x69aac=597/s d3d11.dll+0x34284=477/s
+[15:34:27.406] [INFO] [prev-tail] [15:19:37.183] [xp-api-qpc] 15:19:37.182 QPC 16810/s gaps <1us 32% <10us 59% <100us 5% <1ms 2% >=1ms 2%; top threads: 00a4=10545/s(<1us 8% <10us 86%) 00b8=2640/s(<1us 98% <10us 0%) 00b4=2151/s(<1us 69% <10us 23%) 00c8=613/s(<1us 31% <10us 9%)
+[15:34:27.406] [INFO] [prev-tail] [15:19:37.183] [xp-api-cs] 15:19:37.182 21 sampled contended enters (process heap 0x70b2f60000): 0x70bcc9beb0=90%(spin 0 contention 0) 0x14e3e0940=10%(spin 0 contention 604 ntdll.dll+0xd0940 ../dlls/ntdll/threadpool.c: timerqueue.cs)
+[15:34:27.428] [INFO] [prev-end] last footprint "[footprint] rev=ml358 phys=5583 MB (peak 5583) internal=3062 MB compressed=1973 MB external=32 MB reusable=0 MB (cycle=56)" | last alive none | last summary none | verdict: no memory pressure (90 % of the limit)
+[15:34:27.452] [INFO] [epic-install] start installed=0 refused=0
+[15:34:27.544] [INFO] [xinput] ml1920 physical controllers enabled=1
+[15:34:27.544] [INFO] [touch-xinput] ml1930 enabled=1
+[15:34:27.545] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[15:34:27.551] [INFO] [steam-library] start signed-in=1 cached=15
+[15:34:27.574] [INFO] [bcd-ui] shown games=16 downloads=0
+[15:34:27.575] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[15:34:27.575] [INFO] SIGTRAP handler installed (no debugger)
+[15:34:27.575] [INFO] Checking entitlements...
+[15:34:27.575] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[15:34:27.575] [OK]   increased-memory-limit: true
+[15:34:27.575] [DBG]   extended-virtual-addressing: false
+[15:34:27.576] [DBG]   increased-debugging-memory-limit: false
+[15:34:27.576] [INFO] [build] v0.1.721 (721)
+[15:34:27.576] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[15:34:27.577] [INFO] [device] address-map=[0x1043e0000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[15:34:27.577] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[15:34:27.578] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[15:34:27.587] [INFO] [device] settings: low-power=0 thermal=nominal screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=85GB stikdebug-url=0
+[15:34:27.591] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[15:34:27.658] [INFO] [steam-games] installed=2 ready=2
+[15:34:27.688] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[15:34:27.688] [INFO] [epic-auth] start signed-in=0
+[15:34:27.689] [INFO] [epic-library] start cached=0 listed=0
+[15:34:27.708] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[15:34:28.946] [INFO] [steam-playtime] apps=13
+[15:34:28.947] [INFO] [steam-cloud] sync games=2 automatic=1
+[15:34:29.752] [INFO] [steam-cloud] app=255710 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[15:34:30.495] [INFO] [steam-cloud] app=1927780 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[15:34:30.878] [INFO] [autotune] Cities: Skylines: killed at stage 4 after 90 s; matched swap-8gb-memory-kill-sure,swap-8gb-memory-kill; status stuck; next nothing; kept swap-mb = 3072, swap-mode = 2, swap-min-mb = 1, pool-window-cut = 1; skipped swap-8gb-memory-kill-sure (tried), swap-8gb-memory-kill (its lines were tried); read bcd-log.prev.txt (46660 lines; swap-8gb-memory-kill-sure from line 681, swap-8gb-memory-kill from line 681)
+[15:34:30.879] [INFO] [autotune] the unfinished session's analysis waited 0 ms and took 3502 ms
+[15:34:36.027] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:34:36.028] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:34:41.233] [INFO] [bcd-logs] sent bcd-log.prev.txt: code EEZ46W
+[15:34:42.589] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:36:07.090] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:36:13.802] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:36:34.185] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:37:19.058] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:37:27.574] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[15:37:37.434] [INFO] [bcd-logs] sent Cities.exe-2026-11-27_15-17-50.txt: code 62BCGB
+[15:38:06.177] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
