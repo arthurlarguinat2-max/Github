@@ -1,0 +1,99 @@
+[11:43:25.269] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[11:43:25.453] [INFO] [session] the last session of Cities: Skylines II did not end cleanly (in the background, last start-up phase wine-start 0 s after the start); not asking (turned off)
+[11:43:25.468] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (vswhere.exe-2026-11-28_11-25-03.txt), scrubbed:
+[11:43:25.469] [INFO] [prev-tail] [waiters]  tid=0110 addr=0x70f098f2c0 age=1236s INF w0=ff800001 w1=00000000
+[11:43:25.469] [INFO] [prev-tail] [waiters]  tid=0114 addr=0x70f0997480 age=1236s INF w0=ff800001 w1=00000000
+[11:43:25.469] [INFO] [prev-tail] [waiters]  tid=0118 addr=0x70f099f640 age=1236s INF w0=ff800001 w1=00000000
+[11:43:25.469] [INFO] [prev-tail] [waiters]  tid=00ac addr=0x71ef91432a age=500s INF w0=0001000f w1=00000000
+[11:43:25.470] [INFO] [prev-tail] [waiters]  tid=0128 addr=0x15265d448 age=502s INF w0=00000b25 w1=00000000
+[11:43:25.470] [INFO] [prev-tail] [waiters]  tid=0124 addr=0x15265be48 age=502s INF w0=00000b24 w1=00000000
+[11:43:25.470] [INFO] [prev-tail] [waiters]  tid=0134 addr=0x71da2d2548 age=510s INF w0=0000032c w1=00000000
+[11:43:25.470] [INFO] [prev-tail] [waiters]  tid=0130 addr=0x71da2d2548 age=510s INF w0=0000032c w1=00000000
+[11:43:25.470] [INFO] [prev-tail] [waiters]  tid=0164 addr=0x15265ef88 age=502s INF w0=0000028a w1=00000000
+[11:43:25.471] [INFO] [prev-tail] [waiters]  tid=016c addr=0x72498d1a58 age=1233s INF w0=00000000 w1=00000000
+[11:43:25.471] [INFO] [prev-tail] [waiters]  tid=0170 addr=0x72498d1a58 age=1233s INF w0=00000000 w1=00000000
+[11:43:25.471] [INFO] [prev-tail] [waiters]  tid=0160 addr=0x15265bd48 age=513s INF w0=00000001 w1=00000000
+[11:43:25.471] [INFO] [prev-tail] [waiters]  tid=01f0 addr=0x71da2d2548 age=510s INF w0=0000032c w1=00000000
+[11:43:25.471] [INFO] [prev-tail] [waiters]  tid=01f4 addr=0x71da2d2548 age=510s INF w0=0000032c w1=00000000
+[11:43:25.472] [INFO] [prev-tail] [freeze] GAP #4  21.6s (wall 21.6s) — started t+1240.8s, ended t+1262.3s; threads=126 resident=1273MB dbg=DEBUGGED gen=1 cause=BACKGROUNDED(not-a-freeze) rev=ml525
+[11:43:25.472] [INFO] [prev-tail] [freeze]   bg-enter t+1240.5s bg-exit t+1228.4s bg_now=1
+[11:43:25.472] [INFO] [prev-tail] [11:43:24.230] [INFO] [hud] layout=4 fps=0 cpu=0 mem=5257/6143 jit=582/624 swap=1928 thermal=serious lpm=0 batt=75 t=21:03
+[11:43:25.472] [INFO] [prev-tail] [waiters] parked=46 over60s=46 rev=ml444
+[11:43:25.473] [INFO] [prev-tail] [waiters]  tid=00cc addr=0x70f02e1380 age=523s INF w0=ff8036d2 w1=00000000
+[11:43:25.473] [INFO] [prev-tail] [waiters]  tid=00d0 addr=0x70f02e9540 age=523s INF w0=ff801499 w1=00000000
+[11:43:25.473] [INFO] [prev-tail] [waiters]  tid=00d4 addr=0x70f02f1700 age=523s INF w0=ff80155b w1=00000000
+[11:43:25.473] [INFO] [prev-tail] [waiters]  tid=00d8 addr=0x70f02f98c0 age=523s INF w0=ff800fd1 w1=0000004c
+[11:43:25.473] [INFO] [prev-tail] [waiters]  tid=00dc addr=0x70f0925c00 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.474] [INFO] [prev-tail] [waiters]  tid=00e0 addr=0x70f092ddc0 age=593s INF w0=ff800034 w1=00000000
+[11:43:25.474] [INFO] [prev-tail] [waiters]  tid=00e8 addr=0x70f093e140 age=592s INF w0=ff800047 w1=00000000
+[11:43:25.474] [INFO] [prev-tail] [waiters]  tid=00e4 addr=0x70f0935f80 age=596s INF w0=ff800013 w1=00000000
+[11:43:25.474] [INFO] [prev-tail] [waiters]  tid=00ec addr=0x70f0946300 age=1245s INF w0=ff800003 w1=00000000
+[11:43:25.475] [INFO] [prev-tail] [waiters]  tid=00f0 addr=0x70f094e4c0 age=592s INF w0=ff800012 w1=00000000
+[11:43:25.475] [INFO] [prev-tail] [waiters]  tid=00f4 addr=0x70f0956680 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.475] [INFO] [prev-tail] [waiters]  tid=00c8 addr=0x70f02d91c0 age=523s INF w0=ff8011b3 w1=00000000
+[11:43:25.475] [INFO] [prev-tail] [waiters]  tid=00f8 addr=0x70f095e840 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.475] [INFO] [prev-tail] [waiters]  tid=0100 addr=0x70f096ebc0 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.476] [INFO] [prev-tail] [waiters]  tid=00fc addr=0x70f0966a00 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.476] [INFO] [prev-tail] [waiters]  tid=0104 addr=0x70f0976d80 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.476] [INFO] [prev-tail] [waiters]  tid=0108 addr=0x70f097ef40 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.476] [INFO] [prev-tail] [waiters]  tid=010c addr=0x70f0987100 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.476] [INFO] [prev-tail] [waiters]  tid=0110 addr=0x70f098f2c0 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.477] [INFO] [prev-tail] [waiters]  tid=0114 addr=0x70f0997480 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.477] [INFO] [prev-tail] [waiters]  tid=0118 addr=0x70f099f640 age=1257s INF w0=ff800001 w1=00000000
+[11:43:25.477] [INFO] [prev-tail] [waiters]  tid=00ac addr=0x71ef91432a age=521s INF w0=0001000f w1=00000000
+[11:43:25.477] [INFO] [prev-tail] [waiters]  tid=0128 addr=0x15265d448 age=524s INF w0=00000b25 w1=00000000
+[11:43:25.477] [INFO] [prev-tail] [waiters]  tid=0124 addr=0x15265be48 age=524s INF w0=00000b24 w1=00000000
+[11:43:25.478] [INFO] [prev-tail] [srv-queues] ---- 64 threads ----
+[11:43:25.478] [INFO] [prev-tail] [srv-queues] tid=0024 wake=00000000/00000040 chg=00000000/00001cff send_pend=0 post=0 recv_in_prog=0
+[11:43:25.478] [INFO] [prev-tail] [srv-queues] tid=002c wake=00000000/00000000 chg=00000000/00001cff send_pend=0 post=0 recv_in_prog=0
+[11:43:25.478] [INFO] [prev-tail] [srv-queues] tid=0030 wake=00000000/00000000 chg=00000000/00000000 send_pend=0 post=0 recv_in_prog=0
+[11:43:25.478] [INFO] [prev-tail] [srv-queues] tid=0050 wake=00000000/00000000 chg=00000000/00000000 send_pend=0 post=0 recv_in_prog=0
+[11:43:25.479] [INFO] [prev-tail] [srv-queues] tid=00ac wake=00000412/00000000 chg=00000412/00000000 send_pend=0 post=0 recv_in_prog=0
+[11:43:25.479] [INFO] [prev-tail] [waiters]  tid=0134 addr=0x71da2d2548 age=532s INF w0=0000032c w1=00000000
+[11:43:25.479] [INFO] [prev-tail] [waiters]  tid=0130 addr=0x71da2d2548 age=532s INF w0=0000032c w1=00000000
+[11:43:25.479] [INFO] [prev-tail] [waiters]  tid=0164 addr=0x15265ef88 age=524s INF w0=0000028a w1=00000000
+[11:43:25.480] [INFO] [prev-tail] [waiters]  tid=016c addr=0x72498d1a58 age=1254s INF w0=00000000 w1=00000000
+[11:43:25.480] [INFO] [prev-tail] [waiters]  tid=0170 addr=0x72498d1a58 age=1254s INF w0=00000000 w1=00000000
+[11:43:25.480] [INFO] [prev-tail] [waiters]  tid=0160 addr=0x15265bd48 age=535s INF w0=00000001 w1=00000000
+[11:43:25.480] [INFO] [prev-tail] [waiters]  tid=01f0 addr=0x71da2d2548 age=532s INF w0=0000032c w1=00000000
+[11:43:25.480] [INFO] [prev-tail] [waiters]  tid=01f4 addr=0x71da2d2548 age=532s INF w0=0000032c w1=00000000
+[11:43:25.481] [INFO] [prev-tail] [thread-sample] ml876 modmap peb=0x71ffff0000 modules=22 first=explorer.exe@0x11b780000
+[11:43:25.481] [INFO] [prev-tail] [thread-sample] ml876 modmap peb=0x10dbd8000 modules=58 first=dockhost.exe@0x123ea0000
+[11:43:25.481] [INFO] [prev-tail] [thread-sample] ml876 modmap peb=0x110a94000 modules=12 first=conhost.exe@0x11bc30000
+[11:43:25.482] [INFO] [prev-tail] kThreadPool:1" teb=0x71ffea0000 cpu=0% wait pc=libsystem_kernel.dylib`read+0x8 lr=Madeira`wait_select_reply+0x38 sp=0x70ba5de9d0 NATIVE (no FEX state) sp-cand=[ ] last-syscall id=0x4 pc=0x14988f1c8 user-sp=0x70baedfc20 user-cand=[ steamclient64.dll+0x1756848 tier0_s64.dll+0x1645d steamclient64.dll+0xd44f59 ]
+[11:43:25.507] [INFO] [prev-end] last footprint "[footprint] rev=ml358 phys=5255 MB (peak 5351) internal=1229 MB compressed=1631 MB external=44 MB reusable=0 MB (cycle=558)" | last alive "[freeze] alive t+1233s beats=39 gaps=3 iter=4429 gen=1 threads=130 resident=1273MB dbg=DEBUGGED rev=ml525" | last summary "[INFO] [session] length=1241s partial=1 play=626s frames=624 avg=17.7 low1=1.1 worst=67858ms stalls=22/591s peak=5354MB limit=6143MB thermal=serious lpm=0 res=1" | verdict: no memory pressure (85 % of the limit)
+[11:43:25.530] [INFO] [epic-install] start installed=0 refused=0
+[11:43:25.721] [INFO] [xinput] ml1920 physical controllers enabled=1
+[11:43:25.722] [INFO] [touch-xinput] ml1930 enabled=1
+[11:43:25.723] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[11:43:25.731] [INFO] [steam-library] start signed-in=1 cached=17
+[11:43:25.761] [INFO] [bcd-ui] shown games=18 downloads=0
+[11:43:25.762] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[11:43:25.762] [INFO] SIGTRAP handler installed (no debugger)
+[11:43:25.762] [INFO] Checking entitlements...
+[11:43:25.762] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[11:43:25.762] [OK]   increased-memory-limit: true
+[11:43:25.762] [DBG]   extended-virtual-addressing: false
+[11:43:25.763] [DBG]   increased-debugging-memory-limit: false
+[11:43:25.763] [INFO] [build] v0.1.721 (721)
+[11:43:25.763] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[11:43:25.763] [INFO] [device] address-map=[0x104838000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[11:43:25.764] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[11:43:25.765] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[11:43:25.776] [INFO] [device] settings: low-power=0 thermal=serious screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=7GB stikdebug-url=0
+[11:43:25.781] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[11:43:25.864] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[11:43:25.884] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[11:43:25.885] [INFO] [epic-auth] start signed-in=0
+[11:43:25.885] [INFO] [epic-library] start cached=0 listed=0
+[11:43:26.000] [INFO] [steam-games] installed=4 ready=4
+[11:43:27.210] [INFO] [steam-playtime] apps=15
+[11:43:27.212] [INFO] [steam-cloud] sync games=4 automatic=1
+[11:43:27.971] [INFO] [steam-cloud] app=255710 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[11:43:28.709] [INFO] [steam-cloud] app=949230 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[11:43:29.460] [INFO] [steam-cloud] app=1927780 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[11:43:30.211] [INFO] [steam-cloud] app=427820 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[11:43:34.007] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[11:43:34.007] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[11:43:35.163] [INFO] [autotune] Cities: Skylines II: hung at stage 5 after 1233 s; matched fex-exit-runaway-cache-loop; status known; next nothing; read bcd-log.prev.txt (114469 lines; fex-exit-runaway-cache-loop from line 14403)
+[11:43:35.164] [INFO] [autotune] the unfinished session's analysis waited 0 ms and took 9716 ms
