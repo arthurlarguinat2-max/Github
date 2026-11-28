@@ -1,0 +1,41 @@
+# Builds ci/dowser-shim/dowser-shim.c (x86-64 Windows) and publishes dowser.exe as a pre-release.
+# For Cities: Skylines II on BCD: it replaces Launcher\dowser.exe and starts ..\Cities2.exe through Steam.
+name: dowser-shim (Cities Skylines II)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/dowser-shim.yml", "ci/dowser-shim/**"]
+
+env:
+  MINGW_URL: https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-ucrt-ubuntu-22.04-x86_64.tar.xz
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: ci/dowser-shim
+      - name: llvm-mingw
+        run: |
+          mkdir -p tc && curl -fsSL --retry 3 -o tc/m.tar.xz "$MINGW_URL"
+          tar -xJf tc/m.tar.xz -C tc && rm tc/m.tar.xz
+      - name: Build dowser.exe
+        run: |
+          CC=$(ls -d $PWD/tc/llvm-mingw-*)/bin/x86_64-w64-mingw32-clang
+          "$CC" -O2 -municode -mwindows -Wall -Wextra -Werror -o dowser.exe ci/dowser-shim/dowser-shim.c
+          ls -l dowser.exe
+      - name: Publish as pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "dowser-shim-$GITHUB_RUN_NUMBER" dowser.exe \
+            --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "dowser-shim (Cities: Skylines II sur BCD)" \
+            --notes "Remplace Launcher\\dowser.exe de Cities: Skylines II : Steam le lance, il lance ..\\Cities2.exe. Garder l'original en dowser.original.exe."
