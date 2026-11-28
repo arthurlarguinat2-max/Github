@@ -1,0 +1,98 @@
+[08:41:47.872] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[08:41:48.078] [INFO] [session] the last session of Cities: Skylines II did not end cleanly (in the background, last start-up phase wine-start 0 s after the start); not asking (turned off)
+[08:41:48.094] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (Cities2.exe-2026-11-28_08-30-10.txt), scrubbed:
+[08:41:48.095] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 15B2666B8 AV READ of 0
+[08:41:48.095] [INFO] [prev-tail] D 24 Reconstructing context
+[08:41:48.095] [INFO] [prev-tail] D 24 pc: 15B2666B8 rip: 72FC07B109
+[08:41:48.095] [INFO] [prev-tail] D 24 Rethrowing onto guest stack: 70A3A0D920
+[08:41:48.095] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 72FC07B109 AV READ of 0
+[08:41:48.096] [INFO] [prev-tail] D 24 Passing through exception
+[08:41:48.096] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 15B2666B8 AV READ of 0
+[08:41:48.096] [INFO] [prev-tail] D 24 Reconstructing context
+[08:41:48.096] [INFO] [prev-tail] D 24 pc: 15B2666B8 rip: 72FC07B109
+[08:41:48.096] [INFO] [prev-tail] D 24 Rethrowing onto guest stack: 70A3A0D920
+[08:41:48.096] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 72FC07B109 AV READ of 0
+[08:41:48.096] [INFO] [prev-tail] D 24 Passing through exception
+[08:41:48.097] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 15BC84D78 AV READ of 0
+[08:41:48.097] [INFO] [prev-tail] D 24 Reconstructing context
+[08:41:48.097] [INFO] [prev-tail] D 24 pc: 15BC84D78 rip: 72F0CAD6B2
+[08:41:48.097] [INFO] [prev-tail] D 24 Rethrowing onto guest stack: 70A3A0E1A0
+[08:41:48.097] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 72F0CAD6B2 AV READ of 0
+[08:41:48.097] [INFO] [prev-tail] D 24 Passing through exception
+[08:41:48.098] [INFO] [prev-tail] [freeze] GAP #1  163.6s (wall 163.6s) — started t+493.2s, ended t+656.8s; threads=91 resident=601MB dbg=DEBUGGED gen=1 cause=BACKGROUNDED(not-a-freeze) rev=ml525
+[08:41:48.098] [INFO] [prev-tail] [freeze]   bg-enter t+492.9s bg-exit t+-36989.8s bg_now=1
+[08:41:48.098] [INFO] [prev-tail] [freeze] alive t+657s beats=17 gaps=1 iter=1953 gen=1 threads=91 resident=601MB dbg=DEBUGGED rev=ml525
+[08:41:48.098] [INFO] [prev-tail] [08:41:08.200] [INFO] [hud] layout=4 fps=0 cpu=0 gpu=0 mem=1480/6143 jit=375/560 swap=3123 thermal=serious lpm=0 batt=90 t=10:57
+[08:41:48.098] [INFO] [prev-tail] [rtcs-cap] madeira-bcd v1: 28 '[rtcs] pre' lines left out since the last note (62139 seen, 58536 left out; 10 per second per thread kept; MADEIRA_RTCS_LOG=all prints every line)
+[08:41:48.099] [INFO] [prev-tail] 0024:err:seh:prepare_exception_arm64ec [rtcs] pre: code=c0000005 addr=000000015B2666B8 armPc=000000015B2666B8 ecRip=000000015B2666B8 rtcs=0000000148256F1C insim=1
+[08:41:48.099] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 15B2666B8 AV READ of 0
+[08:41:48.099] [INFO] [prev-tail] D 24 Reconstructing context
+[08:41:48.099] [INFO] [prev-tail] D 24 pc: 15B2666B8 rip: 72FC07B109
+[08:41:48.099] [INFO] [prev-tail] D 24 Rethrowing onto guest stack: 70A3A0D920
+[08:41:48.099] [INFO] [prev-tail] 0024:err:seh:prepare_exception_arm64ec [rtcs] pre: code=c0000005 addr=00000072FC07B109 armPc=00000072FC07B109 ecRip=00000072FC07B109 rtcs=0000000148256F1C insim=1
+[08:41:48.100] [INFO] [prev-tail] [swap] census file-backed now=17580MB peak=19815MB extents=810 file=15552/4096MB free=17 merges=115 | commit MB by reason: backed=3279 small=63 band=0 fex/jit=88 prot=9 view=0 recommit=60 present=477793 refused=0 mapfail=0 churn=944 | reserve-backed 1038 (27805MB) holes=14018 disk=3123MB committed=4439MB kept-in-memory=0MB past-cap=0MB churn-sizes=1 | reservations not taken whole MB: prot=9 view=0
+[08:41:48.100] [INFO] [prev-tail] D 24 Exception: Code: C0000005 Address: 72FC07B109 AV READ of 0
+[08:41:48.100] [INFO] [prev-tail] D 24 Passing through exception
+[08:41:48.101] [INFO] [prev-tail] [xp-api-top] 08:41:08.239 1142 samples: kernelbase.dll+0x6d470=93/s ntdll.dll+0x67dcc=71/s ntdll.dll+0x6784c=56/s d3d11.dll+0x6f810=38/s ntdll.dll+0x281ac=21/s ntdll.dll+0x27cc8=19/s kernel32.dll+0x26678=17/s ntdll.dll+0x67d10=12/s ntdll.dll+0x71aac=10/s d3d11.dll+0x6a1c8=7/s d3d11.dll+0x6f818=7/s d3d11.dll+0x69cd4=6/s d3d11.dll+0x6b990=6/s d3d11.dll+0x6f8a4=6/s d3d11.dll+0x6f89c=5/s d3d11.dll+0x6
+[08:41:48.101] [INFO] [prev-tail] [xp-api-qpc] 08:41:08.239 QPC 31/s gaps <1us 66% <10us 17% <100us 8% <1ms 4% >=1ms 5%; top threads: 009c=14/s(<1us 63% <10us 29%) 0024=6/s(<1us 81% <10us 6%) 00a0=5/s(<1us 96% <10us 0%) 00b0=4/s(<1us 45% <10us 12%)
+[08:41:48.101] [INFO] [prev-tail] [xp-api-cs] 08:41:08.239 9 sampled contended enters (process heap 0x70a3a50000): 0x70b00c83f0=67%(spin 0 contention 0) 0x70d0bd0308=33%(spin 200 contention 0)
+[08:41:48.101] [INFO] [prev-tail] [thr-create] creator_teb=0x72c5c80000 creator_peb=0x71ffff0000 start=0x71f9b2fe20 (copy pe=0x0 owner=0xffffffffffffffff) param=0x72c7456a70
+[08:41:48.102] [INFO] [prev-tail] 0148:err:thread:init_thread_stack iOS arm64ec: TEB 0x72c5c60000 ChpeV2CpuAreaInfo=0x72ee950000 (stackBase=0x72eea50000 stackLimit=0x72ee951000 ContextAmd64=0x72ee950050)
+[08:41:48.102] [INFO] [prev-tail] 015c:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=015c status=00000000 caller=0000000148081F74
+[08:41:48.102] [INFO] [prev-tail] 0148:err:thread:init_thread_stack iOS native stack: TEB 0x72c5c60000 StackBase=0x7354230000 StackLimit=0x7353a38000 DeallocStack=0x7353a30000 (reserve=0x0 commit=0x100000)
+[08:41:48.102] [INFO] [prev-tail] [teb-tsd] thread tid=01c4 raw=0x72c5c60000 pthread=0x72c5c60000 MATCH
+[08:41:48.102] [INFO] [prev-tail] 01c0:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=01c0 status=00000000 caller=0000000148081F74
+[08:41:48.103] [INFO] [prev-tail] 0160:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=0160 status=00000000 caller=0000000148081F74
+[08:41:48.103] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame init_syscall_frame: redirected PC 0x71ffd32de0 → 0x148066de0 (JIT pool)
+[08:41:48.103] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame init_syscall_frame: allocated trampoline slot 103, tramp=0x148000678, teb=0x72c5c60000
+[08:41:48.103] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame page0: already attempted by first thread — skipping (Mach handler covers x18=0)
+[08:41:48.104] [INFO] [prev-tail] 01c4:err:seh:ios_setup_mach_exception_handler Mach exception handler registered thread 0x494b (idx=103), teb=0x72c5c60000 tramp=0x148000678 usd=0x70a3000000 mask=ba+bi rev=ml353
+[08:41:48.104] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame init_syscall_frame: mach exc thread alive=1, slot=103
+[08:41:48.104] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame init_syscall_frame: signals_total=62404 before PE entry
+[08:41:48.104] [INFO] [prev-tail] 01c4:err:seh:init_syscall_frame init_syscall_frame: frame=0x72ee94fb90 pc=0x148066de0 x0=0x735422fc70 sp=0x735422fc70 x18=0x72c5c60000 restore_flags=0x400007
+[08:41:48.104] [INFO] [prev-tail] 0138:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=0138 status=00000000 caller=0000000148081F74
+[08:41:48.105] [INFO] [prev-tail] 0158:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=0158 status=00000000 caller=0000000148081F74
+[08:41:48.105] [INFO] [prev-tail] [thread-sample] ml876 modmap peb=0x71ffff0000 modules=76 first=Cities2.exe@0x11f920000
+[08:41:48.105] [INFO] [prev-tail] 0168:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=0168 status=00000000 caller=0000000148081F74
+[08:41:48.105] [INFO] [prev-tail] 0164:err:thread:RtlExitUserThread [thr-exit] ml806 RtlExitUserThread tid=0164 status=00000000 caller=0000000148081F74
+[08:41:48.106] [INFO] [prev-tail] [fex-headroom] arena=0x7c00000000..0x8000000000 used=2602MB free=13781MB (15% used) holes=285 maxgap=13708216KB max_4mb_aligned_gap=13705216KB views=607 (MADEIRA_FEX_HEADROOM_LOG=0 disables)
+[08:41:48.106] [INFO] [prev-tail] E 1C4 [lookup-cache] ml606 mode=l1-only alloc=2MB live=68 cumulative=96 fleet_live=136MB (full-layout would be 50MB/cache)
+[08:41:48.106] [INFO] [prev-tail] E 1C4 [callret] zero-scrub rev=ml362 stale=0x0
+[08:41:48.106] [INFO] [prev-tail] E 1C4 [cpu-area] ThreadInit-done tid=0x1c4 teb=0x72c5c60000 tsd275=0x72c5c60000 x18teb=0x72c5c60000 area=0x72ee950000 StateFrame(ED0)=0x7caf401140 ThreadState(ED1)=0x7caf401000 EnterEC=0x16affc108
+[08:41:48.107] [INFO] [prev-tail]  [thread-sample] ml876 b0 "Background Job.Worker 11" teb=0x71ffe70000 cpu=0% wait pc=libsystem_kernel.dylib`__ulock_wait2+0x8 lr=libsystem_platform.dylib`os_sync_wait_on_address+0x68 sp=0x71b2c8f9d0 NATIVE (unresolved: OffsetToBlockTail implausible) sp-cand=[ UnityPlayer.dll+0x6b2c90 ]
+[08:41:48.107] [INFO] [prev-tail] [08:41:08.277] [thread-sample] ml876 b0 "Background Job.Worker 12" teb=0x71ffe60000 cpu=0% wait pc=libsystem_kernel.dylib`__ulock_wait2+0x8 lr=libsystem_platform.dylib`os_sync_wait_on_address+0x68 sp=0x71b368f9d0 NATIVE (unresolved: OffsetToBlockTail implausible) sp-cand=[ UnityPlayer.dll+0x6b2c90 ]
+[08:41:48.132] [INFO] [prev-end] last footprint "[footprint] rev=ml358 phys=1545 MB (peak 2561) internal=913 MB compressed=526 MB external=504 MB reusable=0 MB (cycle=244)" | last alive "[freeze] alive t+657s beats=17 gaps=1 iter=1953 gen=1 threads=91 resident=601MB dbg=DEBUGGED rev=ml525" | last summary "[INFO] [session] length=493s partial=1 play=373s frames=10345 avg=29.0 low1=13.3 low01=7.8 worst=16426ms stalls=1/16s peak=2599MB limit=6143MB thermal=serious l" | verdict: no memory pressure (25 % of the limit)
+[08:41:48.158] [INFO] [epic-install] start installed=0 refused=0
+[08:41:48.268] [INFO] [xinput] ml1920 physical controllers enabled=1
+[08:41:48.269] [INFO] [touch-xinput] ml1930 enabled=1
+[08:41:48.270] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[08:41:48.282] [INFO] [steam-library] start signed-in=1 cached=17
+[08:41:48.311] [INFO] [bcd-ui] shown games=18 downloads=0
+[08:41:48.311] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[08:41:48.312] [INFO] SIGTRAP handler installed (no debugger)
+[08:41:48.312] [INFO] Checking entitlements...
+[08:41:48.312] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[08:41:48.312] [OK]   increased-memory-limit: true
+[08:41:48.312] [DBG]   extended-virtual-addressing: false
+[08:41:48.312] [DBG]   increased-debugging-memory-limit: false
+[08:41:48.312] [INFO] [build] v0.1.721 (721)
+[08:41:48.313] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[08:41:48.313] [INFO] [device] address-map=[0x100460000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[08:41:48.316] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[08:41:48.317] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[08:41:48.328] [INFO] [device] settings: low-power=0 thermal=serious screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=1GB stikdebug-url=0
+[08:41:48.334] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[08:41:48.411] [INFO] [steam-games] installed=6 ready=6
+[08:41:48.417] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[08:41:48.447] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[08:41:48.448] [INFO] [epic-auth] start signed-in=0
+[08:41:48.448] [INFO] [epic-library] start cached=0 listed=0
+[08:41:50.396] [INFO] [steam-playtime] apps=15
+[08:41:50.398] [INFO] [steam-cloud] sync games=6 automatic=1
+[08:41:51.718] [INFO] [steam-cloud] app=255710 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:41:53.326] [INFO] [steam-cloud] app=949230 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:41:54.593] [INFO] [steam-cloud] app=1927780 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:41:55.909] [INFO] [steam-cloud] app=427820 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:41:56.601] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[08:41:56.615] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[08:41:57.663] [INFO] [steam-cloud] app=220200 cloud-change=0 cloud-files=126 same=53 differ=73 missing-local=0 local-only=0 unmapped=0 patterns=11 roots=gameinstall overrides=0 | plan download=0 upload=0 ask=73
