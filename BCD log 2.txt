@@ -1,0 +1,98 @@
+[02:27:51.401] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[02:27:51.570] [INFO] [session] the last session of Cities: Skylines did not end cleanly (in front, last start-up phase wine-start 0 s after the start); not asking (turned off)
+[02:27:51.590] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (Cities.exe-2026-11-28_02-26-39.txt), scrubbed:
+[02:27:51.591] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945e124
+[02:27:51.591] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9463fdb
+[02:27:51.592] [INFO] [prev-tail] E 15C [cb-sample] f 2e4989d8cba0af19 488ba0
+[02:27:51.592] [INFO] [prev-tail] E AC [cb-sample] a 70a946566d
+[02:27:51.592] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9466a9d
+[02:27:51.592] [INFO] [prev-tail] E AC [cb-sample] a 70a944fdf3
+[02:27:51.592] [INFO] [prev-tail] E AC [cb-sample] a 70a946566d
+[02:27:51.593] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945e124
+[02:27:51.593] [INFO] [prev-tail] E AC [cb-sample] a 70a946566d
+[02:27:51.593] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9463fdb
+[02:27:51.593] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9466a9d
+[02:27:51.593] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9463fdb
+[02:27:51.594] [INFO] [prev-tail] [field] ml964 #41 after STORE off=0x19c: [0x71309991b6]=0x0000000000000000 (high32=0x00000000)
+[02:27:51.594] [INFO] [prev-tail] [writer] ml963 #41 STORE addr=0x713099919c (off=0x19c) insn=0xd9000001 bytes=8 Rt=x1 Rn=x0 Rt_val=0x3f33b3b43f149495 high32=0x3f33b3b4 pc=0x16247151c -- 64-bit STORE of a FULL-WIDTH value
+[02:27:51.594] [INFO] [prev-tail] E 15C [cb-sample] a 70a9467ecd
+[02:27:51.594] [INFO] [prev-tail] [field] ml964 #42 after STORE off=0x1cc: [0x71309991b6]=0x00003e7cfcfd3e82 (high32=0x00003e7c)
+[02:27:51.595] [INFO] [prev-tail] [writer] ml963 #42 STORE addr=0x71309991cc (off=0x1cc) insn=0xd9008002 bytes=8 Rt=x2 Rn=x0 Rt_val=0x3f8000003e20a0a1 high32=0x3f800000 pc=0x1624720ac -- 64-bit STORE of a FULL-WIDTH value
+[02:27:51.595] [INFO] [prev-tail] E 15C [cb-sample] a 70a94693e6
+[02:27:51.595] [INFO] [prev-tail] [steer] #20 size=0x2010000 reserved_total=0MB armed=va-pressure -> above ceiling 0x7d0e8d0000
+[02:27:51.596] [INFO] [prev-tail] [va-exit] rev=ml312 0x7d0e8d0000+0x2010000 type=0x2000 tid=00d0 steer=INSIDE#19 freed=0 steer_n=20
+[02:27:51.596] [INFO] [prev-tail] E AC [cb-sample] a 70a9451489
+[02:27:51.596] [INFO] [prev-tail] E AC [CB_SUMMARY] total=1835009 real_compiles=127787 cache_hits=1707222 hit_rate=93%  hottest_rip≈0x71f2da3e23 repeats~18446744073707728269 L1ptr=0x7c19010000 L1mask=0x1ffff0 cacheL1=0x7c19010000
+[02:27:51.597] [INFO] [prev-tail] E AC [CB_COST] compiles=127787 compile_ms=1426 avg_us=11 max_us=39034 flush_ms=19 flush_calls=127765 link_flushes=82670 samples_file=257 samples_anon=701 freq=1000000000
+[02:27:51.597] [INFO] [prev-tail] E AC [cb-sample] a 70a946566d
+[02:27:51.597] [INFO] [prev-tail] E 1A0 Failed to mprotect last page of code buffer.
+[02:27:51.598] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9472193
+[02:27:51.598] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9472193
+[02:27:51.599] [INFO] [prev-tail] err:   [bc-census] ml653 periodic: 7296 BC resources, 45645 subresources
+[02:27:51.599] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM n=4469 57119KB max=512x512 mips=10 arr=1 cube=0 | use def=4469 imm=0 dyn=0 stg=0 | data y=4469 n=0 | cpu r=0 w=0 | bind srv=4469 rt=0 uav=0
+[02:27:51.600] [INFO] [prev-tail] err:   [bc-census] ml653   BC1_UNORM_SRGB n=2692 159102KB max=2240x1260 mips=12 arr=1 cube=0 | use def=2692 imm=0 dyn=0 stg=0 | data y=2692 n=0 | cpu r=0 w=0 | bind srv=2692 rt=0 uav=0
+[02:27:51.600] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM n=55 6811KB max=4096x1024 mips=10 arr=1 cube=0 | use def=55 imm=0 dyn=0 stg=0 | data y=55 n=0 | cpu r=0 w=0 | bind srv=55 rt=0 uav=0
+[02:27:51.601] [INFO] [prev-tail] err:   [bc-census] ml653   BC3_UNORM_SRGB n=80 2902KB max=1024x1024 mips=9 arr=1 cube=0 | use def=80 imm=0 dyn=0 stg=0 | data y=80 n=0 | cpu r=0 w=0 | bind srv=80 rt=0 uav=0
+[02:27:51.601] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 71 (BC1_UNORM) x4469
+[02:27:51.602] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 72 (BC1_UNORM_SRGB) x2692
+[02:27:51.602] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 77 (BC3_UNORM) x54
+[02:27:51.602] [INFO] [prev-tail] err:   [bc-census] ml653   SRV view fmt 78 (BC3_UNORM_SRGB) x80
+[02:27:51.602] [INFO] [prev-tail] err:   [bc-census] ml653   RUNTIME OPS on BC textures: UpdateSubresource=0 CopyResource=0 CopySubresourceRegion=0 Map=0
+[02:27:51.603] [INFO] [prev-tail] err:   [bc-census] ml653   TOTAL logical BC bytes = 225935KB
+[02:27:51.603] [INFO] [prev-tail] E D0 [iOS-xrem] via=aligned #448 tracker=0x14e819fd8 0x7d0e8d0000-0x7d108e0000
+[02:27:51.603] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9472193
+[02:27:51.603] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945e124
+[02:27:51.603] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945e124
+[02:27:51.604] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9470d63
+[02:27:51.604] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9470d63
+[02:27:51.604] [INFO] [prev-tail] [mach_exc] UNALIGNED-BACKPATCH #2500 pc=0x1624e4fd8 insn=0xd9000348 addr=0x70e75bdfdc kind=STLR/STLUR
+[02:27:51.604] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945f9bf
+[02:27:51.605] [INFO] [prev-tail] E 1A0 [callret] ml610 resets=22528 bytes=180224MB per_reset=8192KB site=core by_site core=22471 cpubackend=57 jit-rollover=0
+[02:27:51.605] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945e124
+[02:27:51.605] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a945f9bf
+[02:27:51.606] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a9453e62
+[02:27:51.606] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a948387e
+[02:27:51.606] [INFO] [prev-tail] E 1A0 Failed to mprotect last page of code buffer.
+[02:27:51.606] [INFO] [prev-tail] E 1A0 Failed to mprotect last page of code buffer.
+[02:27:51.606] [INFO] [prev-tail] E AC [cb-sample] a 70a947e7f1
+[02:27:51.607] [INFO] [prev-tail] [decommit-zero] #36864 arena/pool OK base=0x7c37c01000 size=0x800000 branch=mmap-over (zero) checked=232/36864 notzero=0/0 rev=ml547
+[02:27:51.607] [INFO] [prev-tail] [commit-zero] #40960 arena/pool OK base=0x7c37c01000 size=0x800000 protect=0x4 (zero) checked=1196/40960 stale=0/0 recommit=0 rev=ml546
+[02:27:51.607] [INFO] [prev-tail] E AC [cb-sample] a 70a947e7f1
+[02:27:51.607] [INFO] [prev-tail] E AC [cb-sample] a 70a947e7f1
+[02:27:51.608] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a948387e
+[02:27:51.608] [INFO] [prev-tail] E 1A0 [cb-sample] a 70a948387e
+[02:27:51.644] [INFO] [prev-end] last footprint "[footprint] rev=ml1060 fast phys=6129 MB compressed=3153 MB internal=1915 MB" | last alive none | last summary none | verdict: memory kill likely (99 % of the limit)
+[02:27:51.674] [INFO] [epic-install] start installed=0 refused=0
+[02:27:51.893] [INFO] [xinput] ml1920 physical controllers enabled=1
+[02:27:51.893] [INFO] [touch-xinput] ml1930 enabled=1
+[02:27:51.894] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[02:27:51.906] [INFO] [steam-library] start signed-in=1 cached=15
+[02:27:51.948] [INFO] [bcd-ui] shown games=16 downloads=0
+[02:27:51.949] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[02:27:51.949] [INFO] SIGTRAP handler installed (no debugger)
+[02:27:51.949] [INFO] Checking entitlements...
+[02:27:51.949] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[02:27:51.949] [OK]   increased-memory-limit: true
+[02:27:51.949] [DBG]   extended-virtual-addressing: false
+[02:27:51.950] [DBG]   increased-debugging-memory-limit: false
+[02:27:51.950] [INFO] [build] v0.1.721 (721)
+[02:27:51.950] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[02:27:51.950] [INFO] [device] address-map=[0x1027e4000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[02:27:51.951] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[02:27:51.952] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[02:27:51.968] [INFO] [device] settings: low-power=0 thermal=nominal screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=60GB stikdebug-url=0
+[02:27:51.974] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[02:27:52.120] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[02:27:52.121] [INFO] [epic-auth] start signed-in=0
+[02:27:52.121] [INFO] [epic-library] start cached=0 listed=0
+[02:27:52.847] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[02:27:52.949] [INFO] [steam-games] installed=2 ready=2
+[02:27:53.499] [INFO] [steam-playtime] apps=13
+[02:27:53.500] [INFO] [steam-cloud] sync games=2 automatic=1
+[02:28:33.771] [INFO] [steam-cloud] app=255710 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[02:28:33.796] [INFO] [update-check] no answer from the source; asked again at the next start
+[02:28:33.807] [INFO] [steam-cloud] app=1927780 failed reason=disconnected
+[02:28:34.519] [INFO] [autotune] Cities: Skylines: killed at stage 4 after 66 s; matched swap-8gb-memory-kill-sure,swap-8gb-memory-kill; status stuck; next nothing; kept swap-mb = 3072, swap-mode = 2, swap-min-mb = 1, pool-window-cut = 1; skipped swap-8gb-memory-kill-sure (tried), swap-8gb-memory-kill (its lines were tried); read bcd-log.prev.txt (31129 lines; swap-8gb-memory-kill-sure from line 603, swap-8gb-memory-kill from line 603)
+[02:28:34.520] [INFO] [autotune] the unfinished session's analysis waited 0 ms and took 42959 ms
+[02:28:42.345] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[02:28:48.171] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
