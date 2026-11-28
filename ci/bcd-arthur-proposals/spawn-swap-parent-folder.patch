@@ -1,0 +1,65 @@
+diff --git a/build/ntdll-unix/ios_spawn_swap.h b/build/ntdll-unix/ios_spawn_swap.h
+index dad6d1b..be80e56 100644
+--- a/build/ntdll-unix/ios_spawn_swap.h
++++ b/build/ntdll-unix/ios_spawn_swap.h
+@@ -37,6 +37,19 @@ static WCHAR spawn_swap_lower( WCHAR c )
+     return (c >= 'A' && c <= 'Z') ? (WCHAR)(c + ('a' - 'A')) : c;
+ }
+ 
++/* madeira-bcd (Cities: Skylines II, Steam 949230): Steam's launch entry is Launcher\dowser.exe, the game is Cities2.exe one folder up. A
++ * replacement may start with "..\" (or "../"), up to four times: each one moves one folder up from the folder of the program being started.
++ * Returns how many there are; the file name after them is checked as before. The program being replaced (<from.exe>) is still a plain name. */
++static size_t spawn_swap_up( const char *name, size_t len )
++{
++    size_t up = 0;
++
++    while (up < 4 && len >= 3 * (up + 1) + 5 && name[3 * up] == '.' && name[3 * up + 1] == '.' &&
++           (name[3 * up + 2] == '\\' || name[3 * up + 2] == '/'))
++        up++;
++    return up;
++}
++
+ /* A program file name of the list: printable ASCII and spaces, no path or list punctuation, no leading or trailing space, ".exe" at the end. */
+ static int spawn_swap_name_valid( const char *name, size_t len )
+ {
+@@ -103,7 +116,7 @@ static const char *spawn_swap_find( const char *list, const WCHAR *name, size_t
+             to_end = end;
+             from_len = from_end - entry;
+             len = to_end - to;
+-            if (spawn_swap_name_valid( entry, from_len ) && spawn_swap_name_valid( to, len ) && from_len == name_len &&
++            if (spawn_swap_name_valid( entry, from_len ) && spawn_swap_name_valid( to + 3 * spawn_swap_up( to, len ), len - 3 * spawn_swap_up( to, len ) ) && from_len == name_len &&
+                 spawn_swap_equal_c_w( entry, name, name_len ) && !(len == from_len && spawn_swap_equal_c_w( to, name, name_len )))
+             {
+                 *to_len = len;
+@@ -118,8 +131,17 @@ static const char *spawn_swap_find( const char *list, const WCHAR *name, size_t
+ /* `path` with its file name replaced by `to`, written to `out` (NUL-terminated). Returns the length in characters, or 0 when it does not fit. */
+ static size_t spawn_swap_path( const WCHAR *path, size_t len, const char *to, size_t to_len, WCHAR *out, size_t capacity )
+ {
+-    size_t base = spawn_swap_base( path, len ), i;
++    size_t base = spawn_swap_base( path, len ), i, up = spawn_swap_up( to, to_len );
+ 
++    /* "..\" in the replacement: drop one folder of `path` for each (the folder must have a parent folder, or nothing is written). */
++    for (i = 0; i < up; i++)
++    {
++        if (base < 2) return 0;
++        base = spawn_swap_base( path, base - 1 );
++        if (!base) return 0;
++    }
++    to += 3 * up;
++    to_len -= 3 * up;
+     if (base + to_len + 1 > capacity) return 0;
+     memcpy( out, path, base * sizeof(WCHAR) );
+     for (i = 0; i < to_len; i++) out[base + i] = (WCHAR)(unsigned char)to[i];
+diff --git a/tests/host/check-spawn-swap.py b/tests/host/check-spawn-swap.py
+index 4545cde..c08c9c1 100644
+--- a/tests/host/check-spawn-swap.py
++++ b/tests/host/check-spawn-swap.py
+@@ -95,7 +95,7 @@ int main(void)
+     REQUIRE(finds("a.exe=b.exe;c.exe=d.exe;e.exe=f.exe", "c.exe", "d.exe") && finds("a.exe=b.exe;c.exe=d.exe;e.exe=f.exe", "e.exe", "f.exe"), "find: several entries");
+     REQUIRE(finds("garbage;=;a.exe;b.exe=;=c.exe;x.dll=y.exe;d.exe=e.exe", "d.exe", "e.exe") && finds("garbage;=;a.exe;b.exe=;=c.exe;x.dll=y.exe", "x.dll", NULL), "find: an invalid entry is skipped, the next one still works");
+     REQUIRE(finds("a.exe=a.exe", "a.exe", NULL) && finds("a.exe=A.EXE", "a.exe", NULL), "find: a program is never swapped for itself");
+-    REQUIRE(finds("a.exe=..\\b.exe", "a.exe", NULL) && finds("a.exe=bin/b.exe", "a.exe", NULL) && finds("bin\\a.exe=b.exe", "a.exe", NULL), "find: no path in either name");
++    REQUIRE(finds("a.exe=bin/b.exe", "a.exe", NULL) && finds("bin\\a.exe=b.exe", "a.exe", NULL), "find: no path in either name");
+     REQUIRE(finds("", "a.exe", NULL) && finds("a.exe=b.exe", "", NULL) && finds(";;;", "a.exe", NULL), "find: an empty list or name finds nothing");
+ 
+     /* the real strings of C050A4 (Fallout 4 through BCD Dock, build 580) */
