@@ -1,0 +1,101 @@
+[08:22:12.745] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[08:22:12.938] [INFO] [session] the last session of Cities: Skylines II did not end cleanly (in the background, last start-up phase wine-start 0 s after the start); not asking (turned off)
+[08:22:12.953] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (Cities2.exe-2026-11-28_08-18-19.txt), scrubbed:
+[08:22:12.953] [INFO] [prev-tail] [waiters]  tid=007c addr=0x70c0976d80 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=0080 addr=0x70c097ef40 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=0084 addr=0x70c0987100 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=0088 addr=0x70c098f2c0 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=008c addr=0x70c0997480 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=0090 addr=0x70c099f640 age=224s INF w0=ff800001 w1=00000000
+[08:22:12.954] [INFO] [prev-tail] [waiters]  tid=00a0 addr=0x14b1b3fc8 age=218s INF w0=00000001 w1=00000000
+[08:22:12.955] [INFO] [prev-tail] [waiters]  tid=009c addr=0x14b1b7548 age=218s INF w0=00000001 w1=00000000
+[08:22:12.955] [INFO] [prev-tail] [waiters]  tid=00ac addr=0x71a0831928 age=224s INF w0=00000000 w1=00000000
+[08:22:12.955] [INFO] [prev-tail] [waiters]  tid=00a8 addr=0x71a0831928 age=224s INF w0=00000000 w1=00000000
+[08:22:12.955] [INFO] [prev-tail] [waiters]  tid=00d8 addr=0x14b1b4dc8 age=222s INF w0=00000000 w1=00000000
+[08:22:12.955] [INFO] [prev-tail] [waiters]  tid=00e0 addr=0x71ed7378d8 age=222s INF w0=00000000 w1=00000000
+[08:22:12.956] [INFO] [prev-tail] [waiters]  tid=00e4 addr=0x71ed7378d8 age=222s INF w0=00000000 w1=00000000
+[08:22:12.956] [INFO] [prev-tail] [waiters]  tid=00d4 addr=0x14b1b57c8 age=222s INF w0=00000000 w1=00000000
+[08:22:12.956] [INFO] [prev-tail] [trackpad] CANCELLED (dragActive=false)
+[08:22:12.956] [INFO] [prev-tail] [xp-names] m499704 "(unnamed)"
+[08:22:12.956] [INFO] [prev-tail] [xp-api-top] 08:22:06.929 15 samples: ntdll.dll+0x6784c=216/s ntdll.dll+0x67dcc=216/s ntdll.dll+0x71aac=162/s ntdll.dll+0x71d04=162/s kernelbase.dll+0x68958=54/s
+[08:22:12.957] [INFO] [prev-tail] [xp-api-qpc] 08:22:06.929 QPC 184/s gaps <1us 0% <10us 27% <100us 22% <1ms 0% >=1ms 50%; top threads: 00d0=184/s(<1us 0% <10us 27%)
+[08:22:12.957] [INFO] [prev-tail] [08:22:07.307] [INFO] [hud] layout=4 fps=0 cpu=1 mem=1198/6143 jit=244/336 swap=973 thermal=nominal lpm=0 batt=95 t=03:47
+[08:22:12.957] [INFO] [prev-tail] [hwinput] keyboard focus: elsewhere (app inactive)
+[08:22:12.957] [INFO] [prev-tail] [xp-names] m499703 "(unnamed)"
+[08:22:12.957] [INFO] [prev-tail] [xp-api-top] 08:22:08.077 15 samples: ntdll.dll+0x71d04=223/s ntdll.dll+0x6784c=167/s ntdll.dll+0x67dcc=167/s ntdll.dll+0x71aac=167/s kernelbase.dll+0x68958=111/s
+[08:22:12.958] [INFO] [prev-tail] [xp-api-qpc] 08:22:08.077 QPC 185/s gaps <1us 0% <10us 24% <100us 26% <1ms 0% >=1ms 50%; top threads: 00d0=185/s(<1us 0% <10us 24%)
+[08:22:12.958] [INFO] [prev-tail] [waiters] parked=29 over60s=29 rev=ml444
+[08:22:12.958] [INFO] [prev-tail] [waiters]  tid=0044 addr=0x70c02e1380 age=191s INF w0=ff8011e0 w1=00000000
+[08:22:12.958] [INFO] [prev-tail] [waiters]  tid=0048 addr=0x70c02e9540 age=162s INF w0=ff800301 w1=00000000
+[08:22:12.958] [INFO] [prev-tail] [waiters]  tid=004c addr=0x70c02f1700 age=162s INF w0=ff800032 w1=00000000
+[08:22:12.958] [INFO] [prev-tail] [waiters]  tid=0050 addr=0x70c02f98c0 age=191s INF w0=ff800078 w1=0000004c
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=0054 addr=0x70c0925c00 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=0040 addr=0x70c02d91c0 age=191s INF w0=ff800025 w1=00000000
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=0058 addr=0x70c092ddc0 age=213s INF w0=ff800004 w1=00000000
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=005c addr=0x70c0935f80 age=213s INF w0=ff800004 w1=00000000
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=0060 addr=0x70c093e140 age=213s INF w0=ff800006 w1=00000000
+[08:22:12.959] [INFO] [prev-tail] [waiters]  tid=0064 addr=0x70c0946300 age=213s INF w0=ff800003 w1=00000000
+[08:22:12.960] [INFO] [prev-tail] [waiters]  tid=0068 addr=0x70c094e4c0 age=213s INF w0=ff800003 w1=00000000
+[08:22:12.960] [INFO] [prev-tail] [waiters]  tid=006c addr=0x70c0956680 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.960] [INFO] [prev-tail] [waiters]  tid=0070 addr=0x70c095e840 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.960] [INFO] [prev-tail] [waiters]  tid=0074 addr=0x70c0966a00 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.960] [INFO] [prev-tail] [waiters]  tid=0078 addr=0x70c096ebc0 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.961] [INFO] [prev-tail] [waiters]  tid=007c addr=0x70c0976d80 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.961] [INFO] [prev-tail] [waiters]  tid=0080 addr=0x70c097ef40 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.961] [INFO] [prev-tail] [waiters]  tid=0084 addr=0x70c0987100 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.961] [INFO] [prev-tail] [waiters]  tid=0088 addr=0x70c098f2c0 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.961] [INFO] [prev-tail] [waiters]  tid=008c addr=0x70c0997480 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=0090 addr=0x70c099f640 age=227s INF w0=ff800001 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=00a0 addr=0x14b1b3fc8 age=220s INF w0=00000001 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=009c addr=0x14b1b7548 age=220s INF w0=00000001 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=00ac addr=0x71a0831928 age=226s INF w0=00000000 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=00a8 addr=0x71a0831928 age=226s INF w0=00000000 w1=00000000
+[08:22:12.962] [INFO] [prev-tail] [waiters]  tid=00d8 addr=0x14b1b4dc8 age=224s INF w0=00000000 w1=00000000
+[08:22:12.963] [INFO] [prev-tail] [waiters]  tid=00e0 addr=0x71ed7378d8 age=224s INF w0=00000000 w1=00000000
+[08:22:12.963] [INFO] [prev-tail] [waiters]  tid=00e4 addr=0x71ed7378d8 age=224s INF w0=00000000 w1=00000000
+[08:22:12.963] [INFO] [prev-tail] [waiters]  tid=00d4 addr=0x14b1b57c8 age=224s INF w0=00000000 w1=00000000
+[08:22:12.963] [INFO] [prev-tail] [xp-api-top] 08:22:09.262 15 samples: ntdll.dll+0x71aac=216/s ntdll.dll+0x6784c=162/s ntdll.dll+0x67dcc=162/s ntdll.dll+0x71d04=162/s kernelbase.dll+0x68958=108/s
+[08:22:12.964] [INFO] [prev-tail] [xp-api-qpc] 08:22:09.262 QPC 184/s gaps <1us 0% <10us 14% <100us 35% <1ms 0% >=1ms 50%; top threads: 00d0=184/s(<1us 0% <10us 14%)
+[08:22:12.964] [INFO] [prev-tail] [ios_audio] bg keepalive=0 mute=1 halt=1 clients=1 -> endpoint stopped
+[08:22:12.964] [INFO] [prev-tail] [08:22:10.143] [INFO] [session] length=230s partial=1 play=0s frames=0 stalls=0/0s peak=2106MB limit=6143MB thermal=fair lpm=0 res=1160x536 cap=30 game=Cities: Skylines II
+[08:22:12.964] [INFO] [prev-tail] 0] [xp-t] 08:22:09.810 m493995:0/14:0.0/1.1:18 m496973:0/3:0.9/1.1:7
+[08:22:12.964] [INFO] [prev-tail] [08:22:10.123] [xp] 08:22:10.122 +229.52 dt=312 cpu=23 (thr 23) P=0 E=23 run=32 pgw=0.0 GHz P=0.00 E=1.59 Minst=40 IPC=1.10 mJ=2 pin=0 rdKB=0 fpMB=1198
+[08:22:12.965] [INFO] [prev-tail] [08:22:10.123] [xp-t] 08:22:10.122 m493995:0/13:0.0/1.8:26 m496973:0/3:0.0/1.1:8
+[08:22:12.990] [INFO] [prev-end] last footprint "[footprint] rev=ml358 phys=1198 MB (peak 2105) internal=690 MB compressed=495 MB external=196 MB reusable=2 MB (cycle=101)" | last alive "[freeze] alive t+222s beats=7 gaps=1 iter=774 gen=1 threads=55 resident=886MB dbg=DEBUGGED rev=ml525" | last summary "[INFO] [session] length=230s partial=1 play=0s frames=0 stalls=0/0s peak=2106MB limit=6143MB thermal=fair lpm=0 res=1160x536 cap=30 game=Cities: Skylines II" | verdict: no memory pressure (19 % of the limit)
+[08:22:13.024] [INFO] [epic-install] start installed=0 refused=0
+[08:22:13.200] [INFO] [xinput] ml1920 physical controllers enabled=1
+[08:22:13.201] [INFO] [touch-xinput] ml1930 enabled=1
+[08:22:13.202] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[08:22:13.210] [INFO] [steam-library] start signed-in=1 cached=17
+[08:22:13.241] [INFO] [bcd-ui] shown games=18 downloads=0
+[08:22:13.242] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[08:22:13.242] [INFO] SIGTRAP handler installed (no debugger)
+[08:22:13.242] [INFO] Checking entitlements...
+[08:22:13.242] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[08:22:13.242] [OK]   increased-memory-limit: true
+[08:22:13.242] [DBG]   extended-virtual-addressing: false
+[08:22:13.243] [DBG]   increased-debugging-memory-limit: false
+[08:22:13.243] [INFO] [build] v0.1.721 (721)
+[08:22:13.243] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[08:22:13.243] [INFO] [device] address-map=[0x100998000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[08:22:13.244] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[08:22:13.245] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[08:22:13.258] [INFO] [device] settings: low-power=0 thermal=nominal screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=4GB stikdebug-url=0
+[08:22:13.264] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[08:22:13.355] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[08:22:13.377] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[08:22:13.378] [INFO] [epic-auth] start signed-in=0
+[08:22:13.378] [INFO] [epic-library] start cached=0 listed=0
+[08:22:13.396] [INFO] [steam-games] installed=6 ready=6
+[08:22:14.176] [INFO] [steam-playtime] apps=15
+[08:22:14.177] [INFO] [steam-cloud] sync games=6 automatic=1
+[08:22:14.862] [INFO] [autotune] Cities: Skylines II: crashed at stage 3 after 222 s; matched cage-release-band-exhausted,unity-empty-display-array,thread-stack-spill; status trying; next env.MADEIRA_CAGE_RELEASE = 1; read bcd-log.prev.txt (23085 lines; cage-release-band-exhausted from line 10524, unity-empty-display-array from line 952, thread-stack-spill from line 17242)
+[08:22:14.863] [INFO] [autotune] the unfinished session's analysis waited 0 ms and took 1931 ms
+[08:22:14.896] [INFO] [steam-cloud] app=255710 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:22:15.655] [INFO] [steam-cloud] app=949230 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:22:16.470] [INFO] [steam-cloud] app=1927780 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:22:17.402] [INFO] [steam-cloud] app=427820 cloud-change=0 cloud-files=0 same=0 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=0 roots=- overrides=0 | plan download=0 upload=0 ask=0
+[08:22:18.439] [INFO] [steam-cloud] app=220200 cloud-change=0 cloud-files=126 same=53 differ=73 missing-local=0 local-only=0 unmapped=0 patterns=11 roots=gameinstall overrides=0 | plan download=0 upload=0 ask=73
+[08:22:19.390] [INFO] [steam-cloud] app=248570 cloud-change=0 cloud-files=18 same=18 differ=0 missing-local=0 local-only=0 unmapped=0 patterns=13 roots=LinuxHome,MacHome,WinMyDocuments,WinSavedGames,gameinstall overrides=0 | plan download=0 upload=0 ask=0
+[08:22:21.561] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[08:22:21.567] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
