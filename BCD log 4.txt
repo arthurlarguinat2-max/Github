@@ -1,0 +1,97 @@
+[03:02:19.751] [INFO] [recs] in use: built-in list v98 (2026-11-24), 422 rules, build 721
+[03:02:19.892] [INFO] [session] the last session of Cities: Skylines did not end cleanly (in front, last start-up phase wine-start 0 s after the start); not asking (turned off)
+[03:02:19.907] [INFO] [prev-tail] the last 60 line(s) of the previous run's log (Cities.exe-2026-11-28_03-01-00.txt), scrubbed:
+[03:02:19.907] [INFO] [prev-tail] E A4 [cb-sample] a 70a457e881
+[03:02:19.907] [INFO] [prev-tail] E A4 [cb-sample] a 70a4584154
+[03:02:19.908] [INFO] [prev-tail] E A4 [cb-sample] a 70a45843b6
+[03:02:19.908] [INFO] [prev-tail] [decommit-zero] #40960 arena/pool OK base=0x7c41c01000 size=0x800000 branch=mmap-over (zero) checked=242/40960 notzero=0/0 rev=ml547
+[03:02:19.908] [INFO] [prev-tail] E A4 [cb-sample] a 70a45855dd
+[03:02:19.908] [INFO] [prev-tail] E A4 [cb-sample] a 70a458583f
+[03:02:19.908] [INFO] [prev-tail] [commit-zero] #45056 arena/pool OK base=0x7c41c01000 size=0x800000 protect=0x4 (zero) checked=1143/45056 stale=0/0 recommit=0 rev=ml546
+[03:02:19.908] [INFO] [prev-tail] E A4 [cb-sample] a 70a4587fb6
+[03:02:19.909] [INFO] [prev-tail] [xp-api-top] 03:02:03.885 4096 samples: kernel32.dll+0x26678=365399/s kernelbase.dll+0x6d470=139410/s ntdll.dll+0x67dcc=100640/s ntdll.dll+0x6784c=90596/s ntdll.dll+0x27cc8=33145/s ntdll.dll+0x281ac=30734/s ntdll.dll+0x71aac=6629/s kernelbase.dll+0x1e49c=4620/s kernelbase.dll+0x6c248=4620/s kernelbase.dll+0x68ac8=4218/s d3d11.dll+0x6ac84=3214/s kernelbase.dll+0x69aac=3013/s kernelbase.dll+0x23d88=
+[03:02:19.909] [INFO] [prev-tail] [xp-api-qpc] 03:02:03.885 QPC 38156/s gaps <1us 66% <10us 26% <100us 6% <1ms 1% >=1ms 1%; top threads: 00a4=18550/s(<1us 64% <10us 29%) 0198=15466/s(<1us 68% <10us 25%) 00b4=1194/s(<1us 75% <10us 20%) 00b8=1040/s(<1us 98% <10us 0%)
+[03:02:19.910] [INFO] [prev-tail] [xp-api-cs] 03:02:03.885 46 sampled contended enters (process heap 0x70ace60000): 0x70b9cdbeb0=46%(spin 0 contention 0) 0x70bbe34d48=20%(spin 0 contention 0) 0x71f2f6ece0=20%(spin 4000 contention 0 mono.dll+0x2bece0) 0x70b9ccd348=11%(spin 200 contention 0) 0x14e3e0940=4%(spin 0 contention 425 ntdll.dll+0xd0940 ../dlls/ntdll/threadpool.c: timerqueue.cs)
+[03:02:19.910] [INFO] [prev-tail] E A4 [cb-sample] a 70a457f090
+[03:02:19.910] [INFO] [prev-tail] E A4 [cb-sample] a 70a457f6cd
+[03:02:19.910] [INFO] [prev-tail] E A4 [cb-sample] a 70a457e881
+[03:02:19.910] [INFO] [prev-tail] E A4 [cb-sample] a 70a4589bf5
+[03:02:19.911] [INFO] [prev-tail] E 198 Failed to mprotect last page of code buffer.
+[03:02:19.911] [INFO] [prev-tail] E 198 [cb-sample] a 70a454b19e
+[03:02:19.911] [INFO] [prev-tail] E 198 [cb-sample] a 70a455926d
+[03:02:19.911] [INFO] [prev-tail] E 198 [cb-sample] a 70a455926d
+[03:02:19.911] [INFO] [prev-tail] E A4 [cb-sample] a 70a4590d63
+[03:02:19.911] [INFO] [prev-tail] E A4 [cb-sample] a 70a4590dbc
+[03:02:19.911] [INFO] [prev-tail] E A4 [cb-sample] a 70a4581572
+[03:02:19.912] [INFO] [prev-tail] E A4 [cb-sample] a 70a4590d63
+[03:02:19.912] [INFO] [prev-tail] E A4 [cb-sample] a 70a4590dbc
+[03:02:19.912] [INFO] [prev-tail] [field] ml964 #39 after load off=0x1bc: [0x71357d91b6]=0xc0003e92e0003e58 (high32=0xc0003e92)
+[03:02:19.912] [INFO] [prev-tail] [writer] ml963 #39 load addr=0x71357d91bc (off=0x1bc) insn=0xd9408021 bytes=8 Rt=x1 Rn=x1 Rt_val=0x00000071357d91b4 high32=0x00000071 pc=0x16394b3d8 -- (load, not the writer)
+[03:02:19.912] [INFO] [prev-tail] [field] ml964 #40 after load off=0x1bc: [0x71357d91b6]=0xc0003e92e0003e58 (high32=0xc0003e92)
+[03:02:19.913] [INFO] [prev-tail] [writer] ml963 #40 load addr=0x71357d91bc (off=0x1bc) insn=0xd9408021 bytes=8 Rt=x1 Rn=x1 Rt_val=0x00000071357d91b4 high32=0x00000071 pc=0x16394b47c -- (load, not the writer)
+[03:02:19.913] [INFO] [prev-tail] [field] ml964 #41 after load off=0x1bc: [0x71357d91b6]=0xc0003e92e0003e58 (high32=0xc0003e92)
+[03:02:19.913] [INFO] [prev-tail] [writer] ml963 #41 load addr=0x71357d91bc (off=0x1bc) insn=0xd9408021 bytes=8 Rt=x1 Rn=x1 Rt_val=0x00000071357d91b4 high32=0x00000071 pc=0x16394b520 -- (load, not the writer)
+[03:02:19.914] [INFO] [prev-tail] [field] ml964 #42 after load off=0x1bc: [0x71357d91b6]=0xc0003e92e0003e58 (high32=0xc0003e92)
+[03:02:19.914] [INFO] [prev-tail] [writer] ml963 #42 load addr=0x71357d91bc (off=0x1bc) insn=0xd9408021 bytes=8 Rt=x1 Rn=x1 Rt_val=0x00000071357d91b4 high32=0x00000071 pc=0x16394b5c4 -- (load, not the writer)
+[03:02:19.914] [INFO] [prev-tail] E 198 [cb-sample] a 70a456ba3d
+[03:02:19.914] [INFO] [prev-tail] E 198 [cb-sample] a 70a456ba3d
+[03:02:19.915] [INFO] [prev-tail] E A4 [cb-sample] a 70a458f8d6
+[03:02:19.915] [INFO] [prev-tail] E A4 [cb-sample] a 70a458f8d6
+[03:02:19.915] [INFO] [prev-tail] [steer] #21 size=0x4010000 reserved_total=0MB armed=va-pressure -> above ceiling 0x7d0e4b0000
+[03:02:19.915] [INFO] [prev-tail] [va-exit] rev=ml312 0x7d0e4b0000+0x4010000 type=0x2000 tid=0158 steer=INSIDE#19 freed=0 steer_n=21
+[03:02:19.915] [INFO] [prev-tail] 0158:err:seh:NtAllocateVirtualMemory [big-reserve] addr=0000007D0E4B0000 size=4010000 type=2000 prot=4 ret=000000014E3370F4
+[03:02:19.916] [INFO] [prev-tail] E A4 [cb-sample] f 2e4989d8cba0af19 211310
+[03:02:19.916] [INFO] [prev-tail] [thr-create] creator_teb=0x70bfac0000 creator_peb=0x11cb78000 start=0x151035308 (copy pe=0x71f2650000 owner=0x0) param=0x714a043920
+[03:02:19.916] [INFO] [prev-tail] 00c8:err:thread:init_thread_stack iOS arm64ec: TEB 0x70e1530000 ChpeV2CpuAreaInfo=0x17e400000 (stackBase=0x17e500000 stackLimit=0x17e401000 ContextAmd64=0x17e400050)
+[03:02:19.917] [INFO] [prev-tail] 00c8:err:thread:init_thread_stack iOS native stack: TEB 0x70e1530000 StackBase=0x71b1180000 StackLimit=0x71b0988000 DeallocStack=0x71b0980000 (reserve=0x100000 commit=0x0)
+[03:02:19.917] [INFO] [prev-tail] [teb-tsd] thread tid=026c raw=0x70e1530000 pthread=0x70e1530000 MATCH
+[03:02:19.917] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame init_syscall_frame: redirected PC 0x71f5762de0 → 0x14e372de0 (JIT pool)
+[03:02:19.917] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame init_syscall_frame: allocated trampoline slot 143, tramp=0x1480008f8, teb=0x70e1530000
+[03:02:19.917] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame page0: already attempted by first thread — skipping (Mach handler covers x18=0)
+[03:02:19.918] [INFO] [prev-tail] 026c:err:seh:ios_setup_mach_exception_handler Mach exception handler registered thread 0x22383 (idx=143), teb=0x70e1530000 tramp=0x1480008f8 usd=0x70a3000000 mask=ba+bi rev=ml353
+[03:02:19.918] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame init_syscall_frame: mach exc thread alive=1, slot=143
+[03:02:19.918] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame init_syscall_frame: signals_total=269 before PE entry
+[03:02:19.918] [INFO] [prev-tail] 026c:err:seh:init_syscall_frame init_syscall_frame: frame=0x17df0fb90 pc=0x14e372de0 x0=0x71b117fc70 sp=0x71b117fc70 x18=0x70e1530000 restore_flags=0x400007
+[03:02:19.919] [INFO] [prev-tail] E 26C [lookup-cache] ml606 mode=l1-only alloc=2MB live=77 cumulative=111 fleet_live=154MB (full-layout would be 50MB/cache)
+[03:02:19.919] [INFO] [prev-tail] E 26C [callret] zero-scrub rev=ml362 stale=0x0
+[03:02:19.919] [INFO] [prev-tail] E 26C [cpu-area] ThreadInit-done tid=0x26c teb=0x70e1530000 tsd275=0x70e1530000 x18teb=0x70e1530000 area=0x17e400000 StateFrame(ED0)=0x7c94001140 ThreadState(ED1)=0x7c94001000 EnterEC=0x169ff8108
+[03:02:19.919] [INFO] [prev-tail] 026c:err:module:alloc_thread_tls iOS-Madeira alloc_thread_tls: TEB=00000070E1530000 TEB->TLS=00000070B9A629C0 TLS[0]=000000714A0451F0 TLS[1]=000000714A045220 TLS[2]=000000714A045250 TLS[3]=000000714A045280 (count=32)
+[03:02:19.920] [INFO] [prev-tail] E A4 [cb-sample] a 70a4595030
+[03:02:19.920] [INFO] [prev-tail] E A4 [callret] ml610 resets=25600 bytes=204800MB per_reset=8192KB site=core by_site core=25543 cpubackend=57 jit-rollover=0
+[03:02:19.920] [INFO] [prev-tail] E 144 [CB_SUMMARY] total=4046848 real_compiles=140364 cache_hits=3906484 hit_rate=96%  hottest_rip≈0x71f2d1e924 repeats~18446744073705814682 L1ptr=0x7c7f010000 L1mask=0x1fff0 cacheL1=0x7c7f010000
+[03:02:19.921] [INFO] [prev-tail] E 144 [CB_COST] compiles=140364 compile_ms=1817 avg_us=12 max_us=18933 flush_ms=21 flush_calls=140286 link_flushes=85377 samples_file=258 samples_anon=932 freq=1000000000
+[03:02:19.921] [INFO] [prev-tail] E A4 [cb-sample] a 70a4589bf5
+[03:02:19.947] [INFO] [prev-end] last footprint "[footprint] rev=ml1060 fast phys=6118 MB compressed=3045 MB internal=2217 MB" | last alive "[freeze] alive t+60s beats=2 gaps=0 iter=238 gen=1 threads=117 resident=2305MB dbg=DEBUGGED rev=ml525" | last summary none | verdict: memory kill likely (99 % of the limit)
+[03:02:19.974] [INFO] [epic-install] start installed=0 refused=0
+[03:02:20.083] [INFO] [xinput] ml1920 physical controllers enabled=1
+[03:02:20.083] [INFO] [touch-xinput] ml1930 enabled=1
+[03:02:20.084] [INFO] [controllers] hub started: 0 connected, XInput on, keys and mouse off
+[03:02:20.096] [INFO] [steam-library] start signed-in=1 cached=15
+[03:02:20.123] [INFO] [bcd-ui] shown games=16 downloads=0
+[03:02:20.124] [INFO] CS_DEBUGGED flag: NOT SET (flags=0x22003305)
+[03:02:20.124] [INFO] SIGTRAP handler installed (no debugger)
+[03:02:20.124] [INFO] Checking entitlements...
+[03:02:20.124] [DBG]   allow-jit: false (macOS-only, inert on iOS)
+[03:02:20.125] [OK]   increased-memory-limit: true
+[03:02:20.125] [DBG]   extended-virtual-addressing: false
+[03:02:20.125] [DBG]   increased-debugging-memory-limit: false
+[03:02:20.125] [INFO] [build] v0.1.721 (721)
+[03:02:20.125] [INFO] [device] model=iPhone18,5 idiom=phone os=iOS Version 27.2.1 (Build 24B156) ram=7709MB available=6118MB cores=6
+[03:02:20.126] [INFO] [device] address-map=[0x104584000,0x8000000000) 512GB increased-memory=1 extended-va=0
+[03:02:20.126] [INFO] [device] signing: cs-flags=0x22003305 get-task-allow=1 cs-debugged=0 debugger-attached=0 traced=0 profile=development lifetime=7d left=6d profile-get-task-allow=1 profile-increased-memory=1 profile-extended-va=0 appid-match=1 wildcard=0 lc=0
+[03:02:20.127] [INFO] [jit-nodebug] debugger-less JIT pool: not here (iOS 27: every device is a TXM device); env.MADEIRA_JIT_NO_DEBUGGER_POOL=1
+[03:02:20.138] [INFO] [device] settings: low-power=0 thermal=nominal screen=1170x2532@3.0x max-fps=60 utc-offset=+01:00 free-disk=54GB stikdebug-url=0
+[03:02:20.143] [INFO] [device] gpu="Apple A19 GPU" family=apple10 argument-buffers=tier2 mesh=1 bc=1 atomics64=1 cpu-lse=1 cpu-lrcpc=1 direct3d=ok x64=ok
+[03:02:20.218] [INFO] [steam-games] installed=3 ready=3
+[03:02:20.223] [INFO] MetalLayer: displaySyncEnabled=false (private API, MeloNX pattern)
+[03:02:20.248] [INFO] [gog-library] start signed-in=0 cached=0 installed=0
+[03:02:20.249] [INFO] [epic-auth] start signed-in=0
+[03:02:20.249] [INFO] [epic-library] start cached=0 listed=0
+[03:02:21.497] [INFO] [steam-playtime] apps=13
+[03:02:21.500] [INFO] [steam-cloud] sync games=3 automatic=1
+[03:02:38.628] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[03:02:38.632] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[03:02:39.314] [INFO] [autotune] Cities: Skylines: killed at stage 4 after 60 s; matched swap-8gb-memory-kill-sure,swap-8gb-memory-kill; status stuck; next nothing; kept swap-mb = 3072, swap-mode = 2, swap-min-mb = 1, pool-window-cut = 1; skipped swap-8gb-memory-kill-sure (tried), swap-8gb-memory-kill (its lines were tried); read bcd-log.prev.txt (29925 lines; swap-8gb-memory-kill-sure from line 621, swap-8gb-memory-kill from line 621)
+[03:02:39.315] [INFO] [autotune] the unfinished session's analysis waited 0 ms and took 19429 ms
+[03:02:47.022] [INFO] [update-check] latest=721 (0.1.721) this=721 told=0
+[03:02:51.753] [INFO] [steam-cloud] app=255710 failed reason=timeout
