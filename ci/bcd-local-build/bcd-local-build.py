@@ -370,14 +370,17 @@ def main():
         state.save()
         if res == "failure":
             failed = True
-            print(f"\nStopped at step {i}. Fix the cause (or send the log to Claude), then run again:\n"
-                  f"  python3 {sys.argv[0]} --repo {a.repo} --from {i}\n")
-            # steps that GitHub runs after a failure (if: failure() / always()) are run once for their diagnostics
-            for j in range(i + 1, len(steps)):
-                cond = str(steps[j].get("if") or "")
-                if ("failure()" in cond or "always()" in cond) and not skip_reason(steps[j], a.with_checks):
-                    run_step(j, steps[j], repo, state, wf_env, job_env, True, a.dry_run)
+            # GitHub runs the steps marked if: failure() / always() after a failure; they only print diagnostics,
+            # so they are left out here: their messages hid the step that really failed.
             state.save()
+            name = s.get("name") or f"step {i}"
+            log = os.path.join(state.logs, f"{i:03d}.log")
+            print("\n" + "=" * 70)
+            print(f"STOPPED AT STEP {i}: {name}")
+            print(f"log: {log}")
+            print("Send Claude a screenshot of this box and of:  tail -40 " + log)
+            print(f"Then run again from this step:  --from {i}")
+            print("=" * 70)
             sys.exit(1)
     if not a.dry_run:
         print("\nAll steps done. The unsigned IPA is in", os.path.join(repo, "build-out"))
